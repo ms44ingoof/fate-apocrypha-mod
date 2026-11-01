@@ -11,4 +11,4 @@
 
 ## Текстуры
 - `textures/item/command_seal.png` - красный дракон (есть `command_seal_black.png`, чёрный вариант: переименуй, чтобы использовать).
-- `textures/entity/astolfo.png` - временный скин 64x64, замени на свой в стиле Minecraft-скина.
+- `textures/entity/astolfo.png` - скин Астольфо (64x64, формат Alex).
