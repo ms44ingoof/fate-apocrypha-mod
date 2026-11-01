@@ -11,6 +11,7 @@ public class FateApocrypha {
     public FateApocrypha() {
         IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
         ModItems.ITEMS.register(bus);
+        ModEntities.ENTITIES.register(bus);
         ModCreativeTabs.TABS.register(bus);
     }
 }

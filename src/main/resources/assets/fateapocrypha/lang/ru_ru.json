@@ -1,5 +1,7 @@
 {
   "itemGroup.fateapocrypha": "Fate/Apocrypha",
   "item.fateapocrypha.command_seal": "Командное заклинание",
-  "item.fateapocrypha.summon_catalyst": "Катализатор призыва"
+  "item.fateapocrypha.summon_catalyst": "Катализатор призыва",
+  "entity.fateapocrypha.astolfo": "Астольфо, Rider Чёрных",
+  "message.fateapocrypha.summoned": "Слуга Rider откликнулся на твой зов!"
 }

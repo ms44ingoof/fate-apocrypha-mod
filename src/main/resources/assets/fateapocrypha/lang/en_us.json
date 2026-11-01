@@ -1,5 +1,7 @@
 {
   "itemGroup.fateapocrypha": "Fate/Apocrypha",
   "item.fateapocrypha.command_seal": "Command Seal",
-  "item.fateapocrypha.summon_catalyst": "Summoning Catalyst"
+  "item.fateapocrypha.summon_catalyst": "Summoning Catalyst",
+  "entity.fateapocrypha.astolfo": "Astolfo, Rider of Black",
+  "message.fateapocrypha.summoned": "Servant Rider has answered your summons!"
 }
