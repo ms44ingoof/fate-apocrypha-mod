@@ -2,7 +2,6 @@ package com.example.fateapocrypha.servant;
 
 import com.example.fateapocrypha.ModItems;
 import com.example.fateapocrypha.entity.ServantEntity;
-import com.example.fateapocrypha.story.StoryChapter;
 import com.example.fateapocrypha.story.StoryManager;
 import java.util.UUID;
 import net.minecraft.core.particles.ParticleTypes;
@@ -161,6 +160,5 @@ public class ServantActions {
         }
         player.sendSystemMessage(Component.translatable("message.fateapocrypha.summoned",
                 Component.translatable(type.nameKey())));
-        StoryManager.advanceTo(player, StoryChapter.ROMANIA);
     }
 }

@@ -4,6 +4,7 @@ import com.example.fateapocrypha.entity.AstolfoEntity;
 import com.example.fateapocrypha.entity.JeanneEntity;
 import com.example.fateapocrypha.entity.MordredEntity;
 import com.example.fateapocrypha.entity.SemiramisEntity;
+import com.example.fateapocrypha.entity.StoryNpcEntity;
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -16,5 +17,6 @@ public class ModEvents {
         event.put(ModEntities.MORDRED.get(), MordredEntity.createAttributes().build());
         event.put(ModEntities.JEANNE.get(), JeanneEntity.createAttributes().build());
         event.put(ModEntities.SEMIRAMIS.get(), SemiramisEntity.createAttributes().build());
+        event.put(ModEntities.STORY_NPC.get(), StoryNpcEntity.createAttributes().build());
     }
 }

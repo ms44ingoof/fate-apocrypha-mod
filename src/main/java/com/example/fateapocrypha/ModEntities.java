@@ -4,6 +4,7 @@ import com.example.fateapocrypha.entity.AstolfoEntity;
 import com.example.fateapocrypha.entity.JeanneEntity;
 import com.example.fateapocrypha.entity.MordredEntity;
 import com.example.fateapocrypha.entity.SemiramisEntity;
+import com.example.fateapocrypha.entity.StoryNpcEntity;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
@@ -34,4 +35,9 @@ public class ModEntities {
             () -> EntityType.Builder.of(SemiramisEntity::new, MobCategory.CREATURE)
                     .sized(0.6F, 1.8F).clientTrackingRange(10)
                     .build(new ResourceLocation(FateApocrypha.MODID, "semiramis").toString()));
+
+    public static final RegistryObject<EntityType<StoryNpcEntity>> STORY_NPC = ENTITIES.register("story_npc",
+            () -> EntityType.Builder.of(StoryNpcEntity::new, MobCategory.CREATURE)
+                    .sized(0.6F, 1.8F).clientTrackingRange(10)
+                    .build(new ResourceLocation(FateApocrypha.MODID, "story_npc").toString()));
 }

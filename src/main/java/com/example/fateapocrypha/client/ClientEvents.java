@@ -5,6 +5,7 @@ import com.example.fateapocrypha.ModEntities;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.EntityRenderersEvent;
+import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -25,5 +26,12 @@ public class ClientEvents {
                 ctx -> new ServantRenderer<>(ctx, skin("jeanne"), true));
         event.registerEntityRenderer(ModEntities.SEMIRAMIS.get(),
                 ctx -> new ServantRenderer<>(ctx, skin("semiramis"), false));
+        event.registerEntityRenderer(ModEntities.STORY_NPC.get(), StoryNpcRenderer::new);
+    }
+
+    @SubscribeEvent
+    public static void onRegisterOverlays(RegisterGuiOverlaysEvent event) {
+        event.registerAboveAll("story_overlay",
+                (gui, graphics, partialTick, width, height) -> ClientStoryState.render(graphics, width, height));
     }
 }

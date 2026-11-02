@@ -17,6 +17,7 @@ public class ModCreativeTabs {
                     .displayItems((params, output) -> {
                         output.accept(ModItems.COMMAND_SEAL.get());
                         output.accept(ModItems.SUMMON_CATALYST.get());
+                        output.accept(ModItems.ASTOLFO_SWORD.get());
                     })
                     .build());
 }

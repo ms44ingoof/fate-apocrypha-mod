@@ -4,9 +4,13 @@ import java.util.Locale;
 
 /** Главы сюжета. Порядок в enum = порядок прохождения. */
 public enum StoryChapter {
-    PROLOGUE,
-    ROMANIA,
-    MILLENNIUM_CASTLE;
+    LAB_TANK,
+    LAB_WALK,
+    CORRIDOR,
+    CHIRON,
+    ESCAPE,
+    FOREST,
+    TO_BE_CONTINUED;
 
     public String titleKey() {
         return "story.fateapocrypha." + name().toLowerCase(Locale.ROOT) + ".title";

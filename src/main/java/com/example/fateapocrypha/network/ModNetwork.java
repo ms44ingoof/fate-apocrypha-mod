@@ -18,5 +18,9 @@ public class ModNetwork {
                 SealActionPacket::encode, SealActionPacket::decode, SealActionPacket::handle);
         CHANNEL.registerMessage(id++, SummonPacket.class,
                 SummonPacket::encode, SummonPacket::decode, SummonPacket::handle);
+        CHANNEL.registerMessage(id++, DialoguePacket.class,
+                DialoguePacket::encode, DialoguePacket::decode, DialoguePacket::handle);
+        CHANNEL.registerMessage(id++, FadePacket.class,
+                FadePacket::encode, FadePacket::decode, FadePacket::handle);
     }
 }
