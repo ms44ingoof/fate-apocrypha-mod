@@ -10,6 +10,9 @@ public enum StoryChapter {
     CHIRON,
     ESCAPE,
     FOREST,
+    INTERLUDE_RED,
+    INTERLUDE_SHIRO,
+    INTERLUDE_FRANKENSTEIN,
     TO_BE_CONTINUED;
 
     public String titleKey() {

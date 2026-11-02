@@ -7,6 +7,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.BedBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.CandleBlock;
 import net.minecraft.world.level.block.LanternBlock;
 import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -70,6 +71,7 @@ public class StoryWorld {
     public static void buildAll(ServerLevel l) {
         buildCastle(l);
         buildForest(l);
+        buildStages(l);
     }
 
     private static void buildCastle(ServerLevel l) {
@@ -542,6 +544,140 @@ public class StoryWorld {
                     }
                 }
             }
+        }
+    }
+
+    // ================= Сцены интерлюдий (смотрим со стороны, камерой) =================
+    public static final int STAGE_RED_X = 800;       // лагерь Красной фракции
+    public static final int STAGE_RED_Z = 800;
+    public static final int STAGE_CHAPEL_X = 800;    // церковь Широ: x790-810, z890-920
+    public static final int STAGE_CHAPEL_Z = 905;
+    public static final int STAGE_RUINS_X = 800;     // руины для боя Франкенштейн и Мордред
+    public static final int STAGE_RUINS_Z = 1000;
+
+    public static void ensureStages(ServerLevel l) {
+        if (l != null && !l.getBlockState(new BlockPos(STAGE_RED_X, Y0 - 1, STAGE_RED_Z)).is(Blocks.COARSE_DIRT)) {
+            buildStages(l);
+        }
+    }
+
+    private static void buildStages(ServerLevel l) {
+        buildRedCamp(l);
+        buildChapel(l);
+        buildRuins(l);
+        set(l, STAGE_RED_X, Y0 - 1, STAGE_RED_Z, s(Blocks.COARSE_DIRT));   // метка "построено"
+    }
+
+    private static void buildRedCamp(ServerLevel l) {
+        int cx = STAGE_RED_X;
+        int cz = STAGE_RED_Z;
+        Random rnd = new Random(7L);
+        for (int x = cx - 18; x <= cx + 18; x++) {
+            for (int z = cz - 18; z <= cz + 18; z++) {
+                if (Math.hypot(x - cx, z - cz) <= 16.0D) {
+                    set(l, x, Y0, z, rnd.nextInt(3) == 0 ? s(Blocks.PODZOL) : s(Blocks.COARSE_DIRT));
+                }
+            }
+        }
+        set(l, cx, Y0 + 1, cz, s(Blocks.CAMPFIRE));
+        set(l, cx - 3, Y0 + 1, cz, s(Blocks.HAY_BLOCK));
+        set(l, cx + 3, Y0 + 1, cz, s(Blocks.HAY_BLOCK));
+        set(l, cx, Y0 + 1, cz - 3, s(Blocks.HAY_BLOCK));
+        tent(l, cx - 16, cz - 10, s(Blocks.RED_WOOL));
+        tent(l, cx - 16, cz + 6, s(Blocks.GRAY_WOOL));
+        tent(l, cx + 11, cz - 12, s(Blocks.RED_WOOL));
+        set(l, cx + 7, Y0 + 1, cz - 7, s(Blocks.BARREL));
+        set(l, cx + 8, Y0 + 1, cz - 7, s(Blocks.BARREL));
+        set(l, cx + 7, Y0 + 2, cz - 7, s(Blocks.BARREL));
+        for (int[] c : new int[][] {{-11, -11}, {11, -11}, {-11, 11}, {11, 11}}) {
+            set(l, cx + c[0], Y0 + 1, cz + c[1], s(Blocks.OAK_FENCE));
+            set(l, cx + c[0], Y0 + 2, cz + c[1], s(Blocks.OAK_FENCE));
+            set(l, cx + c[0], Y0 + 3, cz + c[1], s(Blocks.LANTERN));
+        }
+    }
+
+    /** Палатка-шатёр: двускатная крыша из шерсти (ширина 6 по x, длина 5 по z). */
+    private static void tent(ServerLevel l, int x, int z, BlockState wool) {
+        for (int i = 0; i < 5; i++) {
+            int h = 1 + Math.min(i, 4 - i);
+            for (int dx = 0; dx < 6; dx++) {
+                for (int y = 1; y <= h; y++) {
+                    if (y == h || dx == 0 || dx == 5) {
+                        set(l, x + dx, Y0 + y, z + i, wool);
+                    }
+                }
+            }
+        }
+    }
+
+    private static void buildChapel(ServerLevel l) {
+        room(l, 790, 890, 810, 920, 10, CASTLE);
+        fill(l, 799, Y0 + 1, 892, 801, Y0 + 1, 918, CARPET_RED);
+        for (int z = 896; z <= 916; z += 5) {
+            pillar(l, 794, z, 10, s(Blocks.STONE_BRICKS));
+            pillar(l, 806, z, 10, s(Blocks.STONE_BRICKS));
+        }
+        for (int z : new int[] {897, 903, 909, 915}) {
+            fill(l, 790, Y0 + 3, z, 790, Y0 + 8, z + 1, s(Blocks.PURPLE_STAINED_GLASS));
+            fill(l, 810, Y0 + 3, z, 810, Y0 + 8, z + 1, s(Blocks.PURPLE_STAINED_GLASS));
+        }
+        for (int z = 898; z <= 912; z += 2) {
+            for (int x : new int[] {796, 797, 798, 802, 803, 804}) {
+                set(l, x, Y0 + 1, z, s(Blocks.SPRUCE_SLAB));
+            }
+        }
+        fill(l, 798, Y0 + 1, 915, 802, Y0 + 1, 915, s(Blocks.POLISHED_ANDESITE));
+        fill(l, 799, Y0 + 2, 915, 801, Y0 + 2, 915, s(Blocks.SMOOTH_QUARTZ_SLAB));
+        BlockState candle = Blocks.CANDLE.defaultBlockState().setValue(CandleBlock.LIT, true);
+        set(l, 798, Y0 + 2, 915, candle);
+        set(l, 802, Y0 + 2, 915, candle);
+        for (int z : new int[] {898, 905, 912}) {
+            set(l, 800, Y0 + 10, z, CHAIN);
+            set(l, 800, Y0 + 9, z, CHAIN);
+            set(l, 800, Y0 + 8, z, HANGING_LANTERN);
+        }
+    }
+
+    private static void buildRuins(ServerLevel l) {
+        int cx = STAGE_RUINS_X;
+        int cz = STAGE_RUINS_Z;
+        Random rnd = new Random(99L);
+        for (int x = cx - 20; x <= cx + 20; x++) {
+            for (int z = cz - 20; z <= cz + 20; z++) {
+                int r = rnd.nextInt(10);
+                if (r < 2) {
+                    set(l, x, Y0, z, s(Blocks.COBBLESTONE));
+                } else if (r == 2) {
+                    set(l, x, Y0, z, s(Blocks.GRAVEL));
+                } else if (r == 3) {
+                    set(l, x, Y0, z, s(Blocks.MOSSY_COBBLESTONE));
+                }
+            }
+        }
+        // обломки стен только по краям, чтобы не мешать камере
+        for (int i = 0; i < 22; i++) {
+            int x = cx - 20 + rnd.nextInt(41);
+            int z = cz - 20 + rnd.nextInt(41);
+            if (Math.abs(x - cx) < 14 && Math.abs(z - cz) < 14) {
+                continue;
+            }
+            int len = 3 + rnd.nextInt(5);
+            boolean alongX = rnd.nextBoolean();
+            int height = 2 + rnd.nextInt(4);
+            for (int k = 0; k < len; k++) {
+                int hh = height - rnd.nextInt(2);
+                for (int y = 1; y <= hh; y++) {
+                    int roll = rnd.nextInt(3);
+                    BlockState state = roll == 0 ? s(Blocks.CRACKED_STONE_BRICKS)
+                            : roll == 1 ? s(Blocks.MOSSY_STONE_BRICKS) : s(Blocks.STONE_BRICKS);
+                    set(l, alongX ? x + k : x, Y0 + y, alongX ? z : z + k, state);
+                }
+            }
+        }
+        for (int[] c : new int[][] {{-14, -9}, {14, -9}, {-14, 9}, {14, 9}}) {
+            set(l, cx + c[0], Y0 + 1, cz + c[1], s(Blocks.COBBLESTONE_WALL));
+            set(l, cx + c[0], Y0 + 2, cz + c[1], s(Blocks.COBBLESTONE_WALL));
+            set(l, cx + c[0], Y0 + 3, cz + c[1], s(Blocks.LANTERN));
         }
     }
 }

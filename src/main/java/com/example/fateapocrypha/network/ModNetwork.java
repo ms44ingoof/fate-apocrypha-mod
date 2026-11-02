@@ -22,5 +22,7 @@ public class ModNetwork {
                 DialoguePacket::encode, DialoguePacket::decode, DialoguePacket::handle);
         CHANNEL.registerMessage(id++, FadePacket.class,
                 FadePacket::encode, FadePacket::decode, FadePacket::handle);
+        CHANNEL.registerMessage(id++, CameraPacket.class,
+                CameraPacket::encode, CameraPacket::decode, CameraPacket::handle);
     }
 }

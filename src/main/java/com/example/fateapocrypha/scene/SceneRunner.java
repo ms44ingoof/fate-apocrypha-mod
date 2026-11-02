@@ -45,6 +45,7 @@ public class SceneRunner {
     /** Останавливает сцену и убирает её NPC и мобов. */
     public void cancel() {
         cancelled = true;
+        ctx.endCinematic();
         ServerLevel level = ctx.trifas();
         for (UUID id : ctx.npcs.values()) {
             SceneManager.unregister(id);

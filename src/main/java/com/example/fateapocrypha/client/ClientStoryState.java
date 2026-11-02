@@ -5,6 +5,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.Mth;
 
@@ -18,6 +19,39 @@ public class ClientStoryState {
     private static long fadeIn = 0L;
     private static long fadeHold = 0L;
     private static long fadeOut = 0L;
+
+    private static boolean cinematic = false;
+    private static int pendingCamera = -2;
+
+    public static boolean isCinematic() {
+        return cinematic;
+    }
+
+    /** entityId >= 0: смотреть глазами этой сущности; -1: вернуть камеру игроку. */
+    public static void setCamera(int entityId, boolean on) {
+        cinematic = on;
+        pendingCamera = entityId;
+    }
+
+    /** Каждый клиентский тик: ждём появления сущности-камеры и переключаем на неё вид. */
+    public static void clientTick() {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.level == null || mc.player == null) {
+            cinematic = false;
+            pendingCamera = -2;
+            return;
+        }
+        if (pendingCamera == -1) {
+            mc.setCameraEntity(mc.player);
+            pendingCamera = -2;
+        } else if (pendingCamera >= 0) {
+            Entity camera = mc.level.getEntity(pendingCamera);
+            if (camera != null) {
+                mc.setCameraEntity(camera);
+                pendingCamera = -2;
+            }
+        }
+    }
 
     private static long now() {
         return System.currentTimeMillis();
@@ -39,6 +73,11 @@ public class ClientStoryState {
     public static void render(GuiGraphics graphics, int width, int height) {
         long t = now();
         renderFade(graphics, width, height, t);
+        if (cinematic) {
+            int bar = height / 8;
+            graphics.fill(0, 0, width, bar, 0xFF000000);
+            graphics.fill(0, height - bar, width, height, 0xFF000000);
+        }
         renderDialogue(graphics, width, height, t);
     }
 
@@ -71,7 +110,8 @@ public class ClientStoryState {
         List<FormattedCharSequence> lines = font.split(text, boxWidth - 20);
         int boxHeight = 24 + lines.size() * 10;
         int x = (width - boxWidth) / 2;
-        int y = height - 70 - boxHeight;
+        int bottom = cinematic ? height - height / 8 - 12 : height - 70;
+        int y = bottom - boxHeight;
 
         graphics.fill(x, y, x + boxWidth, y + boxHeight, 0xC0000000);
         graphics.fill(x, y, x + boxWidth, y + 1, 0xFFD4AF37);

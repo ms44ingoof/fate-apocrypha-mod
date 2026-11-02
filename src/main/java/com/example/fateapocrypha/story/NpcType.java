@@ -7,7 +7,13 @@ import net.minecraft.world.item.Items;
 public enum NpcType {
     ASTOLFO("astolfo", true, Items.GOLDEN_SWORD),
     CHIRON("chiron", false, Items.BOW),
-    JEANNE("jeanne", true, Items.WHITE_BANNER);
+    JEANNE("jeanne", true, Items.WHITE_BANNER),
+    MORDRED("mordred", false, Items.IRON_SWORD),
+    SEMIRAMIS("semiramis", false, Items.AIR),
+    KAIRI("kairi", false, Items.AIR),
+    SHIRO("shiro", false, Items.AIR),
+    FRANKENSTEIN("frankenstein", false, Items.AIR),
+    CAULES("caules", false, Items.AIR);
 
     private final String id;
     private final boolean slim;

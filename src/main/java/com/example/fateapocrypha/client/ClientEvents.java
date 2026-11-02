@@ -2,6 +2,7 @@ package com.example.fateapocrypha.client;
 
 import com.example.fateapocrypha.FateApocrypha;
 import com.example.fateapocrypha.ModEntities;
+import net.minecraft.client.renderer.entity.NoopRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.EntityRenderersEvent;
@@ -27,6 +28,7 @@ public class ClientEvents {
         event.registerEntityRenderer(ModEntities.SEMIRAMIS.get(),
                 ctx -> new ServantRenderer<>(ctx, skin("semiramis"), false));
         event.registerEntityRenderer(ModEntities.STORY_NPC.get(), StoryNpcRenderer::new);
+        event.registerEntityRenderer(ModEntities.STORY_CAMERA.get(), NoopRenderer::new);
     }
 
     @SubscribeEvent

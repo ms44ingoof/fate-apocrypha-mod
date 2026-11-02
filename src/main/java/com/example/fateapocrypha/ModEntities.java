@@ -4,6 +4,7 @@ import com.example.fateapocrypha.entity.AstolfoEntity;
 import com.example.fateapocrypha.entity.JeanneEntity;
 import com.example.fateapocrypha.entity.MordredEntity;
 import com.example.fateapocrypha.entity.SemiramisEntity;
+import com.example.fateapocrypha.entity.StoryCameraEntity;
 import com.example.fateapocrypha.entity.StoryNpcEntity;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
@@ -40,4 +41,9 @@ public class ModEntities {
             () -> EntityType.Builder.of(StoryNpcEntity::new, MobCategory.CREATURE)
                     .sized(0.6F, 1.8F).clientTrackingRange(10)
                     .build(new ResourceLocation(FateApocrypha.MODID, "story_npc").toString()));
+
+    public static final RegistryObject<EntityType<StoryCameraEntity>> STORY_CAMERA = ENTITIES.register("story_camera",
+            () -> EntityType.Builder.of(StoryCameraEntity::new, MobCategory.MISC)
+                    .sized(0.1F, 0.1F).clientTrackingRange(16).updateInterval(1).noSave().fireImmune()
+                    .build(new ResourceLocation(FateApocrypha.MODID, "story_camera").toString()));
 }
