@@ -1,5 +1,5 @@
-# Fate/Apocrypha mod (Forge 1.20.1)
 
+<<<<<<< HEAD
 Сборка идёт на GitHub Actions: Java и Gradle у себя ставить не нужно.
 Готовый jar: вкладка Actions -> завершённый запуск -> Artifacts -> fate-apocrypha-mod.
 Положи jar в папку mods клиента Minecraft Forge 1.20.1 (47.x).
@@ -47,3 +47,5 @@
 
 ## Скины
 `assets/fateapocrypha/textures/entity/`: astolfo, mordred, jeanne, semiramis - твои; chiron.png, kairi.png, shiro.png, frankenstein.png, caules.png - временные заглушки (замени на свои скины 64x64).
+=======
+>>>>>>> 7ff67d98229a12cef4b8f236ad621ae80535aa9c
