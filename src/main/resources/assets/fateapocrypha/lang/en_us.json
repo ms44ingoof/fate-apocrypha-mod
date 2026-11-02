@@ -3,5 +3,18 @@
   "item.fateapocrypha.command_seal": "Command Seal",
   "item.fateapocrypha.summon_catalyst": "Summoning Catalyst",
   "entity.fateapocrypha.astolfo": "Astolfo, Rider of Black",
-  "message.fateapocrypha.summoned": "Servant Rider has answered your summons!"
+  "message.fateapocrypha.summoned": "Servant Rider has answered your summons!",
+  "message.fateapocrypha.seal_awakened": "Command Seals have awakened on your hand.",
+  "command.fateapocrypha.locked": "You cannot travel to Trifas yet. Continue the story first.",
+  "command.fateapocrypha.no_dimension": "The Trifas dimension is not loaded.",
+  "story.fateapocrypha.new_chapter": "New chapter: %s",
+  "story.fateapocrypha.chapter_header": "Chapter: %s",
+  "story.fateapocrypha.prologue.title": "Prologue: The Call of the Grail",
+  "story.fateapocrypha.prologue.objective": "Craft a Summoning Catalyst (gold ingots, redstone and a diamond).",
+  "story.fateapocrypha.summoning.title": "Summoning",
+  "story.fateapocrypha.summoning.objective": "Right-click a block with the catalyst to summon your Servant.",
+  "story.fateapocrypha.romania.title": "The Road to Romania",
+  "story.fateapocrypha.romania.objective": "Travel to Trifas with the command /fate trifas.",
+  "story.fateapocrypha.millennium_castle.title": "Millennium Castle",
+  "story.fateapocrypha.millennium_castle.objective": "Find Yggdmillennia Castle. (To be continued.)"
 }

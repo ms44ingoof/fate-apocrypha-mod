@@ -3,5 +3,18 @@
   "item.fateapocrypha.command_seal": "Командное заклинание",
   "item.fateapocrypha.summon_catalyst": "Катализатор призыва",
   "entity.fateapocrypha.astolfo": "Астольфо, Rider Чёрных",
-  "message.fateapocrypha.summoned": "Слуга Rider откликнулся на твой зов!"
+  "message.fateapocrypha.summoned": "Слуга Rider откликнулся на твой зов!",
+  "message.fateapocrypha.seal_awakened": "На твоей руке проявились Командные заклинания.",
+  "command.fateapocrypha.locked": "Ты пока не можешь отправиться в Трифас. Продолжай сюжет.",
+  "command.fateapocrypha.no_dimension": "Измерение Трифас не загружено.",
+  "story.fateapocrypha.new_chapter": "Новая глава: %s",
+  "story.fateapocrypha.chapter_header": "Глава: %s",
+  "story.fateapocrypha.prologue.title": "Пролог: Зов Грааля",
+  "story.fateapocrypha.prologue.objective": "Создай катализатор призыва (золотые слитки, редстоун и алмаз).",
+  "story.fateapocrypha.summoning.title": "Призыв",
+  "story.fateapocrypha.summoning.objective": "Нажми ПКМ катализатором по блоку, чтобы призвать Слугу.",
+  "story.fateapocrypha.romania.title": "Дорога в Румынию",
+  "story.fateapocrypha.romania.objective": "Отправляйся в Трифас командой /fate trifas.",
+  "story.fateapocrypha.millennium_castle.title": "Тысячелетний замок",
+  "story.fateapocrypha.millennium_castle.objective": "Найди замок Ёггдмиллениа. (Продолжение следует.)"
 }

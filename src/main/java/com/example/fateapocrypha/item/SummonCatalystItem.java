@@ -1,6 +1,7 @@
 package com.example.fateapocrypha.item;
 
 import com.example.fateapocrypha.ModEntities;
+import com.example.fateapocrypha.ModItems;
 import com.example.fateapocrypha.entity.AstolfoEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -14,6 +15,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
+import com.example.fateapocrypha.story.StoryChapter;
+import com.example.fateapocrypha.story.StoryManager;
 
 /** Катализатор: ПКМ по блоку призывает Астольфо как Слугу игрока. */
 public class SummonCatalystItem extends Item {
@@ -49,6 +52,13 @@ public class SummonCatalystItem extends Item {
         }
 
         player.sendSystemMessage(Component.translatable("message.fateapocrypha.summoned"));
+
+        // Первый призыв: награда - Командные заклинания, и сюжет идёт дальше
+        if (StoryManager.getChapter(player).ordinal() < StoryChapter.ROMANIA.ordinal()) {
+            player.addItem(new ItemStack(ModItems.COMMAND_SEAL.get()));
+            player.sendSystemMessage(Component.translatable("message.fateapocrypha.seal_awakened"));
+            StoryManager.advanceTo(player, StoryChapter.ROMANIA);
+        }
         if (!player.getAbilities().instabuild) {
             context.getItemInHand().shrink(1);
         }
