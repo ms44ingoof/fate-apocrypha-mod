@@ -16,10 +16,13 @@ import net.minecraft.world.phys.AABB;
  */
 public class StoryScenes {
     private static final double Y = StoryWorld.Y0 + 1;
+    private static final double FX = StoryWorld.FOREST_CX;
+    private static final double FZ = StoryWorld.FOREST_CZ;
 
     private static final String SIEG = "npc.fateapocrypha.sieg";
     private static final String ASTOLFO = "npc.fateapocrypha.astolfo";
     private static final String CHIRON = "npc.fateapocrypha.chiron";
+    private static final String JEANNE = "npc.fateapocrypha.jeanne";
     private static final String UNKNOWN = "npc.fateapocrypha.unknown";
 
     private static Step say(String speaker, String line) {
@@ -128,10 +131,11 @@ public class StoryScenes {
         return s;
     }
 
-    // 5. Побег из замка
+    // 5. Побег из замка (гомункулы нас не останавливают)
     private static List<Step> escape() {
         List<Step> s = new ArrayList<>();
         s.add(Steps.fade(0, 30, 40, false));
+        s.add(Steps.run(c -> StoryWorld.ensureForest(c.trifas())));   // лес строится, пока экран тёмный
         s.add(Steps.run(c -> StoryWorld.closeGate(c.trifas())));
         s.add(Steps.teleport(110.5, Y, 409.5, -90.0F));
         s.add(Steps.spawnNpc("chiron", NpcType.CHIRON, 106.5, Y, 405.5, -90.0F));
@@ -142,25 +146,18 @@ public class StoryScenes {
         s.add(say(CHIRON, "escape.2"));
         s.add(say(ASTOLFO, "escape.3"));
         s.add(say(ASTOLFO, "escape.4"));
-        s.add(say(SIEG, "escape.5"));
-        s.add(say(ASTOLFO, "escape.6"));
-        s.add(say(ASTOLFO, "escape.7"));
         s.add(Steps.give(() -> new ItemStack(ModItems.ASTOLFO_SWORD.get())));
         s.add(Steps.sound(SoundEvents.ITEM_PICKUP));
-        s.add(say(SIEG, "escape.8"));
-        s.add(Steps.npcWalk("astolfo", 150.5, Y, 407.5, 1.2D, 600, true));
-        s.add(say(ASTOLFO, "escape.9"));
-        s.add(Steps.npcWalk("astolfo", 164.5, Y, 407.5, 1.2D, 400, true));
-        s.add(say(ASTOLFO, "escape.10"));
-        s.add(Steps.spawnGuards(new double[][] {
-                {172.5, Y, 403.5}, {173.5, Y, 407.5}, {172.5, Y, 411.5}}));
-        s.add(Steps.waitGuardsDead());
-        s.add(say(ASTOLFO, "escape.11"));
-        s.add(Steps.npcWalk("astolfo", 188.5, Y, 407.5, 1.2D, 600, true));
-        s.add(say(ASTOLFO, "escape.12"));
+        s.add(say(SIEG, "escape.5"));
+        s.add(Steps.npcWalk("astolfo", 150.5, Y, 407.5, 1.3D, 600, true));
+        s.add(say(ASTOLFO, "escape.6"));
+        s.add(Steps.npcWalk("astolfo", 169.5, Y, 407.5, 1.3D, 400, true));
+        s.add(say(ASTOLFO, "escape.7"));
+        s.add(Steps.npcWalk("astolfo", 188.5, Y, 407.5, 1.3D, 400, true));
+        s.add(say(ASTOLFO, "escape.8"));
         s.add(Steps.run(c -> StoryWorld.openGate(c.trifas())));
         s.add(Steps.sound(SoundEvents.ANVIL_BREAK));
-        s.add(say(ASTOLFO, "escape.13"));
+        s.add(say(ASTOLFO, "escape.9"));
         s.add(Steps.npcWalk("astolfo", 198.5, Y, 407.5, 1.5D, 400, true));
         s.add(Steps.waitInZone(zone(192, 403, 206, 412)));
         s.add(Steps.fade(30, 20, 40, true));
@@ -169,23 +166,37 @@ public class StoryScenes {
         return s;
     }
 
-    // 6. В лесу: Командные заклинания
+    // 6. Лес: бой с големами, Жанна даёт имя
     private static List<Step> forest() {
         List<Step> s = new ArrayList<>();
         s.add(Steps.fade(0, 30, 40, false));
-        s.add(Steps.teleport(505.5, Y, 430.5, -90.0F));
-        s.add(Steps.spawnNpc("astolfo", NpcType.ASTOLFO, 507.5, Y, 430.5, 90.0F));
+        s.add(Steps.run(c -> StoryWorld.ensureForest(c.trifas())));
+        s.add(Steps.teleport(FX + 0.5, Y, FZ + 0.5, -90.0F));
+        s.add(Steps.spawnNpc("astolfo", NpcType.ASTOLFO, FX + 2.5, Y, FZ + 0.5, 90.0F));
         s.add(Steps.wait(60));
         s.add(say(ASTOLFO, "forest.1"));
         s.add(say(SIEG, "forest.2"));
         s.add(say(ASTOLFO, "forest.3"));
         s.add(say(ASTOLFO, "forest.4"));
+        s.add(Steps.golemFight(new double[][] {
+                {FX + 8.5, Y, FZ + 0.5}, {FX - 5.5, Y, FZ - 5.5}, {FX - 5.5, Y, FZ + 6.5}}));
+        s.add(say(ASTOLFO, "forest.5"));
+        s.add(Steps.spawnNpc("jeanne", NpcType.JEANNE, FX + 0.5, Y, FZ - 8.5, 0.0F));
+        s.add(Steps.npcWalk("jeanne", FX - 0.5, Y, FZ - 2.5, 1.3D, 300, false));
+        s.add(say(JEANNE, "forest.6"));
+        s.add(say(ASTOLFO, "forest.7"));
+        s.add(say(JEANNE, "forest.8"));
+        s.add(say(SIEG, "forest.9"));
+        s.add(say(JEANNE, "forest.10"));
+        s.add(say(SIEG, "forest.11"));
+        s.add(say(JEANNE, "forest.12"));
+        s.add(say(SIEG, "forest.13"));
+        s.add(say(ASTOLFO, "forest.14"));
         s.add(Steps.give(() -> new ItemStack(ModItems.COMMAND_SEAL.get())));
         s.add(Steps.give(() -> new ItemStack(ModItems.SUMMON_CATALYST.get())));
         s.add(Steps.sound(SoundEvents.BEACON_ACTIVATE));
-        s.add(say(SIEG, "forest.5"));
-        s.add(say(ASTOLFO, "forest.6"));
-        s.add(say(ASTOLFO, "forest.7"));
+        s.add(say(JEANNE, "forest.15"));
+        s.add(say(JEANNE, "forest.16"));
         s.add(Steps.title("story.fateapocrypha.to_be_continued.title", "story.fateapocrypha.to_be_continued.subtitle"));
         s.add(Steps.wait(100));
         s.add(Steps.despawnAllNpcs());

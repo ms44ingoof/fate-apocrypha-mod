@@ -6,7 +6,8 @@ import net.minecraft.world.item.Items;
 /** Сюжетные NPC. slim = тонкие руки (Alex) в скине. */
 public enum NpcType {
     ASTOLFO("astolfo", true, Items.GOLDEN_SWORD),
-    CHIRON("chiron", false, Items.BOW);
+    CHIRON("chiron", false, Items.BOW),
+    JEANNE("jeanne", true, Items.WHITE_BANNER);
 
     private final String id;
     private final boolean slim;

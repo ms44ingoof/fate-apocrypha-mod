@@ -26,9 +26,9 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.monster.Zombie;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.animal.IronGolem;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.network.PacketDistributor;
@@ -239,43 +239,52 @@ public class Steps {
         };
     }
 
-    // ---------- Мобы засады ----------
-    public static Step spawnGuards(double[][] positions) {
-        return run(c -> {
-            ServerLevel level = c.trifas();
-            if (level == null) {
-                return;
-            }
-            for (double[] p : positions) {
-                Zombie guard = EntityType.ZOMBIE.create(level);
-                if (guard == null) {
-                    continue;
+    // ---------- Бой с големами ----------
+    /** Появляются големы Ёггдмиллениа и нападают на игрока; шаг ждёт, пока все они будут побеждены. */
+    public static Step golemFight(double[][] positions) {
+        return new Step() {
+            @Override
+            public void begin(SceneContext c) {
+                ServerLevel level = c.trifas();
+                if (level == null) {
+                    return;
                 }
-                guard.moveTo(p[0], p[1], p[2], 90.0F, 0.0F);
-                guard.setCustomName(Component.translatable("npc.fateapocrypha.guard"));
-                guard.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.IRON_HELMET));
-                guard.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.IRON_SWORD));
-                guard.setDropChance(EquipmentSlot.HEAD, 0.0F);
-                guard.setDropChance(EquipmentSlot.MAINHAND, 0.0F);
-                level.addFreshEntity(guard);
-                c.mobs.add(guard.getUUID());
+                for (double[] p : positions) {
+                    IronGolem golem = EntityType.IRON_GOLEM.create(level);
+                    if (golem == null) {
+                        continue;
+                    }
+                    golem.moveTo(p[0], p[1], p[2], 90.0F, 0.0F);
+                    golem.getAttribute(Attributes.MAX_HEALTH).setBaseValue(40.0D);
+                    golem.setHealth(40.0F);
+                    golem.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(5.0D);
+                    golem.addTag("fate_golem");
+                    golem.setCustomName(Component.translatable("npc.fateapocrypha.golem"));
+                    golem.setTarget(c.player);
+                    level.addFreshEntity(golem);
+                    c.mobs.add(golem.getUUID());
+                }
             }
-        });
-    }
 
-    public static Step waitGuardsDead() {
-        return waitUntil(c -> {
-            ServerLevel level = c.trifas();
-            if (level == null) {
-                return true;
-            }
-            for (UUID id : c.mobs) {
-                Entity entity = level.getEntity(id);
-                if (entity != null && entity.isAlive()) {
-                    return false;
+            @Override
+            public boolean update(SceneContext c) {
+                ServerLevel level = c.trifas();
+                if (level == null) {
+                    return true;
                 }
+                boolean anyAlive = false;
+                for (UUID id : c.mobs) {
+                    Entity entity = level.getEntity(id);
+                    if (entity instanceof IronGolem golem && golem.isAlive()) {
+                        anyAlive = true;
+                        if (c.stepTicks % 20 == 0
+                                && (golem.getTarget() == null || !golem.getTarget().isAlive())) {
+                            golem.setTarget(c.player);
+                        }
+                    }
+                }
+                return !anyAlive;
             }
-            return true;
-        });
+        };
     }
 }
