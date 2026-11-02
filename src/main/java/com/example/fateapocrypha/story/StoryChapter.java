@@ -5,7 +5,6 @@ import java.util.Locale;
 /** Главы сюжета. Порядок в enum = порядок прохождения. */
 public enum StoryChapter {
     PROLOGUE,
-    SUMMONING,
     ROMANIA,
     MILLENNIUM_CASTLE;
 

@@ -11,9 +11,8 @@ public class ModItems {
     public static final DeferredRegister<Item> ITEMS =
             DeferredRegister.create(ForgeRegistries.ITEMS, FateApocrypha.MODID);
 
-    // durability(3) = 3 заряда, предмет сам не стакается
     public static final RegistryObject<Item> COMMAND_SEAL = ITEMS.register("command_seal",
-            () -> new CommandSealItem(new Item.Properties().durability(3)));
+            () -> new CommandSealItem(new Item.Properties().stacksTo(1)));
 
     public static final RegistryObject<Item> SUMMON_CATALYST = ITEMS.register("summon_catalyst",
             () -> new SummonCatalystItem(new Item.Properties().stacksTo(16)));

@@ -1,6 +1,9 @@
 package com.example.fateapocrypha.story;
 
 import com.example.fateapocrypha.ModDimensions;
+import com.example.fateapocrypha.ModItems;
+import com.example.fateapocrypha.servant.ServantActions;
+import net.minecraft.world.item.ItemStack;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import net.minecraft.ChatFormatting;
@@ -17,6 +20,8 @@ public class FateCommands {
         dispatcher.register(Commands.literal("fate")
                 .then(Commands.literal("story")
                         .executes(ctx -> showStory(ctx.getSource())))
+                .then(Commands.literal("kit")
+                        .executes(ctx -> kit(ctx.getSource())))
                 .then(Commands.literal("trifas")
                         .executes(ctx -> travel(ctx.getSource())))
                 .then(Commands.literal("chapter")
@@ -24,6 +29,18 @@ public class FateCommands {
                         .then(Commands.argument("id", IntegerArgumentType.integer(0, StoryChapter.values().length - 1))
                                 .executes(ctx -> setChapter(ctx.getSource(),
                                         IntegerArgumentType.getInteger(ctx, "id"))))));
+    }
+
+    /** Возвращает потерянное Командное заклинание; операторам ещё и катализатор. */
+    private static int kit(CommandSourceStack source) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        if (!ServantActions.hasItem(player, ModItems.COMMAND_SEAL.get())) {
+            ServantActions.give(player, new ItemStack(ModItems.COMMAND_SEAL.get()));
+        }
+        if (source.hasPermission(2) && !ServantActions.hasItem(player, ModItems.SUMMON_CATALYST.get())) {
+            ServantActions.give(player, new ItemStack(ModItems.SUMMON_CATALYST.get()));
+        }
+        return 1;
     }
 
     private static int showStory(CommandSourceStack source) throws com.mojang.brigadier.exceptions.CommandSyntaxException {

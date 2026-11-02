@@ -7,11 +7,14 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
+import java.util.UUID;
 
 /** Хранит и меняет прогресс игрока. Данные переживают смерть игрока. */
 public class StoryManager {
     private static final String PERSISTED = "PlayerPersisted";
     private static final String KEY = "fateapocrypha_chapter";
+    private static final String SERVANT = "fateapocrypha_servant";
+    private static final String KIT = "fateapocrypha_kit";
 
     private static CompoundTag persisted(Player player) {
         CompoundTag data = player.getPersistentData();
@@ -42,6 +45,23 @@ public class StoryManager {
             player.level().playSound(null, player.blockPosition(), SoundEvents.PLAYER_LEVELUP,
                     SoundSource.PLAYERS, 1.0F, 1.0F);
         }
+    }
+
+    public static UUID getServantId(Player player) {
+        CompoundTag tag = persisted(player);
+        return tag.hasUUID(SERVANT) ? tag.getUUID(SERVANT) : null;
+    }
+
+    public static void setServantId(Player player, UUID id) {
+        persisted(player).putUUID(SERVANT, id);
+    }
+
+    public static boolean hasReceivedKit(Player player) {
+        return persisted(player).getBoolean(KIT);
+    }
+
+    public static void setReceivedKit(Player player) {
+        persisted(player).putBoolean(KIT, true);
     }
 
     public static void showObjective(Player player) {
