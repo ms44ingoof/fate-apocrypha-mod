@@ -1,5 +1,5 @@
-# Fate/Apocrypha mod (Forge 1.20.1)
 
+<<<<<<< HEAD
 Сборка идёт на GitHub Actions: Java и Gradle у себя ставить не нужно.
 Готовый jar: вкладка Actions -> завершённый запуск -> Artifacts -> fate-apocrypha-mod.
 Положи jar в папку mods клиента Minecraft Forge 1.20.1 (47.x).
@@ -22,3 +22,5 @@
 2. Файл появится в `<мир>/generated/minecraft/structures/имя.nbt`.
 3. Положи его в `src/main/resources/data/fateapocrypha/structures/`.
 Дальше такие структуры можно встроить в генерацию мира или ставить по команде.
+=======
+>>>>>>> f6b41a5ac3222d8be72768b8570660db9d6d6ebe
