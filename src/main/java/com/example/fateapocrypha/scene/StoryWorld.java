@@ -8,6 +8,7 @@ import net.minecraft.world.level.block.BedBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CandleBlock;
+import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.LanternBlock;
 import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -59,13 +60,13 @@ public class StoryWorld {
 
     // ================= Построение =================
     public static void ensureBuilt(ServerLevel level) {
-        if (!level.getBlockState(new BlockPos(100, Y0 - 1, 100)).is(Blocks.COARSE_DIRT)) {
+        if (!level.getBlockState(new BlockPos(100, Y0 - 1, 100)).is(Blocks.ROOTED_DIRT)) {
             buildCastle(level);
         }
     }
 
     public static void ensureForest(ServerLevel level) {
-        if (level != null && !level.getBlockState(new BlockPos(FOREST_CX, Y0 - 1, FOREST_CZ)).is(Blocks.COARSE_DIRT)) {
+        if (level != null && !level.getBlockState(new BlockPos(FOREST_CX, Y0 - 1, FOREST_CZ)).is(Blocks.ROOTED_DIRT)) {
             buildForest(level);
         }
     }
@@ -81,7 +82,15 @@ public class StoryWorld {
         buildFallCorridor(l);
         buildChironRoom(l);
         buildEscapeRoute(l);
-        set(l, 100, Y0 - 1, 100, s(Blocks.COARSE_DIRT));   // метка "построено"
+        decorateLab(l);
+        decorateFallCorridor(l);
+        decorateChironRoom(l);
+        decorateEscapeRoute(l);
+        // локации стоят на лесных полянах: кольцо леса скрывает плоский горизонт
+        woodlandRing(l, 100, 100, 190, 130, 6, 2, 1001L);
+        woodlandRing(l, 100, 298, 130, 306, 6, 2, 1002L);
+        woodlandRing(l, 100, 398, 208, 416, 6, 2, 1003L);
+        set(l, 100, Y0 - 1, 100, s(Blocks.ROOTED_DIRT));   // метка "построено"
     }
 
     // ================= Помощники =================
@@ -493,7 +502,8 @@ public class StoryWorld {
             }
         }
 
-        set(l, FOREST_CX, Y0 - 1, FOREST_CZ, s(Blocks.COARSE_DIRT));   // метка "лес построен"
+        woodlandRing(l, FOREST_X0, FOREST_Z0, FOREST_X0 + FOREST_SIZE - 1, FOREST_Z0 + FOREST_SIZE - 1, 6, 3, 3001L);
+        set(l, FOREST_CX, Y0 - 1, FOREST_CZ, s(Blocks.ROOTED_DIRT));   // метка "лес построен"
     }
 
     private static BlockState leaves(Block block) {
@@ -569,7 +579,7 @@ public class StoryWorld {
     public static final int STAGE_RUINS_Z = 1000;
 
     public static void ensureStages(ServerLevel l) {
-        if (l != null && !l.getBlockState(new BlockPos(STAGE_RED_X, Y0 - 1, STAGE_RED_Z)).is(Blocks.COARSE_DIRT)) {
+        if (l != null && !l.getBlockState(new BlockPos(STAGE_RED_X, Y0 - 1, STAGE_RED_Z)).is(Blocks.ROOTED_DIRT)) {
             buildStages(l);
         }
     }
@@ -578,7 +588,13 @@ public class StoryWorld {
         buildRedCamp(l);
         buildChapel(l);
         buildRuins(l);
-        set(l, STAGE_RED_X, Y0 - 1, STAGE_RED_Z, s(Blocks.COARSE_DIRT));   // метка "построено"
+        decorateCamp(l);
+        decorateChapel(l);
+        decorateRuins(l);
+        woodlandRing(l, 784, 784, 816, 816, 6, 2, 2001L);
+        woodlandRing(l, 790, 890, 810, 920, 6, 2, 2002L);
+        woodlandRing(l, 780, 980, 820, 1020, 6, 2, 2003L);
+        set(l, STAGE_RED_X, Y0 - 1, STAGE_RED_Z, s(Blocks.ROOTED_DIRT));   // метка "построено"
     }
 
     private static void buildRedCamp(ServerLevel l) {
@@ -692,5 +708,238 @@ public class StoryWorld {
             set(l, cx + c[0], Y0 + 2, cz + c[1], s(Blocks.COBBLESTONE_WALL));
             set(l, cx + c[0], Y0 + 3, cz + c[1], s(Blocks.LANTERN));
         }
+    }
+
+    // ================= Лесное кольцо вокруг локации =================
+    private static int ringDistance(int x, int z, int x1, int z1, int x2, int z2) {
+        int dx = Math.max(Math.max(x1 - x, 0), x - x2);
+        int dz = Math.max(Math.max(z1 - z, 0), z - z2);
+        return Math.max(dx, dz);
+    }
+
+    private static int mound(int x, int z, int d, int inner) {
+        double f = Math.min(1.0D, (d - inner) / 4.0D);
+        return (int) Math.round((1.0D + 2.5D * noise(x / 7.0D, z / 7.0D)) * f);
+    }
+
+    /**
+     * Кольцо леса вокруг прямоугольника (x1,z1)-(x2,z2): холмики, живая изгородь по внешнему краю
+     * и плотные деревья. Локация выглядит как поляна в лесу, плоского горизонта не видно.
+     */
+    private static void woodlandRing(ServerLevel l, int x1, int z1, int x2, int z2,
+                                     int thickness, int step, long seed) {
+        int inner = 3;
+        int outer = inner + thickness;
+        Random rnd = new Random(seed);
+        BlockState grass = s(Blocks.GRASS_BLOCK);
+        BlockState dirt = s(Blocks.DIRT);
+        BlockState hedge = leaves(Blocks.OAK_LEAVES);
+
+        for (int x = x1 - outer - 2; x <= x2 + outer + 2; x++) {
+            for (int z = z1 - outer - 2; z <= z2 + outer + 2; z++) {
+                int d = ringDistance(x, z, x1, z1, x2, z2);
+                if (d < inner || d > outer + 2) {
+                    continue;
+                }
+                int h = mound(x, z, d, inner);
+                for (int y = 1; y <= h; y++) {
+                    set(l, x, Y0 + y, z, y == h ? grass : dirt);
+                }
+                if (d >= outer - 1) {
+                    for (int y = h + 1; y <= h + 3; y++) {
+                        set(l, x, Y0 + y, z, hedge);
+                    }
+                }
+            }
+        }
+        for (int x = x1 - outer; x <= x2 + outer; x += step) {
+            for (int z = z1 - outer; z <= z2 + outer; z += step) {
+                int tx = x + rnd.nextInt(2);
+                int tz = z + rnd.nextInt(2);
+                int d = ringDistance(tx, tz, x1, z1, x2, z2);
+                if (d < inner + 1 || d > outer || rnd.nextInt(10) == 0) {
+                    continue;
+                }
+                int baseY = Y0 + mound(tx, tz, d, inner) + 1;
+                boolean outerRow = d >= outer - 2;
+                int kind = rnd.nextInt(10);
+                if (outerRow) {
+                    spruce(l, tx, baseY, tz, 9 + rnd.nextInt(4));
+                } else if (kind >= 6) {
+                    spruce(l, tx, baseY, tz, 6 + rnd.nextInt(4));
+                } else {
+                    oak(l, tx, baseY, tz, 5 + rnd.nextInt(3));
+                }
+            }
+        }
+    }
+
+    // ================= Детали локаций =================
+    private static void decorateLab(ServerLevel l) {
+        // трубы под потолком большого зала и кабели к пультам
+        fill(l, 101, Y0 + 8, 101, 129, Y0 + 8, 101, COPPER);
+        fill(l, 101, Y0 + 8, 129, 129, Y0 + 8, 129, COPPER);
+        fill(l, 101, Y0 + 8, 101, 101, Y0 + 8, 129, COPPER);
+        fill(l, 129, Y0 + 8, 101, 129, Y0 + 8, 129, COPPER);
+        for (int x : new int[] {105, 111, 119, 125}) {
+            for (int z : new int[] {101, 129}) {
+                fill(l, x, Y0 + 3, z, x, Y0 + 7, z, CHAIN);
+            }
+        }
+        // зелёная линия на полу от помоста к выходу
+        fill(l, 119, Y0, 115, 129, Y0, 115, s(Blocks.LIME_CONCRETE));
+        // чёрно-жёлтая разметка вдоль коридора
+        for (int x = 131; x <= 169; x++) {
+            BlockState stripe = (x & 1) == 0 ? s(Blocks.YELLOW_CONCRETE) : s(Blocks.BLACK_CONCRETE);
+            set(l, x, Y0, 114, stripe);
+            set(l, x, Y0, 116, stripe);
+        }
+        // лабораторные столы: колбы, зелёные свечи, варочные стойки
+        for (int[] t : new int[][] {{107, 113}, {107, 117}, {121, 113}, {121, 117}}) {
+            for (int i = 0; i < 3; i++) {
+                set(l, t[0] + i, Y0 + 1, t[1], s(Blocks.POLISHED_BLACKSTONE_SLAB));
+            }
+            set(l, t[0], Y0 + 2, t[1], s(Blocks.LIME_CANDLE));
+            set(l, t[0] + 1, Y0 + 2, t[1], s(Blocks.BREWING_STAND));
+            set(l, t[0] + 2, Y0 + 2, t[1], s(Blocks.LIME_CANDLE));
+        }
+        for (int[] c : new int[][] {{102, 102}, {102, 128}, {128, 102}, {128, 128}}) {
+            set(l, c[0], Y0 + 1, c[1], s(Blocks.BARREL));
+        }
+        // стойка приёма в зале выхода
+        fill(l, 178, Y0 + 1, 112, 182, Y0 + 1, 112, s(Blocks.POLISHED_BLACKSTONE_SLAB));
+        fill(l, 178, Y0 + 1, 118, 182, Y0 + 1, 118, s(Blocks.POLISHED_BLACKSTONE_SLAB));
+        fill(l, 172, Y0, 115, 189, Y0, 115, s(Blocks.LIME_CONCRETE));
+    }
+
+    private static void decorateFallCorridor(ServerLevel l) {
+        for (int x : new int[] {107, 117}) {
+            set(l, x, Y0 + 1, 300, s(Blocks.SPRUCE_STAIRS));
+            set(l, x + 1, Y0 + 1, 300, s(Blocks.SPRUCE_STAIRS));
+            set(l, x, Y0 + 1, 304, s(Blocks.SPRUCE_STAIRS));
+            set(l, x + 1, Y0 + 1, 304, s(Blocks.SPRUCE_STAIRS));
+        }
+        set(l, 102, Y0 + 1, 299, s(Blocks.BARREL));
+        set(l, 128, Y0 + 1, 305, s(Blocks.BARREL));
+        set(l, 128, Y0 + 2, 305, s(Blocks.BARREL));
+        for (int x = 108; x <= 124; x += 8) {
+            set(l, x, Y0 + 7, 299, s(Blocks.SHROOMLIGHT));     // тёплые аварийные огни
+            set(l, x, Y0 + 7, 305, s(Blocks.SHROOMLIGHT));
+        }
+    }
+
+    private static void decorateChironRoom(ServerLevel l) {
+        fill(l, 105, Y0 + 1, 406, 108, Y0 + 1, 408, s(Blocks.YELLOW_CARPET));
+        // обеденный стол со стульями
+        for (int x = 104; x <= 106; x++) {
+            set(l, x, Y0 + 1, 410, s(Blocks.OAK_FENCE));
+            set(l, x, Y0 + 2, 410, s(Blocks.SPRUCE_PRESSURE_PLATE));
+            set(l, x, Y0 + 1, 411, s(Blocks.SPRUCE_STAIRS));
+        }
+        // уголок лучника: мишени, стол лучника, бочки, сундук
+        for (int z = 403; z <= 405; z++) {
+            set(l, 113, Y0 + 2, z, s(Blocks.TARGET));
+        }
+        set(l, 111, Y0 + 1, 413, s(Blocks.FLETCHING_TABLE));
+        set(l, 112, Y0 + 1, 413, s(Blocks.BARREL));
+        set(l, 113, Y0 + 1, 412, s(Blocks.BARREL));
+        set(l, 101, Y0 + 1, 413, s(Blocks.CHEST));
+        set(l, 102, Y0 + 1, 413, s(Blocks.COMPOSTER));
+    }
+
+    private static void decorateEscapeRoute(ServerLevel l) {
+        BlockState bannerSouth = Blocks.RED_WALL_BANNER.defaultBlockState()
+                .setValue(HorizontalDirectionalBlock.FACING, Direction.SOUTH);
+        BlockState bannerNorth = Blocks.RED_WALL_BANNER.defaultBlockState()
+                .setValue(HorizontalDirectionalBlock.FACING, Direction.NORTH);
+        for (int x : new int[] {164, 167, 170, 173}) {
+            set(l, x, Y0 + 4, 399, bannerSouth);
+            set(l, x, Y0 + 4, 415, bannerNorth);
+        }
+        // жаровни в углах большого зала и длинные столы вдоль стен
+        for (int[] c : new int[][] {{161, 399}, {177, 399}, {161, 415}, {177, 415}}) {
+            set(l, c[0], Y0 + 1, c[1], s(Blocks.CAMPFIRE));
+        }
+        for (int x = 162; x <= 176; x++) {
+            set(l, x, Y0 + 1, 401, s(Blocks.DARK_OAK_SLAB));
+            set(l, x, Y0 + 1, 413, s(Blocks.DARK_OAK_SLAB));
+        }
+        // двор у ворот: колодец, бочки, ящики
+        for (int x = 204; x <= 206; x++) {
+            for (int z = 406; z <= 408; z++) {
+                set(l, x, Y0 + 1, z, s(Blocks.STONE_BRICKS));
+            }
+        }
+        set(l, 205, Y0 + 1, 407, s(Blocks.WATER));
+        set(l, 207, Y0 + 1, 404, s(Blocks.BARREL));
+        set(l, 207, Y0 + 1, 410, s(Blocks.BARREL));
+        set(l, 207, Y0 + 2, 410, s(Blocks.BARREL));
+    }
+
+    private static void decorateCamp(ServerLevel l) {
+        int cx = STAGE_RED_X;
+        int cz = STAGE_RED_Z;
+        set(l, cx + 5, Y0 + 1, cz + 2, s(Blocks.CAULDRON));
+        set(l, cx + 5, Y0 + 1, cz + 5, s(Blocks.CARTOGRAPHY_TABLE));
+        for (int i = 0; i < 3; i++) {
+            set(l, cx - 6, Y0 + 1 + i, cz - 6, s(Blocks.OAK_LOG));
+        }
+        set(l, cx - 15, Y0 + 1, cz - 8, s(Blocks.CHEST));
+        set(l, cx - 14, Y0 + 1, cz - 8, s(Blocks.RED_CARPET));
+        set(l, cx - 14, Y0 + 1, cz + 8, s(Blocks.GRAY_CARPET));
+        for (int[] c : new int[][] {{-12, -11}, {12, -11}, {-12, 11}, {12, 11}}) {
+            set(l, cx + c[0], Y0 + 1, cz + c[1], s(Blocks.RED_BANNER));
+        }
+        for (int z = cz + 8; z <= cz + 12; z += 2) {
+            set(l, cx + 9, Y0 + 1, z, s(Blocks.TARGET));
+        }
+    }
+
+    private static void decorateChapel(ServerLevel l) {
+        // большой крест на дальней стене
+        fill(l, 800, Y0 + 3, 919, 800, Y0 + 9, 919, s(Blocks.QUARTZ_BLOCK));
+        fill(l, 799, Y0 + 7, 919, 801, Y0 + 7, 919, s(Blocks.QUARTZ_BLOCK));
+        // свечи на ступенях алтаря
+        BlockState candles = Blocks.CANDLE.defaultBlockState()
+                .setValue(CandleBlock.CANDLES, 4).setValue(CandleBlock.LIT, true);
+        for (int x : new int[] {797, 803}) {
+            set(l, x, Y0 + 1, 913, candles);
+            set(l, x, Y0 + 1, 917, candles);
+        }
+        // разноцветные витражи
+        BlockState[] colors = {s(Blocks.RED_STAINED_GLASS), s(Blocks.BLUE_STAINED_GLASS),
+                s(Blocks.PURPLE_STAINED_GLASS), s(Blocks.ORANGE_STAINED_GLASS)};
+        int i = 0;
+        for (int z : new int[] {897, 903, 909, 915}) {
+            fill(l, 790, Y0 + 3, z, 790, Y0 + 8, z + 1, colors[i % colors.length]);
+            fill(l, 810, Y0 + 3, z, 810, Y0 + 8, z + 1, colors[(i + 2) % colors.length]);
+            i++;
+        }
+    }
+
+    private static void decorateRuins(ServerLevel l) {
+        int cx = STAGE_RUINS_X;
+        int cz = STAGE_RUINS_Z;
+        // воронки от боёв по краям площадки
+        for (int[] c : new int[][] {{-5, 8}, {6, -8}, {10, 7}}) {
+            for (int dx = -2; dx <= 2; dx++) {
+                for (int dz = -2; dz <= 2; dz++) {
+                    if (dx * dx + dz * dz <= 4) {
+                        set(l, cx + c[0] + dx, Y0, cz + c[1] + dz, AIR);
+                    } else if (dx * dx + dz * dz <= 8) {
+                        set(l, cx + c[0] + dx, Y0, cz + c[1] + dz, s(Blocks.BLACKSTONE));
+                    }
+                }
+            }
+        }
+        // упавшие колонны, ящики, остатки арки
+        fill(l, cx - 17, Y0 + 1, cz + 9, cx - 12, Y0 + 1, cz + 9, s(Blocks.STONE_BRICKS));
+        fill(l, cx + 12, Y0 + 1, cz - 10, cx + 17, Y0 + 1, cz - 10, s(Blocks.MOSSY_STONE_BRICKS));
+        set(l, cx + 14, Y0 + 1, cz + 12, s(Blocks.BARREL));
+        set(l, cx + 15, Y0 + 1, cz + 12, s(Blocks.BARREL));
+        set(l, cx - 15, Y0 + 1, cz - 12, s(Blocks.BARREL));
+        pillar(l, cx - 18, cz - 2, 5, s(Blocks.STONE_BRICKS));
+        pillar(l, cx - 18, cz + 2, 4, s(Blocks.CRACKED_STONE_BRICKS));
+        fill(l, cx - 18, Y0 + 5, cz - 2, cx - 18, Y0 + 5, cz, s(Blocks.STONE_BRICK_SLAB));
     }
 }
