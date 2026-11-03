@@ -254,6 +254,11 @@ public class Steps {
     // ---------- Бой с големами ----------
     /** Появляются големы Ёггдмиллениа и нападают на игрока; шаг ждёт, пока все они будут побеждены. */
     public static Step golemFight(double[][] positions) {
+        return golemFight(positions, 0, Integer.MAX_VALUE);
+    }
+
+    /** Бой заканчивается, когда големов осталось не больше stopAtMostAlive (или прошло maxTicks тиков). */
+    public static Step golemFight(double[][] positions, int stopAtMostAlive, int maxTicks) {
         return new Step() {
             @Override
             public void begin(SceneContext c) {
@@ -284,18 +289,18 @@ public class Steps {
                 if (level == null) {
                     return true;
                 }
-                boolean anyAlive = false;
+                int alive = 0;
                 for (UUID id : c.mobs) {
                     Entity entity = level.getEntity(id);
                     if (entity instanceof IronGolem golem && golem.isAlive()) {
-                        anyAlive = true;
+                        alive++;
                         if (c.stepTicks % 20 == 0
                                 && (golem.getTarget() == null || !golem.getTarget().isAlive())) {
                             golem.setTarget(c.player);
                         }
                     }
                 }
-                return !anyAlive;
+                return alive <= stopAtMostAlive || c.stepTicks > maxTicks;
             }
         };
     }
@@ -496,6 +501,88 @@ public class Steps {
             ServerLevel level = c.trifas();
             if (level != null) {
                 level.sendParticles(particle, x, y, z, count, spread, spread, spread, 0.1D);
+            }
+        });
+    }
+
+    // ---------- Сцена с Зигфридом: смертельная рана и сердце ----------
+    /** Убирает оставшихся мобов сцены (дымом). */
+    public static Step discardMobs() {
+        return run(c -> {
+            ServerLevel level = c.trifas();
+            if (level == null) {
+                return;
+            }
+            for (UUID id : c.mobs) {
+                Entity entity = level.getEntity(id);
+                if (entity != null) {
+                    level.sendParticles(ParticleTypes.POOF, entity.getX(), entity.getY(0.5D), entity.getZ(),
+                            30, 0.4D, 0.6D, 0.4D, 0.05D);
+                    entity.discard();
+                }
+            }
+            c.mobs.clear();
+        });
+    }
+
+    /** NPC уходит (дым и звук), без драматичной гибели. */
+    public static Step npcLeave(String key) {
+        return run(c -> {
+            StoryNpcEntity npc = c.npc(key);
+            ServerLevel level = c.trifas();
+            if (npc == null || level == null) {
+                return;
+            }
+            level.sendParticles(ParticleTypes.POOF, npc.getX(), npc.getY(0.5D), npc.getZ(),
+                    40, 0.4D, 0.8D, 0.4D, 0.05D);
+            level.playSound(null, BlockPos.containing(npc.position()), SoundEvents.ENDERMAN_TELEPORT,
+                    SoundSource.NEUTRAL, 1.0F, 1.0F);
+            SceneManager.unregister(npc.getUUID());
+            c.npcs.remove(key);
+            npc.discard();
+        });
+    }
+
+    public static Step lightningAtPlayer() {
+        return run(c -> {
+            ServerLevel level = c.trifas();
+            if (level == null) {
+                return;
+            }
+            LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(level);
+            if (bolt != null) {
+                bolt.moveTo(c.player.getX(), c.player.getY(), c.player.getZ());
+                bolt.setVisualOnly(true);
+                level.addFreshEntity(bolt);
+            }
+        });
+    }
+
+    /** Смертельная рана: почти ноль здоровья, слабость и защита от случайной гибели во время сцены. */
+    public static Step hurtPlayerNearDeath() {
+        return run(c -> {
+            c.player.setHealth(2.0F);
+            c.player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 600, 3, false, false));
+            c.player.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 60, 0, false, false));
+            c.player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 1200, 4, false, false));
+            c.player.level().broadcastEntityEvent(c.player, (byte) 2);
+        });
+    }
+
+    /** Сердце Зигфрида: игрок исцелён, получает регенерацию и постоянную стойкость. */
+    public static Step healPlayer() {
+        return run(c -> {
+            c.player.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
+            c.player.removeEffect(MobEffects.BLINDNESS);
+            c.player.removeEffect(MobEffects.DAMAGE_RESISTANCE);
+            c.player.setHealth(c.player.getMaxHealth());
+            c.player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 400, 1, false, false));
+            ServerLevel level = c.trifas();
+            if (level != null) {
+                level.sendParticles(ParticleTypes.HEART, c.player.getX(), c.player.getY(1.0D), c.player.getZ(),
+                        20, 0.5D, 0.8D, 0.5D, 0.05D);
+                level.sendParticles(ParticleTypes.END_ROD, c.player.getX(), c.player.getY(1.0D), c.player.getZ(),
+                        60, 0.6D, 1.0D, 0.6D, 0.1D);
             }
         });
     }

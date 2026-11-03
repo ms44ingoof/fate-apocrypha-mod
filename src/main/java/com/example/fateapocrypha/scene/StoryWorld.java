@@ -17,7 +17,7 @@ import net.minecraft.world.level.block.state.properties.BedPart;
  * Локации сюжета, генерируемые кодом в измерении Трифас (плоский мир, пол на y = Y0).
  * Их можно заменить своими постройками (Structure Block), поменяв координаты в StoryScenes.
  *
- *  Лаборатория        x100-149, z100-114   |  Коридор падения   x100-130, z298-306
+ *  Лаборатория        x100-190, z100-130   |  Коридор падения   x100-130, z298-306
  *  Покои Хирона       x100-114, z400-414   |  Путь побега       x114-208, z398-416
  *  Лес (с рельефом)   x500-659, z350-509   |  Поляна боя        центр (520, 430)
  */
@@ -39,7 +39,9 @@ public class StoryWorld {
 
     private static final BlockState AIR = s(Blocks.AIR);
     private static final BlockState LAMP = s(Blocks.SEA_LANTERN);
-    private static final BlockState GLASS = s(Blocks.LIGHT_BLUE_STAINED_GLASS);
+    private static final BlockState GLASS = s(Blocks.LIME_STAINED_GLASS);
+    private static final BlockState GREEN_LAMP = s(Blocks.VERDANT_FROGLIGHT);
+    private static final BlockState SLIME = s(Blocks.SLIME_BLOCK);
     private static final BlockState BARS = s(Blocks.IRON_BARS);
     private static final BlockState CHAIN = s(Blocks.CHAIN);
     private static final BlockState COPPER = s(Blocks.CUT_COPPER);
@@ -57,7 +59,7 @@ public class StoryWorld {
 
     // ================= Построение =================
     public static void ensureBuilt(ServerLevel level) {
-        if (!level.getBlockState(new BlockPos(100, Y0 + 1, 100)).is(Blocks.CHISELED_POLISHED_BLACKSTONE)) {
+        if (!level.getBlockState(new BlockPos(100, Y0 - 1, 100)).is(Blocks.COARSE_DIRT)) {
             buildCastle(level);
         }
     }
@@ -79,7 +81,7 @@ public class StoryWorld {
         buildFallCorridor(l);
         buildChironRoom(l);
         buildEscapeRoute(l);
-        set(l, 100, Y0 + 1, 100, s(Blocks.CHISELED_POLISHED_BLACKSTONE));   // метка "построено"
+        set(l, 100, Y0 - 1, 100, s(Blocks.COARSE_DIRT));   // метка "построено"
     }
 
     // ================= Помощники =================
@@ -141,86 +143,97 @@ public class StoryWorld {
         fill(l, x, Y0 + 1, z, x, Y0 + h, z, state);
     }
 
-    // ================= Лаборатория =================
+    // ================= Лаборатория (большая, с зелёными капсулами) =================
     private static void buildLab(ServerLevel l) {
-        room(l, 100, 100, 114, 114, 6, LAB);
+        room(l, 100, 100, 130, 130, 8, LAB);                         // зал 29x29, потолок 8
 
-        // помост под главным резервуаром
-        fill(l, 104, Y0, 104, 110, Y0, 110, s(Blocks.SMOOTH_QUARTZ));
-        fill(l, 105, Y0, 105, 109, Y0, 109, s(Blocks.IRON_BLOCK));
+        // помост под главной капсулой Зига (центр 115,115)
+        fill(l, 112, Y0, 112, 118, Y0, 118, s(Blocks.SMOOTH_QUARTZ));
+        fill(l, 113, Y0, 113, 117, Y0, 117, s(Blocks.IRON_BLOCK));
 
-        // потолочные лампы и цепи, на которых висит резервуар
-        for (int x : new int[] {103, 107, 111}) {
-            for (int z : new int[] {103, 107, 111}) {
-                if (x != 107 || z != 107) {
-                    set(l, x, Y0 + 7, z, LAMP);
-                }
+        // зелёное освещение и цепи, на которых висит главная капсула
+        for (int x = 104; x <= 126; x += 6) {
+            for (int z = 104; z <= 126; z += 6) {
+                set(l, x, Y0 + 9, z, GREEN_LAMP);
             }
         }
-        for (int[] c : new int[][] {{105, 105}, {105, 109}, {109, 105}, {109, 109}, {107, 107}}) {
-            set(l, c[0], Y0 + 6, c[1], CHAIN);
+        for (int[] c : new int[][] {{113, 113}, {113, 117}, {117, 113}, {117, 117}, {115, 115}}) {
+            fill(l, c[0], Y0 + 6, c[1], c[0], Y0 + 8, c[1], CHAIN);
         }
         repairTank(l);
 
-        // малые резервуары по углам: в двух из них жидкость
-        for (int[] c : new int[][] {{103, 103}, {103, 111}, {111, 103}, {111, 111}}) {
-            fill(l, c[0] - 1, Y0 + 1, c[1] - 1, c[0] + 1, Y0 + 5, c[1] + 1, GLASS);
-            boolean filled = (c[0] == 103 && c[1] == 103) || (c[0] == 111 && c[1] == 111);
-            fill(l, c[0], Y0 + 1, c[1], c[0], Y0 + 4, c[1], filled ? s(Blocks.WATER) : AIR);
-            fill(l, c[0] - 1, Y0, c[1] - 1, c[0] + 1, Y0, c[1] + 1, s(Blocks.IRON_BLOCK));
+        // ряды малых зелёных капсул: в части из них зелёная жидкость
+        int index = 0;
+        for (int x : new int[] {104, 109, 121, 126}) {
+            for (int z : new int[] {104, 109, 121, 126}) {
+                capsule(l, x, z, index++ % 3 != 0);
+            }
         }
+        capsule(l, 104, 115, true);
+        capsule(l, 115, 104, false);
+        capsule(l, 115, 126, true);
 
-        // пульты вдоль северной и южной стен (светящиеся экраны)
-        for (int x = 102; x <= 112; x++) {
-            for (int z : new int[] {101, 113}) {
+        // пульты с зелёными экранами вдоль северной и южной стен, медные трубы в углах
+        for (int x = 103; x <= 127; x++) {
+            for (int z : new int[] {101, 129}) {
                 set(l, x, Y0 + 1, z, s(Blocks.POLISHED_BLACKSTONE_BRICKS));
-                set(l, x, Y0 + 2, z, x % 2 == 0 ? LAMP : s(Blocks.CYAN_STAINED_GLASS));
+                set(l, x, Y0 + 2, z, x % 2 == 0 ? GREEN_LAMP : s(Blocks.LIME_STAINED_GLASS));
             }
         }
-        // медные трубы в углах
-        for (int[] c : new int[][] {{101, 101}, {101, 113}, {113, 101}, {113, 113}}) {
-            pillar(l, c[0], c[1], 6, COPPER);
+        for (int[] c : new int[][] {{101, 101}, {101, 129}, {129, 101}, {129, 129}}) {
+            pillar(l, c[0], c[1], 8, COPPER);
         }
 
-        // коридор
-        room(l, 114, 105, 135, 109, 4, LAB);
-        fill(l, 115, Y0, 107, 134, Y0, 107, s(Blocks.GRAY_CONCRETE));
-        lampRow(l, 118, 132, 107, 4, 4);
-        for (int x = 117; x <= 133; x += 4) {
-            set(l, x, Y0 + 3, 105, LAMP);
-            set(l, x, Y0 + 3, 109, LAMP);
+        // длинный коридор (x131-169, z114-116)
+        room(l, 130, 113, 170, 117, 4, LAB);
+        fill(l, 131, Y0, 115, 169, Y0, 115, s(Blocks.GRAY_CONCRETE));
+        for (int x = 134; x <= 166; x += 4) {
+            set(l, x, Y0 + 5, 115, GREEN_LAMP);
         }
-        for (int x = 119; x <= 131; x += 6) {
-            setSoft(l, x, Y0 + 2, 105, s(Blocks.CYAN_STAINED_GLASS_PANE));
-            setSoft(l, x, Y0 + 2, 109, s(Blocks.CYAN_STAINED_GLASS_PANE));
+        for (int x = 133; x <= 167; x += 4) {
+            set(l, x, Y0 + 3, 113, GREEN_LAMP);
+            set(l, x, Y0 + 3, 117, GREEN_LAMP);
+        }
+        for (int x = 136; x <= 164; x += 6) {
+            setSoft(l, x, Y0 + 2, 113, s(Blocks.LIME_STAINED_GLASS_PANE));
+            setSoft(l, x, Y0 + 2, 117, s(Blocks.LIME_STAINED_GLASS_PANE));
         }
 
-        // зал выхода
-        room(l, 135, 100, 149, 114, 6, LAB);
-        for (int x : new int[] {139, 145}) {
-            for (int z : new int[] {102, 112}) {
-                pillar(l, x, z, 6, COPPER);
+        // зал выхода (x171-189, z106-124)
+        room(l, 170, 105, 190, 125, 7, LAB);
+        for (int x : new int[] {176, 184}) {
+            for (int z : new int[] {108, 122}) {
+                pillar(l, x, z, 7, COPPER);
             }
         }
-        for (int x = 137; x <= 147; x += 2) {
-            set(l, x, Y0 + 1, 101, s(Blocks.POLISHED_BLACKSTONE_BRICKS));
-            set(l, x, Y0 + 2, 101, LAMP);
-            set(l, x, Y0 + 1, 113, s(Blocks.POLISHED_BLACKSTONE_BRICKS));
-            set(l, x, Y0 + 2, 113, LAMP);
+        for (int x = 173; x <= 187; x += 2) {
+            for (int z : new int[] {106, 124}) {
+                set(l, x, Y0 + 1, z, s(Blocks.POLISHED_BLACKSTONE_BRICKS));
+                set(l, x, Y0 + 2, z, GREEN_LAMP);
+            }
         }
-        set(l, 142, Y0 + 7, 107, LAMP);
-        set(l, 142, Y0 + 7, 103, LAMP);
-        set(l, 142, Y0 + 7, 111, LAMP);
-        doorX(l, 114, 106, 108, 4);
-        doorX(l, 135, 106, 108, 4);
-        fill(l, 149, Y0 + 1, 105, 149, Y0 + 5, 109, s(Blocks.IRON_BLOCK));   // рама выхода
-        fill(l, 149, Y0 + 1, 106, 149, Y0 + 4, 108, LAMP);                  // свет в конце
+        for (int x : new int[] {176, 180, 184}) {
+            set(l, x, Y0 + 8, 115, GREEN_LAMP);
+            set(l, x, Y0 + 8, 110, GREEN_LAMP);
+            set(l, x, Y0 + 8, 120, GREEN_LAMP);
+        }
+        doorX(l, 130, 114, 116, 4);
+        doorX(l, 170, 114, 116, 4);
+        fill(l, 190, Y0 + 1, 113, 190, Y0 + 5, 117, s(Blocks.IRON_BLOCK));   // рама выхода
+        fill(l, 190, Y0 + 1, 114, 190, Y0 + 4, 116, GREEN_LAMP);             // свет в конце
     }
 
-    /** Стекло резервуара: 5x5 снаружи, пустой 3x3 внутри. */
+    /** Малая зелёная капсула 3x3 (1x1 внутри): с зелёной жидкостью или пустая. */
+    private static void capsule(ServerLevel l, int cx, int cz, boolean filled) {
+        fill(l, cx - 1, Y0 + 1, cz - 1, cx + 1, Y0 + 5, cz + 1, GLASS);
+        fill(l, cx, Y0 + 1, cz, cx, Y0 + 4, cz, filled ? SLIME : AIR);
+        fill(l, cx - 1, Y0, cz - 1, cx + 1, Y0, cz + 1, s(Blocks.IRON_BLOCK));
+    }
+
+    /** Главная капсула Зига: зелёное стекло 5x5, внутри пустой объём 3x3. */
     public static void repairTank(ServerLevel l) {
-        fill(l, 105, Y0 + 1, 105, 109, Y0 + 5, 109, GLASS);
-        fill(l, 106, Y0 + 1, 106, 108, Y0 + 4, 108, AIR);
+        fill(l, 113, Y0 + 1, 113, 117, Y0 + 5, 117, GLASS);
+        fill(l, 114, Y0 + 1, 114, 116, Y0 + 4, 116, AIR);
     }
 
     public static boolean isTankBroken(ServerLevel l) {
@@ -228,11 +241,11 @@ public class StoryWorld {
             return false;
         }
         for (int y = Y0 + 1; y <= Y0 + 4; y++) {
-            for (int i = 105; i <= 109; i++) {
-                if (l.getBlockState(new BlockPos(i, y, 105)).isAir()
-                        || l.getBlockState(new BlockPos(i, y, 109)).isAir()
-                        || l.getBlockState(new BlockPos(105, y, i)).isAir()
-                        || l.getBlockState(new BlockPos(109, y, i)).isAir()) {
+            for (int i = 113; i <= 117; i++) {
+                if (l.getBlockState(new BlockPos(i, y, 113)).isAir()
+                        || l.getBlockState(new BlockPos(i, y, 117)).isAir()
+                        || l.getBlockState(new BlockPos(113, y, i)).isAir()
+                        || l.getBlockState(new BlockPos(117, y, i)).isAir()) {
                     return true;
                 }
             }

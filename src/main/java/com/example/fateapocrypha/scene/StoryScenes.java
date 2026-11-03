@@ -32,6 +32,8 @@ public class StoryScenes {
     private static final String SEMIRAMIS = "npc.fateapocrypha.semiramis";
     private static final String FRANKENSTEIN = "npc.fateapocrypha.frankenstein";
     private static final String CAULES = "npc.fateapocrypha.caules";
+    private static final String SIEGFRIED = "npc.fateapocrypha.siegfried";
+    private static final String GORDES = "npc.fateapocrypha.gordes";
 
     private static Step say(String speaker, String line) {
         return Steps.say(speaker, "dialogue.fateapocrypha." + line, 120);
@@ -61,7 +63,7 @@ public class StoryScenes {
         List<Step> s = new ArrayList<>();
         s.add(Steps.fade(0, 40, 60, false));
         s.add(Steps.run(c -> StoryWorld.repairTank(c.trifas())));
-        s.add(Steps.teleport(107.5, Y, 107.5, 0.0F));
+        s.add(Steps.teleport(115.5, Y, 115.5, 0.0F));
         s.add(Steps.wait(50));
         s.add(Steps.title("story.fateapocrypha.lab_tank.title", "story.fateapocrypha.lab_tank.subtitle"));
         s.add(Steps.wait(60));
@@ -78,15 +80,15 @@ public class StoryScenes {
     // 2. Медленно идём по лаборатории
     private static List<Step> labWalk() {
         List<Step> s = new ArrayList<>();
-        s.add(Steps.teleport(112.5, Y, 107.5, -90.0F));
+        s.add(Steps.teleport(127.5, Y, 115.5, -90.0F));
         s.add(Steps.wait(20));
         s.add(say(SIEG, "lab_walk.1"));
         s.add(say(SIEG, "lab_walk.2"));
-        s.add(Steps.waitInZone(zone(122, 105, 128, 110)));
+        s.add(Steps.waitInZone(zone(148, 113, 154, 118)));
         s.add(say(SIEG, "lab_walk.3"));
-        s.add(Steps.waitInZone(zone(136, 100, 142, 115)));
+        s.add(Steps.waitInZone(zone(172, 105, 178, 126)));
         s.add(say(SIEG, "lab_walk.4"));
-        s.add(Steps.waitInZone(zone(145, 105, 149, 110)));
+        s.add(Steps.waitInZone(zone(184, 113, 189, 118)));
         s.add(say(SIEG, "lab_walk.5"));
         s.add(Steps.fade(40, 20, 40, true));
         s.add(Steps.advance(StoryChapter.CORRIDOR));
@@ -177,7 +179,7 @@ public class StoryScenes {
         return s;
     }
 
-    // 6. Лес: бой с големами, Жанна даёт имя
+    // 6. Лес: големы, Зигфрид и Гордес, жертва сердца, имя Зиг
     private static List<Step> forest() {
         List<Step> s = new ArrayList<>();
         s.add(Steps.fade(0, 30, 40, false));
@@ -189,26 +191,47 @@ public class StoryScenes {
         s.add(say(SIEG, "forest.2"));
         s.add(say(ASTOLFO, "forest.3"));
         s.add(say(ASTOLFO, "forest.4"));
+
+        // бой с големами: посреди боя приходят Зигфрид и его Мастер
         s.add(Steps.golemFight(new double[][] {
-                {FX + 8.5, Y, FZ + 0.5}, {FX - 5.5, Y, FZ - 5.5}, {FX - 5.5, Y, FZ + 6.5}}));
-        s.add(say(ASTOLFO, "forest.5"));
-        s.add(Steps.spawnNpc("jeanne", NpcType.JEANNE, FX + 0.5, Y, FZ - 8.5, 0.0F));
-        s.add(Steps.npcWalk("jeanne", FX - 0.5, Y, FZ - 2.5, 1.3D, 300, false));
-        s.add(say(JEANNE, "forest.6"));
-        s.add(say(ASTOLFO, "forest.7"));
-        s.add(say(JEANNE, "forest.8"));
-        s.add(say(SIEG, "forest.9"));
-        s.add(say(JEANNE, "forest.10"));
-        s.add(say(SIEG, "forest.11"));
-        s.add(say(JEANNE, "forest.12"));
-        s.add(say(SIEG, "forest.13"));
-        s.add(say(ASTOLFO, "forest.14"));
+                {FX + 8.5, Y, FZ + 0.5}, {FX - 5.5, Y, FZ - 5.5}, {FX - 5.5, Y, FZ + 6.5}}, 1, 1500));
+        s.add(Steps.spawnNpc("siegfried", NpcType.SIEGFRIED, FX + 0.5, Y, FZ - 10.5, 0.0F));
+        s.add(Steps.spawnNpc("gordes", NpcType.GORDES, FX + 2.5, Y, FZ - 13.0, 0.0F));
+        s.add(say(GORDES, "forest.5"));
+        s.add(par(
+                Steps.npcWalk("siegfried", FX + 0.5, Y, FZ - 4.0, 1.6D, 300, false),
+                Steps.npcWalk("gordes", FX + 2.0, Y, FZ - 6.5, 1.1D, 300, false)));
+        s.add(Steps.discardMobs());                       // Зигфрид уничтожает последнего голема
+        s.add(Steps.sound(SoundEvents.ANVIL_LAND));
+        s.add(say(ASTOLFO, "forest.6"));
+        s.add(say(GORDES, "forest.7"));
+
+        // Гордес наносит смертельные раны
+        s.add(Steps.lightningAtPlayer());
+        s.add(Steps.hurtPlayerNearDeath());
+        s.add(Steps.wait(30));
+        s.add(say(SIEG, "forest.8"));
+        s.add(say(ASTOLFO, "forest.9"));
+
+        // Зигфрид отдаёт своё сердце
+        s.add(say(SIEGFRIED, "forest.10"));
+        s.add(say(GORDES, "forest.11"));
+        s.add(say(SIEGFRIED, "forest.12"));
+        s.add(Steps.healPlayer());
+        s.add(Steps.sound(SoundEvents.BEACON_ACTIVATE));
+        s.add(say(SIEGFRIED, "forest.13"));
+        s.add(Steps.npcDie("siegfried"));
+        s.add(Steps.wait(40));
+        s.add(say(SIEG, "forest.14"));
+        s.add(say(GORDES, "forest.15"));
+        s.add(say(ASTOLFO, "forest.16"));
+        s.add(Steps.npcLeave("gordes"));
         s.add(Steps.give(() -> new ItemStack(ModItems.COMMAND_SEAL.get())));
         s.add(Steps.give(() -> new ItemStack(ModItems.SUMMON_CATALYST.get())));
-        s.add(Steps.sound(SoundEvents.BEACON_ACTIVATE));
-        s.add(say(JEANNE, "forest.15"));
-        s.add(say(JEANNE, "forest.16"));
-        s.add(Steps.wait(40));
+        s.add(say(ASTOLFO, "forest.17"));
+        s.add(say(SIEG, "forest.18"));
+        s.add(say(ASTOLFO, "forest.19"));
+        s.add(Steps.wait(30));
         s.add(Steps.fade(30, 10, 5, true));
         s.add(Steps.despawnAllNpcs());
         s.add(Steps.advance(StoryChapter.INTERLUDE_RED));
@@ -277,10 +300,10 @@ public class StoryScenes {
                                 v(cx - 6, Y + 2.0, cz + 6), v(cx - 3, Y + 1.7, cz + 3.5), 330),
                         cam(v(cx - 4, Y + 2.5, cz + 7), v(cx, Y + 1.5, cz),
                                 v(cx + 7, Y + 5.5, cz + 11), v(cx, Y + 1.5, cz), 220)),
-                seq(say(KAIRI, "red.1"), say(MORDRED, "red.2"), say(KAIRI, "red.3"),
-                        say(MORDRED, "red.4"), say(KAIRI, "red.5"), say(MORDRED, "red.6"),
-                        say(KAIRI, "red.7"), say(MORDRED, "red.8"), say(KAIRI, "red.9"),
-                        say(MORDRED, "red.10"))));
+                seq(say(MORDRED, "red.1"), say(KAIRI, "red.2"), say(MORDRED, "red.3"),
+                        say(KAIRI, "red.4"), say(MORDRED, "red.5"), say(KAIRI, "red.6"),
+                        say(MORDRED, "red.7"), say(KAIRI, "red.8"), say(MORDRED, "red.9"),
+                        say(KAIRI, "red.10"), say(MORDRED, "red.11"))));
         interludeEnd(s, StoryChapter.INTERLUDE_SHIRO);
         return s;
     }

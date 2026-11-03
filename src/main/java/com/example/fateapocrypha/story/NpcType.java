@@ -13,7 +13,9 @@ public enum NpcType {
     KAIRI("kairi", false, Items.AIR),
     SHIRO("shiro", false, Items.AIR),
     FRANKENSTEIN("frankenstein", false, Items.AIR),
-    CAULES("caules", false, Items.AIR);
+    CAULES("caules", false, Items.AIR),
+    SIEGFRIED("siegfried", false, Items.DIAMOND_SWORD),
+    GORDES("gordes", false, Items.AIR);
 
     private final String id;
     private final boolean slim;
