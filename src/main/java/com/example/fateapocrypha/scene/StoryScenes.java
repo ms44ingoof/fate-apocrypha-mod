@@ -36,6 +36,11 @@ public class StoryScenes {
     private static final String SIEGFRIED = "npc.fateapocrypha.siegfried";
     private static final String GORDES = "npc.fateapocrypha.gordes";
     private static final String CELENIKE = "npc.fateapocrypha.celenike";
+    private static final String SPARTACUS = "npc.fateapocrypha.spartacus";
+    private static final String JACK = "npc.fateapocrypha.jack";
+    private static final String ATALANTA = "npc.fateapocrypha.atalanta";
+    private static final String AVICEBRON = "npc.fateapocrypha.avicebron";
+    private static final String ROCHE = "npc.fateapocrypha.roche";
 
     private static Step say(String speaker, String line) {
         return Steps.say(speaker, "dialogue.fateapocrypha." + line, 120);
@@ -56,7 +61,12 @@ public class StoryScenes {
             case INTERLUDE_RED -> interludeRed();
             case INTERLUDE_SHIRO -> interludeShiro();
             case INTERLUDE_FRANKENSTEIN -> interludeFrankenstein();
+            case INTERLUDE_SPARTACUS -> interludeSpartacus();
             case CELENIKE -> celenike();
+            case JEANNE -> jeanne();
+            case JACK -> jack();
+            case INTERLUDE_AVICEBRON -> interludeAvicebron();
+            case GOLEM_ADAM -> golemAdam();
             case TO_BE_CONTINUED -> List.of();
         };
     }
@@ -260,6 +270,7 @@ public class StoryScenes {
                                        Vec3 camPos, Vec3 camLook) {
         s.add(Steps.fade(0, 10, 50, true));
         s.add(Steps.run(c -> StoryWorld.ensureStages(c.trifas())));
+        s.add(Steps.run(c -> StoryWorld.ensureStagesB(c.trifas())));
         s.add(Steps.teleport(playerX, Y, playerZ, 0.0F));
         s.add(Steps.cinematicStart(camPos, camLook));
         s.add(Steps.title("story.fateapocrypha." + key + ".title", "story.fateapocrypha." + key + ".subtitle"));
@@ -410,7 +421,7 @@ public class StoryScenes {
                 seq(Steps.wait(40), say(CAULES, "frank.12"))));
 
         // Конец интерлюдий: возвращаемся к Зигу
-        interludeEnd(s, StoryChapter.CELENIKE);
+        interludeEnd(s, StoryChapter.INTERLUDE_SPARTACUS);
         return s;
     }
 
@@ -482,6 +493,256 @@ public class StoryScenes {
         s.add(Steps.give(() -> new ItemStack(ModItems.COMMAND_SEAL.get())));
         s.add(Steps.sound(SoundEvents.BEACON_ACTIVATE));
         s.add(say(ASTOLFO, "celenike.17"));
+        s.add(Steps.wait(60));
+        s.add(Steps.fade(30, 10, 5, true));
+        s.add(Steps.dismissServant());
+        s.add(Steps.advance(StoryChapter.JEANNE));
+        return s;
+    }
+
+    // ================= Интерлюдия: гнев Спартака (третье лицо) =================
+    // Широ направляет Спартака на замок рода Иггдмилления. Спартак не терпит приказов и выходит из-под контроля.
+    // Мордред останавливает его, пока он не разрушил всё вокруг.
+    private static List<Step> interludeSpartacus() {
+        final double cx = StoryWorld.STAGE_SIEGE_X + 0.5;
+        List<Step> s = new ArrayList<>();
+        interludeStart(s, "interlude_spartacus", cx, 884.5, v(cx - 10, Y + 6, 880), v(cx - 4, Y + 2, 890));
+        s.add(Steps.run(c -> StoryWorld.repairSiegeWall(c.trifas())));
+        s.add(Steps.spawnNpc("spartacus", NpcType.SPARTACUS, cx - 4, Y, 890.5, 0.0F));
+        s.add(Steps.spawnNpc("shiro", NpcType.SHIRO, cx + 6, Y, 886.5, 90.0F));
+        s.add(Steps.spawnNpc("mordred", NpcType.MORDRED, cx + 16, Y, 893.5, 90.0F));
+
+        // 1. Широ направляет Спартака; тот отказывается подчиняться
+        s.add(par(
+                seq(cam(v(cx - 10, Y + 6, 880), v(cx - 4, Y + 2, 890), v(cx - 8, Y + 3.5, 884), v(cx - 4, Y + 2, 890), 200),
+                        cam(v(cx + 2, Y + 2.5, 884), v(cx + 6, Y + 1.8, 886.5), v(cx + 3, Y + 2.2, 883.5), v(cx + 6, Y + 1.8, 886.5), 260),
+                        cam(v(cx - 8, Y + 2.3, 886), v(cx - 4, Y + 2.2, 890), v(cx - 7, Y + 2.2, 887), v(cx - 4, Y + 2.2, 890), 260)),
+                seq(say(SHIRO, "spartacus.1"), say(SPARTACUS, "spartacus.2"),
+                        say(SHIRO, "spartacus.3"), say(SPARTACUS, "spartacus.4"))));
+
+        // 2. Спартак бросается на стену замка
+        s.add(par(
+                cam(v(cx - 12, Y + 3, 888), v(cx - 4, Y + 2.5, 893), v(cx - 6, Y + 6, 888), v(cx, Y + 3, 899), 120),
+                Steps.npcWalk("spartacus", cx, Y, 897.5, 1.7D, 150, false)));
+        s.add(Steps.run(c -> StoryWorld.smashSiegeWall(c.trifas())));
+        s.add(Steps.particles(ParticleTypes.EXPLOSION_EMITTER, cx, Y + 3, 900.5, 3, 1.0D));
+        s.add(Steps.sound(SoundEvents.GENERIC_EXPLODE));
+        s.add(Steps.wait(30));
+
+        // 3. Появляется Мордред
+        s.add(par(
+                cam(v(cx + 10, Y + 3, 890), v(cx + 16, Y + 1.8, 893.5), v(cx + 8, Y + 2.8, 893), v(cx + 2, Y + 1.8, 897), 160),
+                Steps.npcWalk("mordred", cx + 5, Y, 896.0, 1.8D, 150, false)));
+        s.add(par(
+                seq(cam(v(cx + 7, Y + 2.2, 891), v(cx + 4, Y + 1.8, 896.5), v(cx + 6, Y + 2.2, 892), v(cx + 4, Y + 1.8, 896.5), 200),
+                        cam(v(cx - 6, Y + 2.8, 896), v(cx, Y + 2.2, 897.5), v(cx - 5, Y + 2.8, 894), v(cx, Y + 2.2, 897.5), 200)),
+                seq(say(MORDRED, "spartacus.5"), say(MORDRED, "spartacus.6"), say(SPARTACUS, "spartacus.7"))));
+
+        // 4. Бой и гибель Спартака
+        s.add(par(
+                cam(v(cx + 3, Y + 4.5, 889), v(cx + 1.5, Y + 2, 897), v(cx + 2, Y + 3.5, 891), v(cx + 1.5, Y + 2, 897), 90),
+                Steps.npcWalk("mordred", cx + 1.8, Y, 897.2, 2.4D, 100, false)));
+        s.add(Steps.npcSwing("mordred"));
+        s.add(Steps.npcHurt("spartacus"));
+        s.add(Steps.lightning(cx, Y, 897.5));
+        s.add(Steps.wait(10));
+        s.add(Steps.npcSwing("mordred"));
+        s.add(Steps.npcHurt("spartacus"));
+        s.add(Steps.lightning(cx - 1, Y, 898.5));
+        s.add(Steps.particles(ParticleTypes.ELECTRIC_SPARK, cx, Y + 1.2, 897.5, 80, 1.5D));
+        s.add(Steps.wait(20));
+        s.add(par(
+                cam(v(cx + 3, Y + 2.0, 893), v(cx + 0.8, Y + 1.7, 897.4), v(cx + 2.5, Y + 1.9, 894), v(cx + 0.8, Y + 1.7, 897.4), 200),
+                say(MORDRED, "spartacus.8")));
+        s.add(Steps.npcDie("spartacus"));
+        s.add(par(
+                cam(v(cx + 4, Y + 2.2, 895), v(cx + 4.5, Y + 1.8, 897), v(cx + 8, Y + 5.5, 888), v(cx, Y + 3, 899), 260),
+                seq(Steps.wait(30), say(MORDRED, "spartacus.9"))));
+        interludeEnd(s, StoryChapter.CELENIKE);
+        return s;
+    }
+
+    // ================= Глава Зига: Жанна д'Арк =================
+    // Улица Трифаса. Жанна находит Зига: Зигфрид перед гибелью просил её его оберегать.
+    private static List<Step> jeanne() {
+        final double zc = StoryWorld.STAGE_STREET_Z + 0.5;
+        List<Step> s = new ArrayList<>();
+        s.add(Steps.fade(0, 20, 40, false));
+        s.add(Steps.dismissServant());
+        s.add(Steps.run(c -> StoryWorld.ensureStagesB(c.trifas())));
+        s.add(Steps.teleport(1185.5, Y, zc, -90.0F));
+        s.add(Steps.restoreServant(ServantType.ASTOLFO));
+        s.add(Steps.title("story.fateapocrypha.jeanne.title", "story.fateapocrypha.jeanne.subtitle"));
+        s.add(Steps.wait(80));
+        s.add(say(SIEG, "jeanne.1"));
+        s.add(say(ASTOLFO, "jeanne.2"));
+        s.add(Steps.spawnNpc("jeanne", NpcType.JEANNE, 1204.5, Y, zc, 90.0F));
+        s.add(Steps.npcWalk("jeanne", 1190.5, Y, zc, 0.9D, 400, false));
+        s.add(say(JEANNE, "jeanne.3"));
+        s.add(say(SIEG, "jeanne.4"));
+        s.add(say(JEANNE, "jeanne.5"));
+        s.add(say(JEANNE, "jeanne.6"));
+        s.add(say(SIEG, "jeanne.7"));
+        s.add(say(JEANNE, "jeanne.8"));
+        s.add(say(ASTOLFO, "jeanne.9"));
+        s.add(say(SIEG, "jeanne.10"));
+        s.add(say(JEANNE, "jeanne.11"));
+        s.add(Steps.wait(40));
+        s.add(Steps.fade(30, 10, 5, true));
+        s.add(Steps.despawnAllNpcs());
+        s.add(Steps.advance(StoryChapter.JACK));
+        return s;
+    }
+
+    // ================= Глава Зига: иллюзия Джека и Атланта =================
+    // Зиг и Жанна попадают в иллюзию. Джек-потрошитель это слитые души детей. Атланта защищает Джека
+    // и возненавидит Жанну, когда та освободит эти души.
+    private static List<Step> jack() {
+        final double zc = StoryWorld.STAGE_STREET_Z + 0.5;
+        final double lz = StoryWorld.STAGE_LONDON_Z + 0.5;
+        List<Step> s = new ArrayList<>();
+        s.add(Steps.fade(0, 20, 40, false));
+        s.add(Steps.dismissServant());
+        s.add(Steps.run(c -> StoryWorld.ensureStagesB(c.trifas())));
+        s.add(Steps.teleport(1185.5, Y, zc, -90.0F));
+        s.add(Steps.spawnNpc("jeanne", NpcType.JEANNE, 1187.5, Y, zc + 1.5, -90.0F));
+        s.add(Steps.title("story.fateapocrypha.jack.title", "story.fateapocrypha.jack.subtitle"));
+        s.add(Steps.wait(80));
+        s.add(say(JEANNE, "jack.1"));
+        s.add(Steps.particles(ParticleTypes.CLOUD, 1190.5, Y + 0.5, zc, 200, 4.0D));
+        s.add(Steps.fade(40, 20, 40, true));
+
+        // иллюзорный Лондон
+        s.add(Steps.teleport(1185.5, Y, lz, -90.0F));
+        s.add(Steps.npcTeleport("jeanne", 1187.5, Y, lz + 1.5, -90.0F));
+        s.add(Steps.particles(ParticleTypes.CLOUD, 1195.5, Y + 0.5, lz, 250, 6.0D));
+        s.add(Steps.wait(40));
+        s.add(say(JEANNE, "jack.2"));
+        s.add(say(SIEG, "jack.3"));
+        s.add(Steps.spawnNpc("jack", NpcType.JACK, 1205.5, Y, lz, 90.0F));
+        s.add(Steps.npcWalk("jack", 1197.5, Y, lz, 0.8D, 300, false));
+        s.add(say(JACK, "jack.4"));
+
+        // бой с тенями
+        s.add(Steps.shadeFight(new double[][] {
+                {1195.5, Y + 1.5, lz - 3}, {1195.5, Y + 1.5, lz + 3}, {1199.5, Y + 2.0, lz}, {1191.5, Y + 1.5, lz}}));
+        s.add(say(JEANNE, "jack.5"));
+        s.add(say(SIEG, "jack.6"));
+        s.add(say(JACK, "jack.7"));
+
+        // Атланта защищает Джека
+        s.add(Steps.spawnNpc("atalanta", NpcType.ATALANTA, 1212.5, Y, lz, 90.0F));
+        s.add(Steps.npcWalk("atalanta", 1199.5, Y, lz + 2.0, 2.0D, 120, false));
+        s.add(say(ATALANTA, "jack.8"));
+        s.add(say(JEANNE, "jack.9"));
+        s.add(say(ATALANTA, "jack.10"));
+        s.add(say(JEANNE, "jack.11"));
+
+        // Жанна освобождает души детей
+        s.add(Steps.particlesAtNpc("jack", ParticleTypes.END_ROD, 150));
+        s.add(Steps.particlesAtNpc("jeanne", ParticleTypes.END_ROD, 100));
+        s.add(Steps.sound(SoundEvents.BEACON_ACTIVATE));
+        s.add(Steps.wait(40));
+        s.add(Steps.npcLeave("jack"));
+        s.add(say(ATALANTA, "jack.12"));
+        s.add(say(ATALANTA, "jack.13"));
+        s.add(Steps.npcLeave("atalanta"));
+        s.add(Steps.wait(30));
+        s.add(say(SIEG, "jack.14"));
+        s.add(say(JEANNE, "jack.15"));
+
+        // иллюзия рассеивается
+        s.add(Steps.fade(40, 20, 40, true));
+        s.add(Steps.teleport(1185.5, Y, zc, -90.0F));
+        s.add(Steps.npcTeleport("jeanne", 1187.5, Y, zc + 1.5, -90.0F));
+        s.add(Steps.title("story.fateapocrypha.jack_end.title", "story.fateapocrypha.jack_end.subtitle"));
+        s.add(Steps.wait(80));
+        s.add(Steps.fade(30, 10, 5, true));
+        s.add(Steps.despawnAllNpcs());
+        s.add(Steps.discardMobs());
+        s.add(Steps.advance(StoryChapter.INTERLUDE_AVICEBRON));
+        return s;
+    }
+
+    // ================= Интерлюдия: мечта Авицеброна (третье лицо) =================
+    // Авицеброн предаёт Чёрных ради воплощения идеала, жертвует своим Мастером Роше и пробуждает Голема Адама.
+    private static List<Step> interludeAvicebron() {
+        final double px = StoryWorld.STAGE_PLAIN_X + 0.5;
+        final double pz = StoryWorld.STAGE_PLAIN_Z + 0.5;
+        List<Step> s = new ArrayList<>();
+        interludeStart(s, "interlude_avicebron", px, pz + 20, v(px, Y + 6, pz + 18), v(px, Y + 2, pz));
+        s.add(Steps.spawnNpc("avicebron", NpcType.AVICEBRON, px, Y, pz, 0.0F));
+        s.add(Steps.spawnNpc("shiro", NpcType.SHIRO, px + 7, Y, pz + 4, 135.0F));
+        s.add(Steps.spawnNpc("roche", NpcType.ROCHE, px - 5.5, Y, pz + 4.5, 45.0F));
+
+        // 1. Авицеброн и Широ: общая мечта
+        s.add(par(
+                seq(cam(v(px, Y + 6, pz + 18), v(px, Y + 2, pz), v(px + 2, Y + 3.5, pz + 11), v(px, Y + 2, pz), 200),
+                        cam(v(px - 4, Y + 2.4, pz + 6), v(px, Y + 1.8, pz), v(px - 3, Y + 2.2, pz + 4), v(px, Y + 1.8, pz), 260)),
+                seq(say(AVICEBRON, "avi.1"), say(SHIRO, "avi.2"))));
+
+        // 2. Предательство Роше
+        s.add(par(
+                seq(cam(v(px - 10, Y + 2.5, pz + 10), v(px - 5.5, Y + 1.7, pz + 4.5), v(px - 8, Y + 2.3, pz + 8), v(px - 5.5, Y + 1.7, pz + 4.5), 260),
+                        cam(v(px + 3, Y + 2.2, pz + 6), v(px, Y + 1.8, pz), v(px + 2, Y + 2.0, pz + 4.5), v(px, Y + 1.8, pz), 260),
+                        cam(v(px - 8, Y + 2.3, pz + 8), v(px - 5.5, Y + 1.7, pz + 4.5), v(px - 7, Y + 2.0, pz + 7), v(px - 5.5, Y + 1.7, pz + 4.5), 160)),
+                seq(say(ROCHE, "avi.3"), say(AVICEBRON, "avi.4"), say(ROCHE, "avi.5"))));
+        s.add(Steps.lightning(px - 5.5, Y, pz + 4.5));
+        s.add(Steps.npcDie("roche"));
+        s.add(Steps.wait(40));
+
+        // 3. Пробуждение Голема Адама
+        s.add(par(
+                seq(cam(v(px, Y + 3, pz + 8), v(px, Y + 2, pz), v(px, Y + 7, pz + 15), v(px, Y + 3, pz), 320)),
+                seq(say(AVICEBRON, "avi.6"), say(SHIRO, "avi.7"))));
+        s.add(Steps.lightning(px, Y, pz));
+        s.add(Steps.wait(10));
+        s.add(Steps.lightning(px + 3, Y, pz + 2));
+        s.add(Steps.particles(ParticleTypes.EXPLOSION_EMITTER, px, Y + 2, pz, 3, 1.5D));
+        s.add(Steps.sound(SoundEvents.GENERIC_EXPLODE));
+        s.add(Steps.wait(40));
+        interludeEnd(s, StoryChapter.GOLEM_ADAM);
+        return s;
+    }
+
+    // ================= Глава Зига: Голем Адам =================
+    // Зиг, Жанна и Астольфо останавливают Голема Адама. Идеал Авицеброна рушится вместе с ним.
+    private static List<Step> golemAdam() {
+        final double px = StoryWorld.STAGE_PLAIN_X + 0.5;
+        final double pz = StoryWorld.STAGE_PLAIN_Z + 0.5;
+        List<Step> s = new ArrayList<>();
+        s.add(Steps.fade(0, 20, 40, false));
+        s.add(Steps.dismissServant());
+        s.add(Steps.run(c -> StoryWorld.ensureStagesB(c.trifas())));
+        s.add(Steps.teleport(px, Y, pz + 20, 180.0F));
+        s.add(Steps.restoreServant(ServantType.ASTOLFO));
+        s.add(Steps.spawnNpc("jeanne", NpcType.JEANNE, px - 3, Y, pz + 21.5, 180.0F));
+        s.add(Steps.spawnNpc("avicebron", NpcType.AVICEBRON, px, Y, pz, 0.0F));
+        s.add(Steps.title("story.fateapocrypha.golem_adam.title", "story.fateapocrypha.golem_adam.subtitle"));
+        s.add(Steps.wait(80));
+        s.add(say(JEANNE, "gol.1"));
+        s.add(say(SIEG, "gol.2"));
+        s.add(say(ASTOLFO, "gol.3"));
+        s.add(say(AVICEBRON, "gol.4"));
+        s.add(say(JEANNE, "gol.5"));
+        s.add(Steps.particles(ParticleTypes.HAPPY_VILLAGER, px, Y + 1, pz + 8, 200, 6.0D));
+        s.add(Steps.sound(SoundEvents.ANVIL_LAND));
+        s.add(Steps.bossFight(new double[][] {{px, Y, pz + 6}}, 300.0D, 12.0D, "npc.fateapocrypha.golem_adam"));
+        s.add(Steps.sound(SoundEvents.GENERIC_EXPLODE));
+        s.add(Steps.wait(30));
+        s.add(say(AVICEBRON, "gol.6"));
+        s.add(say(JEANNE, "gol.7"));
+        s.add(say(AVICEBRON, "gol.8"));
+        s.add(Steps.npcDie("avicebron"));
+        s.add(Steps.wait(30));
+        s.add(say(SIEG, "gol.9"));
+        s.add(say(ASTOLFO, "gol.10"));
+        s.add(Steps.fade(30, 20, 40, true));
+        s.add(Steps.despawnAllNpcs());
+        s.add(Steps.discardMobs());
+        s.add(Steps.dismissServant());
+        s.add(Steps.teleport(StoryWorld.FOREST_CX + 0.5, Y, StoryWorld.FOREST_CZ + 0.5, -90.0F));
+        s.add(Steps.restoreServant(ServantType.ASTOLFO));
         s.add(Steps.title("story.fateapocrypha.to_be_continued.title", "story.fateapocrypha.to_be_continued.subtitle"));
         s.add(Steps.wait(100));
         s.add(Steps.advance(StoryChapter.TO_BE_CONTINUED));

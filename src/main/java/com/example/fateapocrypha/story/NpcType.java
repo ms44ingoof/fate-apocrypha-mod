@@ -16,7 +16,12 @@ public enum NpcType {
     CAULES("caules", false, Items.AIR),
     SIEGFRIED("siegfried", false, Items.DIAMOND_SWORD),
     GORDES("gordes", false, Items.AIR),
-    CELENIKE("celenike", false, Items.AIR);
+    CELENIKE("celenike", false, Items.AIR),
+    SPARTACUS("spartacus", false, Items.IRON_AXE),
+    JACK("jack", false, Items.IRON_SWORD),
+    ATALANTA("atalanta", false, Items.BOW),
+    AVICEBRON("avicebron", false, Items.AIR),
+    ROCHE("roche", false, Items.AIR);
 
     private final String id;
     private final boolean slim;

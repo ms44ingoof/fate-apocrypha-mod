@@ -1,7 +1,9 @@
 package com.example.fateapocrypha.scene;
 
 import com.example.fateapocrypha.ModEntities;
+import com.example.fateapocrypha.entity.ServantEntity;
 import com.example.fateapocrypha.entity.StoryCameraEntity;
+import net.minecraft.world.entity.monster.Vex;
 import com.example.fateapocrypha.network.CameraPacket;
 import java.util.List;
 import net.minecraft.core.BlockPos;
@@ -603,5 +605,131 @@ public class Steps {
                         count, 0.4D, 0.7D, 0.4D, 0.08D);
             }
         });
+    }
+
+    // ---------- Слуга игрока: убрать и вернуть при переходах между сценами ----------
+    public static Step dismissServant() {
+        return run(c -> {
+            ServantEntity servant = ServantActions.findServant(c.player);
+            if (servant != null) {
+                if (servant.level() instanceof ServerLevel level) {
+                    level.sendParticles(ParticleTypes.POOF, servant.getX(), servant.getY(0.5D), servant.getZ(),
+                            20, 0.3D, 0.6D, 0.3D, 0.05D);
+                }
+                servant.discard();
+            }
+        });
+    }
+
+    public static Step restoreServant(ServantType type) {
+        return run(c -> {
+            if (ServantActions.findServant(c.player) == null) {
+                ServantActions.spawnServant(c.player, type);
+            }
+        });
+    }
+
+    public static Step npcTeleport(String key, double x, double y, double z, float yaw) {
+        return run(c -> {
+            StoryNpcEntity npc = c.npc(key);
+            if (npc != null) {
+                npc.moveTo(x, y, z, yaw, 0.0F);
+                npc.setYHeadRot(yaw);
+                npc.getNavigation().stop();
+            }
+        });
+    }
+
+    // ---------- Бои сцен ----------
+    /** Тени (призрачные существа иллюзии): нападают на игрока, шаг ждёт, пока все побеждены. */
+    public static Step shadeFight(double[][] positions) {
+        return new Step() {
+            @Override
+            public void begin(SceneContext c) {
+                ServerLevel level = c.trifas();
+                if (level == null) {
+                    return;
+                }
+                for (double[] p : positions) {
+                    Vex shade = EntityType.VEX.create(level);
+                    if (shade == null) {
+                        continue;
+                    }
+                    shade.moveTo(p[0], p[1], p[2], 90.0F, 0.0F);
+                    shade.addTag("fate_golem");
+                    shade.setCustomName(Component.translatable("npc.fateapocrypha.shade"));
+                    shade.setTarget(c.player);
+                    level.addFreshEntity(shade);
+                    c.mobs.add(shade.getUUID());
+                }
+            }
+
+            @Override
+            public boolean update(SceneContext c) {
+                ServerLevel level = c.trifas();
+                if (level == null) {
+                    return true;
+                }
+                boolean anyAlive = false;
+                for (UUID id : c.mobs) {
+                    Entity entity = level.getEntity(id);
+                    if (entity instanceof Vex shade && shade.isAlive()) {
+                        anyAlive = true;
+                        if (c.stepTicks % 20 == 0 && (shade.getTarget() == null || !shade.getTarget().isAlive())) {
+                            shade.setTarget(c.player);
+                        }
+                    }
+                }
+                return !anyAlive || c.stepTicks > 2400;
+            }
+        };
+    }
+
+    /** Босс-голем: много здоровья и сильный удар; шаг ждёт его гибели. */
+    public static Step bossFight(double[][] positions, double health, double damage, String nameKey) {
+        return new Step() {
+            @Override
+            public void begin(SceneContext c) {
+                ServerLevel level = c.trifas();
+                if (level == null) {
+                    return;
+                }
+                for (double[] p : positions) {
+                    IronGolem boss = EntityType.IRON_GOLEM.create(level);
+                    if (boss == null) {
+                        continue;
+                    }
+                    boss.moveTo(p[0], p[1], p[2], 0.0F, 0.0F);
+                    boss.getAttribute(Attributes.MAX_HEALTH).setBaseValue(health);
+                    boss.setHealth((float) health);
+                    boss.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(damage);
+                    boss.addTag("fate_golem");
+                    boss.setCustomName(Component.translatable(nameKey));
+                    boss.setCustomNameVisible(true);
+                    boss.setTarget(c.player);
+                    level.addFreshEntity(boss);
+                    c.mobs.add(boss.getUUID());
+                }
+            }
+
+            @Override
+            public boolean update(SceneContext c) {
+                ServerLevel level = c.trifas();
+                if (level == null) {
+                    return true;
+                }
+                boolean anyAlive = false;
+                for (UUID id : c.mobs) {
+                    Entity entity = level.getEntity(id);
+                    if (entity instanceof IronGolem boss && boss.isAlive()) {
+                        anyAlive = true;
+                        if (c.stepTicks % 20 == 0 && (boss.getTarget() == null || !boss.getTarget().isAlive())) {
+                            boss.setTarget(c.player);
+                        }
+                    }
+                }
+                return !anyAlive || c.stepTicks > 6000;
+            }
+        };
     }
 }

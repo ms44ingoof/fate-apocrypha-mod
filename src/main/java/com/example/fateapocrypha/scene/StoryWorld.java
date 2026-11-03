@@ -942,4 +942,155 @@ public class StoryWorld {
         pillar(l, cx - 18, cz + 2, 4, s(Blocks.CRACKED_STONE_BRICKS));
         fill(l, cx - 18, Y0 + 5, cz - 2, cx - 18, Y0 + 5, cz, s(Blocks.STONE_BRICK_SLAB));
     }
+
+    // ================= Сцены 2: улица Трифаса, штурм замка, Лондон Джека, равнина Голема =================
+    public static final int STAGE_STREET_X = 1200;    // улица: x1180-1220, z786-814
+    public static final int STAGE_STREET_Z = 800;
+    public static final int STAGE_SIEGE_X = 1200;     // стена замка z900-902, поле z880-899
+    public static final int STAGE_SIEGE_Z = 890;
+    public static final int STAGE_LONDON_X = 1200;    // иллюзия викторианского Лондона
+    public static final int STAGE_LONDON_Z = 1000;
+    public static final int STAGE_PLAIN_X = 1200;     // равнина Голема Адама
+    public static final int STAGE_PLAIN_Z = 1100;
+
+    public static void ensureStagesB(ServerLevel l) {
+        if (l != null && !l.getBlockState(new BlockPos(STAGE_STREET_X, Y0 - 1, STAGE_STREET_Z)).is(Blocks.ROOTED_DIRT)) {
+            buildStagesB(l);
+        }
+    }
+
+    private static void buildStagesB(ServerLevel l) {
+        buildTown(l, 800, s(Blocks.STONE_BRICKS), 7);                // улица Трифаса
+        buildSiege(l);
+        buildTown(l, 1000, s(Blocks.BRICKS), 9);                     // викторианский Лондон
+        buildPlain(l);
+        woodlandRing(l, 1180, 786, 1220, 814, 6, 2, 4001L);
+        woodlandRing(l, 1175, 870, 1225, 920, 6, 2, 4002L);
+        woodlandRing(l, 1180, 986, 1220, 1014, 6, 2, 4003L);
+        woodlandRing(l, 1172, 1072, 1228, 1128, 6, 3, 4004L);
+        set(l, STAGE_STREET_X, Y0 - 1, STAGE_STREET_Z, s(Blocks.ROOTED_DIRT));   // метка "построено"
+    }
+
+    /** Городская улица вдоль оси x: мостовая, тротуары, дома с окнами, фонари, скамейки. */
+    private static void buildTown(ServerLevel l, int zc, BlockState wall, int height) {
+        Random rnd = new Random(zc);
+        for (int x = 1180; x <= 1220; x++) {
+            for (int z = zc - 3; z <= zc + 3; z++) {
+                set(l, x, Y0, z, rnd.nextInt(3) == 0 ? s(Blocks.GRAVEL) : s(Blocks.COBBLESTONE));
+            }
+            set(l, x, Y0, zc - 4, s(Blocks.STONE_BRICKS));
+            set(l, x, Y0, zc + 4, s(Blocks.STONE_BRICKS));
+        }
+        for (int x = 1180; x < 1220; x += 10) {
+            house(l, x, zc + 6, x + 8, zc + 14, height, wall, x + 4, zc + 6);
+            house(l, x, zc - 14, x + 8, zc - 6, height, wall, x + 4, zc - 6);
+        }
+        for (int x = 1184; x <= 1216; x += 8) {
+            for (int dz : new int[] {-5, 5}) {
+                set(l, x, Y0 + 1, zc + dz, s(Blocks.OAK_FENCE));
+                set(l, x, Y0 + 2, zc + dz, s(Blocks.OAK_FENCE));
+                set(l, x, Y0 + 3, zc + dz, s(Blocks.LANTERN));
+            }
+        }
+        for (int x : new int[] {1190, 1210}) {
+            set(l, x, Y0 + 1, zc + 5, s(Blocks.SPRUCE_STAIRS));
+            set(l, x + 1, Y0 + 1, zc + 5, s(Blocks.SPRUCE_STAIRS));
+        }
+    }
+
+    private static void house(ServerLevel l, int x1, int z1, int x2, int z2, int h, BlockState wall,
+                              int doorX, int doorZ) {
+        fill(l, x1, Y0 + 1, z1, x2, Y0 + h, z2, wall);
+        fill(l, x1 + 1, Y0 + 1, z1 + 1, x2 - 1, Y0 + h - 1, z2 - 1, AIR);
+        fill(l, x1, Y0 + h + 1, z1, x2, Y0 + h + 1, z2, s(Blocks.DARK_OAK_PLANKS));
+        for (int x = x1 + 2; x <= x2 - 2; x += 3) {
+            for (int y = Y0 + 3; y <= Y0 + h - 2; y += 3) {
+                setSoft(l, x, y, z1, s(Blocks.GLASS_PANE));
+                setSoft(l, x, y, z2, s(Blocks.GLASS_PANE));
+            }
+        }
+        fill(l, doorX, Y0 + 1, doorZ, doorX, Y0 + 2, doorZ, AIR);
+        set(l, x1 + 1, Y0 + h + 2, z1 + 1, s(Blocks.BRICK_WALL));   // труба
+        set(l, x1 + 1, Y0 + h + 3, z1 + 1, s(Blocks.BRICK_WALL));
+    }
+
+    private static void buildSiege(ServerLevel l) {
+        Random rnd = new Random(55L);
+        for (int x = 1180; x <= 1220; x++) {
+            for (int z = 880; z <= 899; z++) {
+                int r = rnd.nextInt(12);
+                if (r == 0) {
+                    set(l, x, Y0, z, s(Blocks.COBBLESTONE));
+                } else if (r == 1) {
+                    set(l, x, Y0, z, s(Blocks.COARSE_DIRT));
+                }
+            }
+        }
+        fill(l, 1198, Y0, 880, 1202, Y0, 899, s(Blocks.STONE_BRICKS));          // дорога к воротам
+        fill(l, 1180, Y0 + 1, 900, 1220, Y0 + 9, 902, s(Blocks.STONE_BRICKS));    // стена
+        for (int x = 1180; x <= 1220; x += 2) {
+            fill(l, x, Y0 + 10, 900, x, Y0 + 10, 902, s(Blocks.STONE_BRICKS));    // зубцы
+        }
+        fill(l, 1195, Y0 + 1, 899, 1205, Y0 + 13, 903, s(Blocks.STONE_BRICKS));   // привратная башня
+        fill(l, 1180, Y0 + 1, 897, 1185, Y0 + 14, 904, s(Blocks.CRACKED_STONE_BRICKS));
+        fill(l, 1215, Y0 + 1, 897, 1220, Y0 + 14, 904, s(Blocks.CRACKED_STONE_BRICKS));
+        for (int x : new int[] {1182, 1217, 1197, 1203}) {
+            set(l, x, Y0 + 15, 900, s(Blocks.LANTERN));
+        }
+        siegeGate(l, false);
+    }
+
+    /** Ворота замка: целые (решётка в проёме) или выломанные. */
+    private static void siegeGate(ServerLevel l, boolean smashed) {
+        fill(l, 1197, Y0 + 1, 899, 1203, Y0 + 9, 903, smashed ? AIR : s(Blocks.STONE_BRICKS));
+        if (!smashed) {
+            fill(l, 1198, Y0 + 1, 899, 1202, Y0 + 6, 903, AIR);
+            for (int x = 1198; x <= 1202; x++) {
+                for (int y = Y0 + 1; y <= Y0 + 6; y++) {
+                    setSoft(l, x, y, 901, BARS);
+                }
+            }
+        } else {
+            Random rnd = new Random(9L);
+            for (int i = 0; i < 25; i++) {
+                set(l, 1195 + rnd.nextInt(11), Y0 + 1, 893 + rnd.nextInt(7),
+                        rnd.nextBoolean() ? s(Blocks.COBBLESTONE) : s(Blocks.STONE_BRICKS));
+            }
+        }
+    }
+
+    public static void repairSiegeWall(ServerLevel l) {
+        if (l != null) {
+            siegeGate(l, false);
+        }
+    }
+
+    public static void smashSiegeWall(ServerLevel l) {
+        if (l != null) {
+            siegeGate(l, true);
+        }
+    }
+
+    /** Равнина Голема Адама: круг призыва из аметиста, алтарь и восемь колонн с душевыми фонарями. */
+    private static void buildPlain(ServerLevel l) {
+        int cx = STAGE_PLAIN_X;
+        int cz = STAGE_PLAIN_Z;
+        for (int x = cx - 14; x <= cx + 14; x++) {
+            for (int z = cz - 14; z <= cz + 14; z++) {
+                double d = Math.hypot(x - cx, z - cz);
+                if (d <= 9.5D) {
+                    set(l, x, Y0, z, s(Blocks.POLISHED_BLACKSTONE));
+                } else if (d <= 11.0D) {
+                    set(l, x, Y0, z, s(Blocks.AMETHYST_BLOCK));
+                }
+            }
+        }
+        fill(l, cx - 2, Y0, cz - 2, cx + 2, Y0, cz + 2, s(Blocks.CRYING_OBSIDIAN));
+        for (int k = 0; k < 8; k++) {
+            int px = cx + (int) Math.round(13.0D * Math.cos(k * Math.PI / 4.0D));
+            int pz = cz + (int) Math.round(13.0D * Math.sin(k * Math.PI / 4.0D));
+            pillar(l, px, pz, 6, s(Blocks.STONE_BRICKS));
+            set(l, px, Y0 + 7, pz, s(Blocks.SOUL_LANTERN));
+        }
+    }
 }
