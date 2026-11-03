@@ -415,8 +415,9 @@ public class StoryScenes {
     }
 
     // ================= Глава Зига: Селеника =================
-    // Зиг возвращается к замку. Селеника, Мастер Астольфо, видит в нём помеху и считает Астольфо инструментом.
-    // После её гибели Астольфо остаётся без Мастера, и Зиг становится его Мастером.
+    // На поле боя Селеника нападает на Райдера и Зига. Разъярённая заботой Астольфо о Зиге, она двумя
+    // Командными заклинаниями заставляет его напасть на Зига. Прежде чем она использует последнее, чтобы
+    // приказать убить Зига, Мордред убивает её из презрения. Зиг становится Мастером Астольфо.
     private static List<Step> celenike() {
         List<Step> s = new ArrayList<>();
         s.add(Steps.fade(0, 20, 40, false));
@@ -426,34 +427,61 @@ public class StoryScenes {
         s.add(Steps.spawnNpc("astolfo", NpcType.ASTOLFO, 199.5, Y, 405.5, 90.0F));
         s.add(Steps.spawnNpc("celenike", NpcType.CELENIKE, 207.5, Y, 409.5, 90.0F));
         s.add(Steps.wait(60));
-        s.add(Steps.npcWalk("celenike", 201.5, Y, 408.0, 1.1D, 300, false));
+
+        // Селеника появляется на поле боя и вступает в схватку
+        s.add(Steps.npcWalk("celenike", 203.0, Y, 409.0, 1.1D, 300, false));
         s.add(say(CELENIKE, "celenike.1"));
         s.add(say(ASTOLFO, "celenike.2"));
         s.add(say(CELENIKE, "celenike.3"));
-        s.add(say(SIEG, "celenike.4"));
-        s.add(say(CELENIKE, "celenike.5"));
-        s.add(say(ASTOLFO, "celenike.6"));
-        s.add(say(CELENIKE, "celenike.7"));
-        s.add(Steps.lightning(203.5, Y, 407.5));
+        s.add(Steps.lightning(201.0, Y, 406.0));
+        s.add(Steps.npcHurt("astolfo"));
         s.add(Steps.wait(10));
-        s.add(Steps.lightning(201.0, Y, 405.0));
+        s.add(Steps.lightning(198.0, Y, 409.0));
+        s.add(Steps.sound(SoundEvents.ANVIL_LAND));
+        s.add(say(SIEG, "celenike.4"));
 
-        // Конфликт заканчивается гибелью Селеники (затемнение, как в пересказе, без подробностей)
-        s.add(Steps.fade(25, 50, 40, true));
-        s.add(Steps.npcLeave("celenike"));
-        s.add(Steps.title("story.fateapocrypha.celenike_death.title", "story.fateapocrypha.celenike_death.subtitle"));
-        s.add(Steps.wait(40));
+        // Первое Командное заклинание: Райдер должен напасть на Зига
+        s.add(say(CELENIKE, "celenike.5"));
+        s.add(Steps.particlesAtNpc("astolfo", ParticleTypes.FLAME, 40));
+        s.add(Steps.sound(SoundEvents.BEACON_POWER_SELECT));
+        s.add(Steps.npcWalk("astolfo", 198.0, Y, 407.0, 0.6D, 200, false));
+        s.add(Steps.npcSwing("astolfo"));
+        s.add(say(ASTOLFO, "celenike.6"));
+
+        // Второе заклинание: Астольфо едва сдерживается
+        s.add(say(CELENIKE, "celenike.7"));
+        s.add(Steps.particlesAtNpc("astolfo", ParticleTypes.FLAME, 60));
+        s.add(Steps.npcSwing("astolfo"));
+        s.add(Steps.npcHurt("astolfo"));
         s.add(say(ASTOLFO, "celenike.8"));
-        s.add(say(SIEG, "celenike.9"));
-        s.add(say(ASTOLFO, "celenike.10"));
-        s.add(say(SIEG, "celenike.11"));
 
-        // Зиг становится Мастером Астольфо: Командные заклинания и Слуга рядом
+        // Последнее заклинание не звучит до конца: появляется Мордред
+        s.add(say(CELENIKE, "celenike.9"));
+        s.add(Steps.spawnNpc("mordred", NpcType.MORDRED, 209.5, Y, 405.5, 90.0F));
+        s.add(Steps.npcWalk("mordred", 204.5, Y, 408.5, 2.2D, 100, false));
+        s.add(say(MORDRED, "celenike.10"));
+        s.add(Steps.npcSwing("mordred"));
+        s.add(Steps.sound(SoundEvents.PLAYER_ATTACK_SWEEP));
+        s.add(Steps.particlesAtNpc("celenike", ParticleTypes.SWEEP_ATTACK, 3));
+        s.add(Steps.npcDie("celenike"));
+        s.add(Steps.wait(30));
+        s.add(say(MORDRED, "celenike.11"));
+        s.add(say(MORDRED, "celenike.12"));
+        s.add(Steps.npcLeave("mordred"));
+
+        // Астольфо освобождён от приказов, но остался без Мастера
+        s.add(Steps.wait(30));
+        s.add(say(ASTOLFO, "celenike.13"));
+        s.add(say(SIEG, "celenike.14"));
+        s.add(say(ASTOLFO, "celenike.15"));
+        s.add(say(SIEG, "celenike.16"));
+
+        // Зиг становится Мастером Астольфо: Командное заклинание и Слуга рядом
         s.add(Steps.despawnAllNpcs());
         s.add(Steps.bindServant(ServantType.ASTOLFO));
         s.add(Steps.give(() -> new ItemStack(ModItems.COMMAND_SEAL.get())));
         s.add(Steps.sound(SoundEvents.BEACON_ACTIVATE));
-        s.add(say(ASTOLFO, "celenike.12"));
+        s.add(say(ASTOLFO, "celenike.17"));
         s.add(Steps.title("story.fateapocrypha.to_be_continued.title", "story.fateapocrypha.to_be_continued.subtitle"));
         s.add(Steps.wait(100));
         s.add(Steps.advance(StoryChapter.TO_BE_CONTINUED));

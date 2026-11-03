@@ -592,4 +592,16 @@ public class Steps {
     public static Step bindServant(ServantType type) {
         return run(c -> ServantActions.spawnServant(c.player, type));
     }
+
+    /** Частицы на текущей позиции NPC (свечение печатей, удар клинка). */
+    public static Step particlesAtNpc(String key, ParticleOptions particle, int count) {
+        return run(c -> {
+            StoryNpcEntity npc = c.npc(key);
+            ServerLevel level = c.trifas();
+            if (npc != null && level != null) {
+                level.sendParticles(particle, npc.getX(), npc.getY(0.6D), npc.getZ(),
+                        count, 0.4D, 0.7D, 0.4D, 0.08D);
+            }
+        });
+    }
 }
