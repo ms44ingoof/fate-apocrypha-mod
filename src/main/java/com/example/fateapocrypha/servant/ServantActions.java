@@ -161,4 +161,34 @@ public class ServantActions {
         player.sendSystemMessage(Component.translatable("message.fateapocrypha.summoned",
                 Component.translatable(type.nameKey())));
     }
+
+    /** Призывает Слугу игроку без катализатора (для сюжета). */
+    public static ServantEntity spawnServant(ServerPlayer player, ServantType type) {
+        if (!(player.level() instanceof ServerLevel level)) {
+            return null;
+        }
+        ServantEntity servant = type.entityType().create(level);
+        if (servant == null) {
+            return null;
+        }
+        Vec3 look = player.getLookAngle();
+        servant.moveTo(player.getX() + look.x * 2.0D, player.getY(), player.getZ() + look.z * 2.0D,
+                player.getYRot() + 180.0F, 0.0F);
+        servant.tame(player);
+        servant.setPersistenceRequired();
+        ItemStack weapon = type.weapon();
+        if (!weapon.isEmpty()) {
+            servant.setItemSlot(EquipmentSlot.MAINHAND, weapon);
+            servant.setDropChance(EquipmentSlot.MAINHAND, 0.0F);
+        }
+        level.addFreshEntity(servant);
+        LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(level);
+        if (bolt != null) {
+            bolt.moveTo(servant.getX(), servant.getY(), servant.getZ());
+            bolt.setVisualOnly(true);
+            level.addFreshEntity(bolt);
+        }
+        StoryManager.setServantId(player, servant.getUUID());
+        return servant;
+    }
 }

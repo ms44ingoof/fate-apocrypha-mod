@@ -44,7 +44,7 @@ public class FateCommands {
     /** Возвращает потерянное Командное заклинание; операторам ещё и катализатор. */
     private static int kit(CommandSourceStack source) throws CommandSyntaxException {
         ServerPlayer player = source.getPlayerOrException();
-        if (StoryManager.getChapter(player).ordinal() < StoryChapter.FOREST.ordinal() && !source.hasPermission(2)) {
+        if (StoryManager.getChapter(player).ordinal() < StoryChapter.TO_BE_CONTINUED.ordinal() && !source.hasPermission(2)) {
             source.sendFailure(Component.translatable("command.fateapocrypha.locked").withStyle(ChatFormatting.RED));
             return 0;
         }
@@ -81,11 +81,11 @@ public class FateCommands {
         return 1;
     }
 
-    /** Телепорт Overworld <-> Трифас. Доступен операторам и после главы "Лес". */
+    /** Телепорт Overworld <-> Трифас. Доступен операторам и после текущего сюжета. */
     private static int travel(CommandSourceStack source) throws CommandSyntaxException {
         ServerPlayer player = source.getPlayerOrException();
         boolean allowed = source.hasPermission(2)
-                || StoryManager.getChapter(player).ordinal() >= StoryChapter.FOREST.ordinal();
+                || StoryManager.getChapter(player).ordinal() >= StoryChapter.TO_BE_CONTINUED.ordinal();
         if (!allowed) {
             source.sendFailure(Component.translatable("command.fateapocrypha.locked").withStyle(ChatFormatting.RED));
             return 0;

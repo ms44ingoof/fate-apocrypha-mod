@@ -13,6 +13,7 @@ public enum StoryChapter {
     INTERLUDE_RED,
     INTERLUDE_SHIRO,
     INTERLUDE_FRANKENSTEIN,
+    CELENIKE,
     TO_BE_CONTINUED;
 
     public String titleKey() {

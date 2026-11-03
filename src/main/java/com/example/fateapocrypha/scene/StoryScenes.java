@@ -1,6 +1,7 @@
 package com.example.fateapocrypha.scene;
 
 import com.example.fateapocrypha.ModItems;
+import com.example.fateapocrypha.servant.ServantType;
 import com.example.fateapocrypha.story.NpcType;
 import com.example.fateapocrypha.story.StoryChapter;
 import java.util.ArrayList;
@@ -34,6 +35,7 @@ public class StoryScenes {
     private static final String CAULES = "npc.fateapocrypha.caules";
     private static final String SIEGFRIED = "npc.fateapocrypha.siegfried";
     private static final String GORDES = "npc.fateapocrypha.gordes";
+    private static final String CELENIKE = "npc.fateapocrypha.celenike";
 
     private static Step say(String speaker, String line) {
         return Steps.say(speaker, "dialogue.fateapocrypha." + line, 120);
@@ -54,6 +56,7 @@ public class StoryScenes {
             case INTERLUDE_RED -> interludeRed();
             case INTERLUDE_SHIRO -> interludeShiro();
             case INTERLUDE_FRANKENSTEIN -> interludeFrankenstein();
+            case CELENIKE -> celenike();
             case TO_BE_CONTINUED -> List.of();
         };
     }
@@ -226,11 +229,8 @@ public class StoryScenes {
         s.add(say(GORDES, "forest.15"));
         s.add(say(ASTOLFO, "forest.16"));
         s.add(Steps.npcLeave("gordes"));
-        s.add(Steps.give(() -> new ItemStack(ModItems.COMMAND_SEAL.get())));
-        s.add(Steps.give(() -> new ItemStack(ModItems.SUMMON_CATALYST.get())));
-        s.add(say(ASTOLFO, "forest.17"));
-        s.add(say(SIEG, "forest.18"));
-        s.add(say(ASTOLFO, "forest.19"));
+        s.add(say(SIEG, "forest.17"));
+        s.add(say(ASTOLFO, "forest.18"));
         s.add(Steps.wait(30));
         s.add(Steps.fade(30, 10, 5, true));
         s.add(Steps.despawnAllNpcs());
@@ -410,10 +410,50 @@ public class StoryScenes {
                 seq(Steps.wait(40), say(CAULES, "frank.12"))));
 
         // Конец интерлюдий: возвращаемся к Зигу
-        s.add(Steps.fade(30, 20, 40, true));
+        interludeEnd(s, StoryChapter.CELENIKE);
+        return s;
+    }
+
+    // ================= Глава Зига: Селеника =================
+    // Зиг возвращается к замку. Селеника, Мастер Астольфо, видит в нём помеху и считает Астольфо инструментом.
+    // После её гибели Астольфо остаётся без Мастера, и Зиг становится его Мастером.
+    private static List<Step> celenike() {
+        List<Step> s = new ArrayList<>();
+        s.add(Steps.fade(0, 20, 40, false));
+        s.add(Steps.run(c -> StoryWorld.ensureBuilt(c.trifas())));
+        s.add(Steps.run(c -> StoryWorld.openGate(c.trifas())));
+        s.add(Steps.teleport(196.5, Y, 407.5, -90.0F));
+        s.add(Steps.spawnNpc("astolfo", NpcType.ASTOLFO, 199.5, Y, 405.5, 90.0F));
+        s.add(Steps.spawnNpc("celenike", NpcType.CELENIKE, 207.5, Y, 409.5, 90.0F));
+        s.add(Steps.wait(60));
+        s.add(Steps.npcWalk("celenike", 201.5, Y, 408.0, 1.1D, 300, false));
+        s.add(say(CELENIKE, "celenike.1"));
+        s.add(say(ASTOLFO, "celenike.2"));
+        s.add(say(CELENIKE, "celenike.3"));
+        s.add(say(SIEG, "celenike.4"));
+        s.add(say(CELENIKE, "celenike.5"));
+        s.add(say(ASTOLFO, "celenike.6"));
+        s.add(say(CELENIKE, "celenike.7"));
+        s.add(Steps.lightning(203.5, Y, 407.5));
+        s.add(Steps.wait(10));
+        s.add(Steps.lightning(201.0, Y, 405.0));
+
+        // Конфликт заканчивается гибелью Селеники (затемнение, как в пересказе, без подробностей)
+        s.add(Steps.fade(25, 50, 40, true));
+        s.add(Steps.npcLeave("celenike"));
+        s.add(Steps.title("story.fateapocrypha.celenike_death.title", "story.fateapocrypha.celenike_death.subtitle"));
+        s.add(Steps.wait(40));
+        s.add(say(ASTOLFO, "celenike.8"));
+        s.add(say(SIEG, "celenike.9"));
+        s.add(say(ASTOLFO, "celenike.10"));
+        s.add(say(SIEG, "celenike.11"));
+
+        // Зиг становится Мастером Астольфо: Командные заклинания и Слуга рядом
         s.add(Steps.despawnAllNpcs());
-        s.add(Steps.cinematicEnd());
-        s.add(Steps.teleport(StoryWorld.FOREST_CX + 0.5, Y, StoryWorld.FOREST_CZ + 0.5, -90.0F));
+        s.add(Steps.bindServant(ServantType.ASTOLFO));
+        s.add(Steps.give(() -> new ItemStack(ModItems.COMMAND_SEAL.get())));
+        s.add(Steps.sound(SoundEvents.BEACON_ACTIVATE));
+        s.add(say(ASTOLFO, "celenike.12"));
         s.add(Steps.title("story.fateapocrypha.to_be_continued.title", "story.fateapocrypha.to_be_continued.subtitle"));
         s.add(Steps.wait(100));
         s.add(Steps.advance(StoryChapter.TO_BE_CONTINUED));

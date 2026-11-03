@@ -16,6 +16,7 @@ import com.example.fateapocrypha.network.DialoguePacket;
 import com.example.fateapocrypha.network.FadePacket;
 import com.example.fateapocrypha.network.ModNetwork;
 import com.example.fateapocrypha.servant.ServantActions;
+import com.example.fateapocrypha.servant.ServantType;
 import com.example.fateapocrypha.story.NpcType;
 import com.example.fateapocrypha.story.StoryChapter;
 import com.example.fateapocrypha.story.StoryManager;
@@ -585,5 +586,10 @@ public class Steps {
                         60, 0.6D, 1.0D, 0.6D, 0.1D);
             }
         });
+    }
+
+    /** Игрок становится Мастером Слуги: тот появляется рядом и следует за игроком. */
+    public static Step bindServant(ServantType type) {
+        return run(c -> ServantActions.spawnServant(c.player, type));
     }
 }

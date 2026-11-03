@@ -15,7 +15,8 @@ public enum NpcType {
     FRANKENSTEIN("frankenstein", false, Items.AIR),
     CAULES("caules", false, Items.AIR),
     SIEGFRIED("siegfried", false, Items.DIAMOND_SWORD),
-    GORDES("gordes", false, Items.AIR);
+    GORDES("gordes", false, Items.AIR),
+    CELENIKE("celenike", false, Items.AIR);
 
     private final String id;
     private final boolean slim;
