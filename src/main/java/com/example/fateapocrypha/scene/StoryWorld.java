@@ -473,7 +473,7 @@ public class StoryWorld {
         for (int i = 0; i < 520; i++) {
             int x = x0 + 6 + rnd.nextInt(size - 12);
             int z = z0 + 6 + rnd.nextInt(size - 12);
-            if (clearingDistance(x, z) < 13.0D || isPond(x, z)) {
+            if (clearingDistance(x, z) < 13.0D || isPond(x, z) || nearForestPath(x, z)) {
                 continue;
             }
             int h = heightAt(x, z);
@@ -1176,31 +1176,60 @@ public class StoryWorld {
         }
     }
 
+
+    private static final double[] PATH_WOBBLE = {0.7D, 2.1D, 3.6D, 5.0D};
+    private static final int[][] PATH_DIRS = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+
+    private static int pathLateral(int dir, int t) {
+        return (int) Math.round(Math.sin(t / 9.0D + PATH_WOBBLE[dir]) * 3.0D);
+    }
+
+    /** Точка на тропе или рядом с ней: деревья здесь не растут, чтобы тропа не рубила стволы. */
+    private static boolean nearForestPath(int x, int z) {
+        int dx = x - FOREST_CX;
+        int dz = z - FOREST_CZ;
+        for (int dir = 0; dir < 4; dir++) {
+            int[] d = PATH_DIRS[dir];
+            int t = d[0] != 0 ? dx * d[0] : dz * d[1];
+            if (t < 6 || t >= 80) {
+                continue;
+            }
+            int across = d[0] != 0 ? dz : dx;
+            if (Math.abs(across - pathLateral(dir, t)) <= 3) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /** Лес: тропы от поляны, кувшинки и тростник на прудах, грибы и поваленные брёвна. */
     private static void forestDetails(ServerLevel l, Random rnd) {
         int x0 = FOREST_X0;
         int z0 = FOREST_Z0;
         int size = FOREST_SIZE;
-        int[][] dirs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
-        for (int[] d : dirs) {
-            double wobble = rnd.nextDouble() * 6.0D;
+        for (int dir = 0; dir < 4; dir++) {
+            int[] d = PATH_DIRS[dir];
             for (int t = 8; t < 78; t++) {
-                int lateral = (int) Math.round(Math.sin(t / 9.0D + wobble) * 3.0D);
+                int lateral = pathLateral(dir, t);
                 int x = FOREST_CX + d[0] * t + (d[0] == 0 ? lateral : 0);
                 int z = FOREST_CZ + d[1] * t + (d[1] == 0 ? lateral : 0);
                 if (x < x0 + 3 || x > x0 + size - 4 || z < z0 + 3 || z > z0 + size - 4) {
                     break;
                 }
                 for (int w = -1; w <= 1; w++) {
-                    int px = x + (d[0] == 0 ? 0 : 0) + (d[1] != 0 ? w : 0);
+                    int px = x + (d[1] != 0 ? w : 0);
                     int pz = z + (d[0] != 0 ? w : 0);
                     if (isPond(px, pz)) {
                         continue;
                     }
                     int y = Y0 + heightAt(px, pz);
+                    BlockState above = l.getBlockState(new BlockPos(px, y + 1, pz));
+                    if (!above.isAir() && !above.canBeReplaced()) {
+                        continue;   // стволы и листву не трогаем
+                    }
                     set(l, px, y, pz, s(Blocks.DIRT_PATH));
-                    for (int up = 1; up <= 6; up++) {
-                        set(l, px, y + up, pz, AIR);
+                    if (!above.isAir()) {
+                        set(l, px, y + 1, pz, AIR);   // убираем траву и цветы с тропы
                     }
                 }
             }
