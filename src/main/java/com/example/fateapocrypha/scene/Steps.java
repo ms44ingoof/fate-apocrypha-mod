@@ -732,4 +732,28 @@ public class Steps {
             }
         };
     }
+
+    /** Корова, овца, курица по очереди: оживляют ферму. Исчезают в конце сцены. */
+    public static Step spawnAnimals(double[][] positions) {
+        return run(c -> {
+            ServerLevel level = c.trifas();
+            if (level == null) {
+                return;
+            }
+            int i = 0;
+            for (double[] p : positions) {
+                net.minecraft.world.entity.Mob animal = switch (i++ % 3) {
+                    case 0 -> EntityType.COW.create(level);
+                    case 1 -> EntityType.SHEEP.create(level);
+                    default -> EntityType.CHICKEN.create(level);
+                };
+                if (animal == null) {
+                    continue;
+                }
+                animal.moveTo(p[0], p[1], p[2], (float) ((i * 70) % 360), 0.0F);
+                level.addFreshEntity(animal);
+                c.mobs.add(animal.getUUID());
+            }
+        });
+    }
 }

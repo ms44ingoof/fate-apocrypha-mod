@@ -21,7 +21,12 @@ public enum NpcType {
     JACK("jack", false, Items.IRON_SWORD),
     ATALANTA("atalanta", false, Items.BOW),
     AVICEBRON("avicebron", false, Items.AIR),
-    ROCHE("roche", false, Items.AIR);
+    ROCHE("roche", false, Items.AIR),
+    FARMER("farmer", false, Items.IRON_HOE),
+    DARNIC("darnic", false, Items.AIR),
+    VLAD("vlad", false, Items.IRON_SWORD),
+    FIORE("fiore", false, Items.AIR),
+    REIKA("reika", false, Items.AIR);
 
     private final String id;
     private final boolean slim;

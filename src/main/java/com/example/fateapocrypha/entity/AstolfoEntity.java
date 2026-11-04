@@ -17,7 +17,7 @@ public class AstolfoEntity extends ServantEntity {
     }
 
     public static AttributeSupplier.Builder createAttributes() {
-        return createServantAttributes(40.0D, 0.32D, 7.0D);
+        return createServantAttributes(100.0D, 0.34D, 9.0D);
     }
 
     @Override

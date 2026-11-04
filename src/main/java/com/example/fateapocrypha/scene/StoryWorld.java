@@ -10,9 +10,12 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CandleBlock;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.LanternBlock;
+import net.minecraft.world.level.block.FarmBlock;
 import net.minecraft.world.level.block.LeavesBlock;
+import net.minecraft.world.level.block.RotatedPillarBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BedPart;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 
 /**
  * Локации сюжета, генерируемые кодом в измерении Трифас (плоский мир, пол на y = Y0).
@@ -86,6 +89,7 @@ public class StoryWorld {
         decorateFallCorridor(l);
         decorateChironRoom(l);
         decorateEscapeRoute(l);
+        beautifyCastle(l);
         // локации стоят на лесных полянах: кольцо леса скрывает плоский горизонт
         woodlandRing(l, 100, 100, 190, 130, 6, 2, 1001L);
         woodlandRing(l, 100, 298, 130, 306, 6, 2, 1002L);
@@ -502,6 +506,7 @@ public class StoryWorld {
             }
         }
 
+        forestDetails(l, rnd);
         woodlandRing(l, FOREST_X0, FOREST_Z0, FOREST_X0 + FOREST_SIZE - 1, FOREST_Z0 + FOREST_SIZE - 1, 6, 3, 3001L);
         set(l, FOREST_CX, Y0 - 1, FOREST_CZ, s(Blocks.ROOTED_DIRT));   // метка "лес построен"
     }
@@ -591,6 +596,7 @@ public class StoryWorld {
         decorateCamp(l);
         decorateChapel(l);
         decorateRuins(l);
+        beautifyStages(l);
         woodlandRing(l, 784, 784, 816, 816, 6, 2, 2001L);
         woodlandRing(l, 790, 890, 810, 920, 6, 2, 2002L);
         woodlandRing(l, 780, 980, 820, 1020, 6, 2, 2003L);
@@ -964,6 +970,7 @@ public class StoryWorld {
         buildSiege(l);
         buildTown(l, 1000, s(Blocks.BRICKS), 9);                     // викторианский Лондон
         buildPlain(l);
+        beautifyStagesB(l);
         woodlandRing(l, 1180, 786, 1220, 814, 6, 2, 4001L);
         woodlandRing(l, 1175, 870, 1225, 920, 6, 2, 4002L);
         woodlandRing(l, 1180, 986, 1220, 1014, 6, 2, 4003L);
@@ -1092,5 +1099,338 @@ public class StoryWorld {
             pillar(l, px, pz, 6, s(Blocks.STONE_BRICKS));
             set(l, px, Y0 + 7, pz, s(Blocks.SOUL_LANTERN));
         }
+    }
+
+    // ================= Помощники украшений =================
+    private static void setIfAir(ServerLevel l, int x, int y, int z, BlockState state) {
+        BlockPos pos = new BlockPos(x, y, z);
+        if (l.getBlockState(pos).isAir()) {
+            l.setBlock(pos, state, 2);
+        }
+    }
+
+    private static final int[][] CAPSULES = {
+            {104, 104}, {104, 109}, {104, 121}, {104, 126}, {109, 104}, {109, 109}, {109, 121}, {109, 126},
+            {121, 104}, {121, 109}, {121, 121}, {121, 126}, {126, 104}, {126, 109}, {126, 121}, {126, 126},
+            {104, 115}, {115, 104}, {115, 126}};
+
+    private static boolean isCapsuleCell(int x, int z) {
+        for (int[] c : CAPSULES) {
+            if (Math.abs(x - c[0]) <= 1 && Math.abs(z - c[1]) <= 1) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Лаборатория и замок: мозаика вокруг капсулы, световые панели, потолочные балки, ковровые каймы. */
+    private static void beautifyCastle(ServerLevel l) {
+        // кольца зелёной и белой мозаики на полу вокруг главной капсулы
+        for (int x = 105; x <= 125; x++) {
+            for (int z = 105; z <= 125; z++) {
+                if (isCapsuleCell(x, z)) {
+                    continue;
+                }
+                double d = Math.hypot(x - 115, z - 115);
+                if (d >= 6.0D && d < 7.0D) {
+                    set(l, x, Y0, z, s(Blocks.LIME_CONCRETE));
+                } else if (d >= 7.0D && d < 8.0D) {
+                    set(l, x, Y0, z, s(Blocks.WHITE_CONCRETE));
+                } else if (d >= 8.0D && d < 8.7D) {
+                    set(l, x, Y0, z, s(Blocks.LIME_CONCRETE));
+                }
+            }
+        }
+        // световые панели на боковых стенах зала
+        for (int z = 105; z <= 125; z += 4) {
+            fill(l, 101, Y0 + 2, z, 101, Y0 + 5, z, GREEN_LAMP);
+            fill(l, 129, Y0 + 2, z, 129, Y0 + 5, z, GREEN_LAMP);
+        }
+        // балки под потолком зала
+        BlockState rafter = s(Blocks.DEEPSLATE_BRICKS);
+        for (int z : new int[] {108, 122}) {
+            for (int x = 101; x <= 129; x++) {
+                setIfAir(l, x, Y0 + 8, z, rafter);
+            }
+        }
+        for (int x : new int[] {108, 122}) {
+            for (int z = 101; z <= 129; z++) {
+                setIfAir(l, x, Y0 + 8, z, rafter);
+            }
+        }
+        // замок: деревянные балки в коридорах и большом зале, жёлтая кайма ковра
+        BlockState beam = s(Blocks.DARK_OAK_LOG).setValue(RotatedPillarBlock.AXIS, Direction.Axis.Z);
+        for (int x = 116; x <= 156; x += 8) {
+            for (int z = 406; z <= 408; z++) {
+                setIfAir(l, x, Y0 + 4, z, beam);
+            }
+        }
+        for (int x : new int[] {163, 168, 173}) {
+            for (int z = 399; z <= 415; z++) {
+                setIfAir(l, x, Y0 + 7, z, beam);
+            }
+        }
+        for (int x = 161; x <= 177; x++) {
+            set(l, x, Y0 + 1, 405, s(Blocks.YELLOW_CARPET));
+            set(l, x, Y0 + 1, 409, s(Blocks.YELLOW_CARPET));
+        }
+    }
+
+    /** Лес: тропы от поляны, кувшинки и тростник на прудах, грибы и поваленные брёвна. */
+    private static void forestDetails(ServerLevel l, Random rnd) {
+        int x0 = FOREST_X0;
+        int z0 = FOREST_Z0;
+        int size = FOREST_SIZE;
+        int[][] dirs = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+        for (int[] d : dirs) {
+            double wobble = rnd.nextDouble() * 6.0D;
+            for (int t = 8; t < 78; t++) {
+                int lateral = (int) Math.round(Math.sin(t / 9.0D + wobble) * 3.0D);
+                int x = FOREST_CX + d[0] * t + (d[0] == 0 ? lateral : 0);
+                int z = FOREST_CZ + d[1] * t + (d[1] == 0 ? lateral : 0);
+                if (x < x0 + 3 || x > x0 + size - 4 || z < z0 + 3 || z > z0 + size - 4) {
+                    break;
+                }
+                for (int w = -1; w <= 1; w++) {
+                    int px = x + (d[0] == 0 ? 0 : 0) + (d[1] != 0 ? w : 0);
+                    int pz = z + (d[0] != 0 ? w : 0);
+                    if (isPond(px, pz)) {
+                        continue;
+                    }
+                    int y = Y0 + heightAt(px, pz);
+                    set(l, px, y, pz, s(Blocks.DIRT_PATH));
+                    for (int up = 1; up <= 6; up++) {
+                        set(l, px, y + up, pz, AIR);
+                    }
+                }
+            }
+        }
+        for (int x = x0 + 2; x < x0 + size - 2; x++) {
+            for (int z = z0 + 2; z < z0 + size - 2; z++) {
+                if (isPond(x, z)) {
+                    if (rnd.nextInt(5) == 0) {
+                        set(l, x, Y0 + 1, z, s(Blocks.LILY_PAD));
+                    }
+                } else if (heightAt(x, z) == 0
+                        && (isPond(x + 1, z) || isPond(x - 1, z) || isPond(x, z + 1) || isPond(x, z - 1))
+                        && rnd.nextInt(3) == 0) {
+                    int cane = 2 + rnd.nextInt(2);
+                    for (int i = 1; i <= cane; i++) {
+                        set(l, x, Y0 + i, z, s(Blocks.SUGAR_CANE));
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < 160; i++) {
+            int x = x0 + 4 + rnd.nextInt(size - 8);
+            int z = z0 + 4 + rnd.nextInt(size - 8);
+            if (isPond(x, z) || heightAt(x, z) >= 12 || clearingDistance(x, z) < 12.0D) {
+                continue;
+            }
+            BlockPos pos = new BlockPos(x, Y0 + heightAt(x, z) + 1, z);
+            if (l.getBlockState(pos).isAir() && l.getBlockState(pos.below()).is(Blocks.GRASS_BLOCK)) {
+                l.setBlock(pos, rnd.nextBoolean() ? s(Blocks.RED_MUSHROOM) : s(Blocks.BROWN_MUSHROOM), 2);
+            }
+        }
+        for (int i = 0; i < 14; i++) {
+            int x = x0 + 6 + rnd.nextInt(size - 12);
+            int z = z0 + 6 + rnd.nextInt(size - 12);
+            if (isPond(x, z) || heightAt(x, z) >= 11 || clearingDistance(x, z) < 14.0D) {
+                continue;
+            }
+            boolean alongX = rnd.nextBoolean();
+            int len = 3 + rnd.nextInt(2);
+            BlockState log = s(Blocks.OAK_LOG)
+                    .setValue(RotatedPillarBlock.AXIS, alongX ? Direction.Axis.X : Direction.Axis.Z);
+            for (int k = 0; k < len; k++) {
+                int lx = alongX ? x + k : x;
+                int lz = alongX ? z : z + k;
+                if (!isPond(lx, lz)) {
+                    set(l, lx, Y0 + heightAt(lx, lz) + 1, lz, log);
+                }
+            }
+        }
+    }
+
+    /** Лагерь и церковь: пеньки у костра, орган и кафедра. */
+    private static void beautifyStages(ServerLevel l) {
+        int cx = STAGE_RED_X;
+        int cz = STAGE_RED_Z;
+        for (int[] c : new int[][] {{-2, -2}, {2, 2}, {-2, 2}, {2, -2}}) {
+            set(l, cx + c[0], Y0 + 1, cz + c[1], s(Blocks.OAK_LOG));
+        }
+        set(l, cx + 9, Y0 + 1, cz + 3, s(Blocks.CAMPFIRE));
+        set(l, cx - 9, Y0 + 1, cz - 3, s(Blocks.CAMPFIRE));
+        // церковь: орган из труб за алтарём и кафедра
+        for (int i = 0; i < 5; i++) {
+            fill(l, 793 + i, Y0 + 1, 918, 793 + i, Y0 + 4 + i, 918, BARS);
+            fill(l, 807 - i, Y0 + 1, 918, 807 - i, Y0 + 4 + i, 918, BARS);
+        }
+        fill(l, 793, Y0 + 1, 919, 797, Y0 + 1, 919, s(Blocks.CHISELED_STONE_BRICKS));
+        fill(l, 803, Y0 + 1, 919, 807, Y0 + 1, 919, s(Blocks.CHISELED_STONE_BRICKS));
+        set(l, 797, Y0 + 1, 912, s(Blocks.LECTERN));
+    }
+
+    /** Улицы, замок и равнина: цветы у дверей, знамёна на стене, руны на полу круга. */
+    private static void beautifyStagesB(ServerLevel l) {
+        for (int zc : new int[] {800, 1000}) {
+            for (int hx = 1180; hx < 1220; hx += 10) {
+                set(l, hx + 3, Y0 + 1, zc + 5, s(Blocks.POTTED_RED_TULIP));
+                set(l, hx + 5, Y0 + 1, zc - 5, s(Blocks.POTTED_BLUE_ORCHID));
+                set(l, hx + 5, Y0 + 1, zc + 5, s(Blocks.POTTED_ALLIUM));
+            }
+        }
+        BlockState banner = Blocks.RED_WALL_BANNER.defaultBlockState()
+                .setValue(net.minecraft.world.level.block.HorizontalDirectionalBlock.FACING, Direction.NORTH);
+        for (int x : new int[] {1186, 1190, 1210, 1214}) {
+            set(l, x, Y0 + 6, 899, banner);
+        }
+        int cx = STAGE_PLAIN_X;
+        int cz = STAGE_PLAIN_Z;
+        for (int k = 0; k < 8; k++) {
+            for (int r = 3; r <= 9; r++) {
+                int x = cx + (int) Math.round(r * Math.cos(k * Math.PI / 4.0D));
+                int z = cz + (int) Math.round(r * Math.sin(k * Math.PI / 4.0D));
+                set(l, x, Y0, z, r % 2 == 0 ? s(Blocks.SEA_LANTERN) : s(Blocks.CRYING_OBSIDIAN));
+            }
+        }
+    }
+
+    // ================= Ферма (дом Зига после побега) =================
+    public static final int FARM_X = 1200;
+    public static final int FARM_Z = 1200;
+
+    public static void ensureFarm(ServerLevel l) {
+        if (l != null && !l.getBlockState(new BlockPos(FARM_X, Y0 - 1, FARM_Z)).is(Blocks.ROOTED_DIRT)) {
+            buildFarm(l);
+        }
+    }
+
+    private static void pyramidRoof(ServerLevel l, int x1, int z1, int x2, int z2, int y, BlockState state) {
+        int a = x1 - 1;
+        int b = z1 - 1;
+        int c = x2 + 1;
+        int d = z2 + 1;
+        while (a <= c && b <= d) {
+            fill(l, a, y, b, c, y, d, state);
+            a++;
+            b++;
+            c--;
+            d--;
+            y++;
+        }
+    }
+
+    private static void field(ServerLevel l, int x1, int z1, int x2, int z2, Block crop) {
+        BlockState soil = Blocks.FARMLAND.defaultBlockState().setValue(FarmBlock.MOISTURE, 7);
+        BlockState plant = crop.defaultBlockState().setValue(BlockStateProperties.AGE_7, 7);
+        int channel = (x1 + x2) / 2;
+        for (int x = x1; x <= x2; x++) {
+            for (int z = z1; z <= z2; z++) {
+                if (x == channel) {
+                    set(l, x, Y0, z, s(Blocks.WATER));
+                } else {
+                    set(l, x, Y0, z, soil);
+                    set(l, x, Y0 + 1, z, plant);
+                }
+            }
+        }
+    }
+
+    private static void buildFarm(ServerLevel l) {
+        // дорожка к дому и двору
+        fill(l, 1188, Y0, 1189, 1190, Y0, 1216, s(Blocks.DIRT_PATH));
+        fill(l, 1184, Y0, 1189, 1194, Y0, 1190, s(Blocks.DIRT_PATH));
+
+        // дом: каменный фундамент, дубовые стены и столбы, остроконечная крыша
+        fill(l, 1184, Y0, 1180, 1194, Y0, 1188, s(Blocks.COBBLESTONE));
+        fill(l, 1184, Y0 + 1, 1180, 1194, Y0 + 4, 1188, s(Blocks.OAK_PLANKS));
+        fill(l, 1185, Y0 + 1, 1181, 1193, Y0 + 4, 1187, AIR);
+        for (int[] c : new int[][] {{1184, 1180}, {1184, 1188}, {1194, 1180}, {1194, 1188}}) {
+            fill(l, c[0], Y0 + 1, c[1], c[0], Y0 + 4, c[1], s(Blocks.OAK_LOG));
+        }
+        for (int x = 1186; x <= 1192; x += 3) {
+            setSoft(l, x, Y0 + 2, 1180, s(Blocks.GLASS_PANE));
+            setSoft(l, x, Y0 + 2, 1188, s(Blocks.GLASS_PANE));
+        }
+        for (int z = 1183; z <= 1185; z += 2) {
+            setSoft(l, 1184, Y0 + 2, z, s(Blocks.GLASS_PANE));
+            setSoft(l, 1194, Y0 + 2, z, s(Blocks.GLASS_PANE));
+        }
+        fill(l, 1189, Y0 + 1, 1188, 1189, Y0 + 2, 1188, AIR);
+        pyramidRoof(l, 1184, 1180, 1194, 1188, Y0 + 5, s(Blocks.DARK_OAK_PLANKS));
+        fill(l, 1186, Y0 + 6, 1182, 1186, Y0 + 9, 1182, s(Blocks.COBBLESTONE));   // труба
+        set(l, 1186, Y0 + 10, 1182, s(Blocks.CAMPFIRE));
+        BlockState foot = Blocks.RED_BED.defaultBlockState()
+                .setValue(BedBlock.FACING, Direction.EAST).setValue(BedBlock.PART, BedPart.FOOT);
+        BlockState head = Blocks.RED_BED.defaultBlockState()
+                .setValue(BedBlock.FACING, Direction.EAST).setValue(BedBlock.PART, BedPart.HEAD);
+        set(l, 1186, Y0 + 1, 1182, foot);
+        set(l, 1187, Y0 + 1, 1182, head);
+        set(l, 1192, Y0 + 1, 1182, s(Blocks.CRAFTING_TABLE));
+        set(l, 1192, Y0 + 1, 1183, s(Blocks.FURNACE));
+        set(l, 1192, Y0 + 1, 1186, s(Blocks.BOOKSHELF));
+        fill(l, 1188, Y0 + 1, 1184, 1190, Y0 + 1, 1186, s(Blocks.RED_CARPET));
+        set(l, 1189, Y0 + 4, 1184, HANGING_LANTERN);
+        set(l, 1190, Y0 + 1, 1189, s(Blocks.POTTED_RED_TULIP));
+        set(l, 1188, Y0 + 1, 1189, s(Blocks.POTTED_RED_TULIP));
+
+        // красный сарай с сеновалом
+        fill(l, 1196, Y0, 1178, 1208, Y0, 1190, s(Blocks.COBBLESTONE));
+        fill(l, 1196, Y0 + 1, 1178, 1208, Y0 + 6, 1190, s(Blocks.RED_TERRACOTTA));
+        fill(l, 1197, Y0 + 1, 1179, 1207, Y0 + 6, 1189, AIR);
+        for (int[] c : new int[][] {{1196, 1178}, {1196, 1190}, {1208, 1178}, {1208, 1190}, {1202, 1190}}) {
+            fill(l, c[0], Y0 + 1, c[1], c[0], Y0 + 6, c[1], s(Blocks.STRIPPED_OAK_LOG));
+        }
+        fill(l, 1200, Y0 + 1, 1190, 1204, Y0 + 4, 1190, AIR);
+        pyramidRoof(l, 1196, 1178, 1208, 1190, Y0 + 7, s(Blocks.DARK_OAK_PLANKS));
+        for (int x = 1198; x <= 1206; x += 2) {
+            set(l, x, Y0 + 1, 1180, s(Blocks.HAY_BLOCK));
+            set(l, x, Y0 + 2, 1180, s(Blocks.HAY_BLOCK));
+        }
+        set(l, 1202, Y0 + 6, 1184, HANGING_LANTERN);
+
+        // поля: пшеница и морковь с каналами воды
+        field(l, 1172, 1195, 1186, 1212, Blocks.WHEAT);
+        field(l, 1192, 1195, 1210, 1212, Blocks.CARROTS);
+
+        // забор вокруг фермы с проходом для дорожки
+        for (int x = 1170; x <= 1212; x++) {
+            set(l, x, Y0 + 1, 1176, s(Blocks.OAK_FENCE));
+            if (x < 1188 || x > 1190) {
+                set(l, x, Y0 + 1, 1214, s(Blocks.OAK_FENCE));
+            }
+        }
+        for (int z = 1176; z <= 1214; z++) {
+            set(l, 1170, Y0 + 1, z, s(Blocks.OAK_FENCE));
+            set(l, 1212, Y0 + 1, z, s(Blocks.OAK_FENCE));
+        }
+
+        // пугало, колодец, сено у ворот
+        set(l, 1179, Y0 + 1, 1203, s(Blocks.OAK_FENCE));
+        set(l, 1179, Y0 + 2, 1203, s(Blocks.HAY_BLOCK));
+        set(l, 1178, Y0 + 2, 1203, s(Blocks.OAK_FENCE));
+        set(l, 1180, Y0 + 2, 1203, s(Blocks.OAK_FENCE));
+        set(l, 1179, Y0 + 3, 1203, s(Blocks.CARVED_PUMPKIN));
+        for (int x = 1198; x <= 1200; x++) {
+            for (int z = 1192; z <= 1194; z++) {
+                set(l, x, Y0 + 1, z, s(Blocks.STONE_BRICKS));
+            }
+        }
+        set(l, 1199, Y0 + 1, 1193, s(Blocks.WATER));
+        for (int[] c : new int[][] {{1198, 1192}, {1200, 1192}, {1198, 1194}, {1200, 1194}}) {
+            fill(l, c[0], Y0 + 2, c[1], c[0], Y0 + 4, c[1], s(Blocks.OAK_FENCE));
+        }
+        fill(l, 1198, Y0 + 5, 1192, 1200, Y0 + 5, 1194, s(Blocks.OAK_SLAB));
+        set(l, 1191, Y0 + 1, 1213, s(Blocks.HAY_BLOCK));
+        set(l, 1187, Y0 + 1, 1213, s(Blocks.HAY_BLOCK));
+        for (int i = 0; i < 24; i++) {
+            int fx = 1174 + (i * 7) % 36;
+            int fz = 1215 + (i % 3);
+            set(l, fx, Y0 + 1, fz, i % 2 == 0 ? s(Blocks.DANDELION) : s(Blocks.POPPY));
+        }
+
+        woodlandRing(l, 1165, 1170, 1217, 1220, 6, 2, 5001L);
+        set(l, FARM_X, Y0 - 1, FARM_Z, s(Blocks.ROOTED_DIRT));   // метка "построено"
     }
 }

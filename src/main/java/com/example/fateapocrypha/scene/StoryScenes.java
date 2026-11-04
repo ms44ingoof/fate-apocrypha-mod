@@ -41,6 +41,10 @@ public class StoryScenes {
     private static final String ATALANTA = "npc.fateapocrypha.atalanta";
     private static final String AVICEBRON = "npc.fateapocrypha.avicebron";
     private static final String ROCHE = "npc.fateapocrypha.roche";
+    private static final String DARNIC = "npc.fateapocrypha.darnic";
+    private static final String VLAD = "npc.fateapocrypha.vlad";
+    private static final String REIKA = "npc.fateapocrypha.reika";
+    private static final String FARMER = "npc.fateapocrypha.farmer";
 
     private static Step say(String speaker, String line) {
         return Steps.say(speaker, "dialogue.fateapocrypha." + line, 120);
@@ -63,7 +67,7 @@ public class StoryScenes {
             case INTERLUDE_FRANKENSTEIN -> interludeFrankenstein();
             case INTERLUDE_SPARTACUS -> interludeSpartacus();
             case CELENIKE -> celenike();
-            case JEANNE -> jeanne();
+            case FARM -> farm();
             case JACK -> jack();
             case INTERLUDE_AVICEBRON -> interludeAvicebron();
             case GOLEM_ADAM -> golemAdam();
@@ -192,7 +196,8 @@ public class StoryScenes {
         return s;
     }
 
-    // 6. Лес: големы, Зигфрид и Гордес, жертва сердца, имя Зиг
+    // 6. Лес: големы, Зигфрид и Гордес, жертва сердца. Приходит Жанна, Зигфрид просит её позаботиться о Зиге.
+    //    Другие Мастера и Слуги забирают Астольфо, а Жанна уводит Зига.
     private static List<Step> forest() {
         List<Step> s = new ArrayList<>();
         s.add(Steps.fade(0, 30, 40, false));
@@ -214,7 +219,7 @@ public class StoryScenes {
         s.add(par(
                 Steps.npcWalk("siegfried", FX + 0.5, Y, FZ - 4.0, 1.6D, 300, false),
                 Steps.npcWalk("gordes", FX + 2.0, Y, FZ - 6.5, 1.1D, 300, false)));
-        s.add(Steps.discardMobs());                       // Зигфрид уничтожает последнего голема
+        s.add(Steps.discardMobs());
         s.add(Steps.sound(SoundEvents.ANVIL_LAND));
         s.add(say(ASTOLFO, "forest.6"));
         s.add(say(GORDES, "forest.7"));
@@ -226,24 +231,114 @@ public class StoryScenes {
         s.add(say(SIEG, "forest.8"));
         s.add(say(ASTOLFO, "forest.9"));
 
-        // Зигфрид отдаёт своё сердце
+        // Зигфрид отдаёт сердце: он хочет в последний раз кому-то помочь
         s.add(say(SIEGFRIED, "forest.10"));
         s.add(say(GORDES, "forest.11"));
         s.add(say(SIEGFRIED, "forest.12"));
         s.add(Steps.healPlayer());
         s.add(Steps.sound(SoundEvents.BEACON_ACTIVATE));
-        s.add(say(SIEGFRIED, "forest.13"));
+
+        // приходит Жанна; Зигфрид просит её позаботиться о Зиге
+        s.add(Steps.spawnNpc("jeanne", NpcType.JEANNE, FX + 11.5, Y, FZ + 5.5, 90.0F));
+        s.add(Steps.npcWalk("jeanne", FX + 2.0, Y, FZ + 2.5, 2.0D, 160, false));
+        s.add(say(JEANNE, "forest.13"));
+        s.add(say(SIEGFRIED, "forest.14"));
+        s.add(say(JEANNE, "forest.15"));
         s.add(Steps.npcDie("siegfried"));
         s.add(Steps.wait(40));
-        s.add(say(SIEG, "forest.14"));
-        s.add(say(GORDES, "forest.15"));
-        s.add(say(ASTOLFO, "forest.16"));
-        s.add(Steps.npcLeave("gordes"));
-        s.add(say(SIEG, "forest.17"));
+        s.add(say(GORDES, "forest.16"));
+
+        // другие Мастера и Слуги Чёрной фракции требуют вернуть Астольфо
+        s.add(Steps.spawnNpc("darnic", NpcType.DARNIC, FX - 8.5, Y, FZ - 14.0, 0.0F));
+        s.add(Steps.spawnNpc("vlad", NpcType.VLAD, FX - 11.0, Y, FZ - 14.0, 0.0F));
+        s.add(Steps.spawnNpc("fiore", NpcType.FIORE, FX - 14.0, Y, FZ - 12.0, 0.0F));
+        s.add(Steps.spawnNpc("chiron", NpcType.CHIRON, FX - 16.0, Y, FZ - 10.0, 0.0F));
+        s.add(par(
+                Steps.npcWalk("darnic", FX - 2.5, Y, FZ - 6.0, 1.1D, 300, false),
+                Steps.npcWalk("vlad", FX - 5.0, Y, FZ - 5.0, 1.2D, 300, false),
+                Steps.npcWalk("fiore", FX - 7.0, Y, FZ - 3.0, 1.0D, 300, false),
+                Steps.npcWalk("chiron", FX - 8.0, Y, FZ - 1.0, 1.1D, 300, false)));
+        s.add(say(DARNIC, "forest.17"));
         s.add(say(ASTOLFO, "forest.18"));
+        s.add(say(VLAD, "forest.19"));
+        s.add(say(JEANNE, "forest.20"));
+        s.add(say(CHIRON, "forest.21"));
+        s.add(say(ASTOLFO, "forest.22"));
+
+        // Астольфо уводят
+        s.add(par(
+                Steps.npcWalk("astolfo", FX - 12.0, Y, FZ - 12.0, 0.9D, 300, false),
+                Steps.npcWalk("darnic", FX - 14.0, Y, FZ - 15.0, 1.0D, 300, false),
+                Steps.npcWalk("vlad", FX - 14.0, Y, FZ - 13.0, 1.0D, 300, false),
+                Steps.npcWalk("fiore", FX - 15.0, Y, FZ - 11.0, 1.0D, 300, false),
+                Steps.npcWalk("chiron", FX - 16.0, Y, FZ - 9.0, 1.0D, 300, false),
+                Steps.npcWalk("gordes", FX - 9.0, Y, FZ - 14.0, 0.8D, 300, false)));
+        s.add(Steps.npcLeave("astolfo"));
+        s.add(Steps.npcLeave("darnic"));
+        s.add(Steps.npcLeave("vlad"));
+        s.add(Steps.npcLeave("fiore"));
+        s.add(Steps.npcLeave("chiron"));
+        s.add(Steps.npcLeave("gordes"));
+        s.add(Steps.wait(40));
+
+        // Жанна забирает Зига и даёт ему имя
+        s.add(say(SIEG, "forest.23"));
+        s.add(say(JEANNE, "forest.24"));
+        s.add(say(SIEG, "forest.25"));
+        s.add(say(JEANNE, "forest.26"));
+        s.add(say(SIEG, "forest.27"));
+        s.add(say(JEANNE, "forest.28"));
         s.add(Steps.wait(30));
         s.add(Steps.fade(30, 10, 5, true));
         s.add(Steps.despawnAllNpcs());
+        s.add(Steps.advance(StoryChapter.FARM));
+        return s;
+    }
+
+    // ================= Глава Зига: ферма =================
+    // Жанна выполняет просьбу Зигфрида: приводит Зига на ферму к фермеру, где ему будет хорошо.
+    private static List<Step> farm() {
+        final double fx = 1189.5;
+        List<Step> s = new ArrayList<>();
+        s.add(Steps.fade(0, 20, 40, false));
+        s.add(Steps.run(c -> StoryWorld.ensureFarm(c.trifas())));
+        s.add(Steps.teleport(fx, Y, 1217.5, 180.0F));
+        s.add(Steps.spawnNpc("jeanne", NpcType.JEANNE, fx + 1.5, Y, 1217.5, 180.0F));
+        s.add(Steps.spawnNpc("farmer", NpcType.FARMER, fx, Y, 1190.5, 0.0F));
+        s.add(Steps.spawnAnimals(new double[][] {
+                {1177.5, Y, 1200.5}, {1180.5, Y, 1205.5}, {1199.5, Y, 1203.5},
+                {1204.5, Y, 1200.5}, {1202.5, Y, 1197.5}, {1176.5, Y, 1197.5}}));
+        s.add(Steps.title("story.fateapocrypha.farm.title", "story.fateapocrypha.farm.subtitle"));
+        s.add(Steps.wait(80));
+        s.add(Steps.npcWalk("jeanne", fx, Y, 1205.5, 0.8D, 300, false));
+        s.add(say(JEANNE, "farm.1"));
+        s.add(Steps.npcWalk("farmer", fx, Y, 1198.5, 0.8D, 300, false));
+        s.add(Steps.waitInZone(zone(1186, 1196, 1193, 1208)));
+        s.add(say(FARMER, "farm.2"));
+        s.add(say(JEANNE, "farm.3"));
+        s.add(say(FARMER, "farm.4"));
+        s.add(say(SIEG, "farm.5"));
+        s.add(say(FARMER, "farm.6"));
+
+        // несколько дней спустя
+        s.add(Steps.title("story.fateapocrypha.time_skip.title", "story.fateapocrypha.time_skip.subtitle"));
+        s.add(Steps.fade(30, 40, 40, true));
+        s.add(Steps.npcTeleport("jeanne", fx, Y, 1194.0, 180.0F));
+        s.add(Steps.npcTeleport("farmer", 1181.5, Y, 1205.5, 90.0F));
+        s.add(Steps.teleport(fx, Y, 1205.5, 180.0F));
+        s.add(Steps.waitInZone(zone(1186, 1191, 1193, 1197)));
+        s.add(say(JEANNE, "farm.7"));
+        s.add(say(SIEG, "farm.8"));
+        s.add(say(JEANNE, "farm.9"));
+        s.add(say(SIEG, "farm.10"));
+        s.add(say(JEANNE, "farm.11"));
+        s.add(say(SIEG, "farm.12"));
+        s.add(say(JEANNE, "farm.13"));
+        s.add(say(FARMER, "farm.14"));
+        s.add(Steps.wait(30));
+        s.add(Steps.fade(30, 10, 5, true));
+        s.add(Steps.despawnAllNpcs());
+        s.add(Steps.discardMobs());
         s.add(Steps.advance(StoryChapter.INTERLUDE_RED));
         return s;
     }
@@ -436,8 +531,10 @@ public class StoryScenes {
         s.add(Steps.run(c -> StoryWorld.openGate(c.trifas())));
         s.add(Steps.teleport(196.5, Y, 407.5, -90.0F));
         s.add(Steps.spawnNpc("astolfo", NpcType.ASTOLFO, 199.5, Y, 405.5, 90.0F));
-        s.add(Steps.spawnNpc("celenike", NpcType.CELENIKE, 207.5, Y, 409.5, 90.0F));
         s.add(Steps.wait(60));
+        s.add(say(ASTOLFO, "celenike.a1"));
+        s.add(say(SIEG, "celenike.a2"));
+        s.add(Steps.spawnNpc("celenike", NpcType.CELENIKE, 207.5, Y, 409.5, 90.0F));
 
         // Селеника появляется на поле боя и вступает в схватку
         s.add(Steps.npcWalk("celenike", 203.0, Y, 409.0, 1.1D, 300, false));
@@ -496,7 +593,7 @@ public class StoryScenes {
         s.add(Steps.wait(60));
         s.add(Steps.fade(30, 10, 5, true));
         s.add(Steps.dismissServant());
-        s.add(Steps.advance(StoryChapter.JEANNE));
+        s.add(Steps.advance(StoryChapter.JACK));
         return s;
     }
 
@@ -562,38 +659,6 @@ public class StoryScenes {
         return s;
     }
 
-    // ================= Глава Зига: Жанна д'Арк =================
-    // Улица Трифаса. Жанна находит Зига: Зигфрид перед гибелью просил её его оберегать.
-    private static List<Step> jeanne() {
-        final double zc = StoryWorld.STAGE_STREET_Z + 0.5;
-        List<Step> s = new ArrayList<>();
-        s.add(Steps.fade(0, 20, 40, false));
-        s.add(Steps.dismissServant());
-        s.add(Steps.run(c -> StoryWorld.ensureStagesB(c.trifas())));
-        s.add(Steps.teleport(1185.5, Y, zc, -90.0F));
-        s.add(Steps.restoreServant(ServantType.ASTOLFO));
-        s.add(Steps.title("story.fateapocrypha.jeanne.title", "story.fateapocrypha.jeanne.subtitle"));
-        s.add(Steps.wait(80));
-        s.add(say(SIEG, "jeanne.1"));
-        s.add(say(ASTOLFO, "jeanne.2"));
-        s.add(Steps.spawnNpc("jeanne", NpcType.JEANNE, 1204.5, Y, zc, 90.0F));
-        s.add(Steps.npcWalk("jeanne", 1190.5, Y, zc, 0.9D, 400, false));
-        s.add(say(JEANNE, "jeanne.3"));
-        s.add(say(SIEG, "jeanne.4"));
-        s.add(say(JEANNE, "jeanne.5"));
-        s.add(say(JEANNE, "jeanne.6"));
-        s.add(say(SIEG, "jeanne.7"));
-        s.add(say(JEANNE, "jeanne.8"));
-        s.add(say(ASTOLFO, "jeanne.9"));
-        s.add(say(SIEG, "jeanne.10"));
-        s.add(say(JEANNE, "jeanne.11"));
-        s.add(Steps.wait(40));
-        s.add(Steps.fade(30, 10, 5, true));
-        s.add(Steps.despawnAllNpcs());
-        s.add(Steps.advance(StoryChapter.JACK));
-        return s;
-    }
-
     // ================= Глава Зига: иллюзия Джека и Атланта =================
     // Зиг и Жанна попадают в иллюзию. Джек-потрошитель это слитые души детей. Атланта защищает Джека
     // и возненавидит Жанну, когда та освободит эти души.
@@ -608,6 +673,8 @@ public class StoryScenes {
         s.add(Steps.spawnNpc("jeanne", NpcType.JEANNE, 1187.5, Y, zc + 1.5, -90.0F));
         s.add(Steps.title("story.fateapocrypha.jack.title", "story.fateapocrypha.jack.subtitle"));
         s.add(Steps.wait(80));
+        s.add(say(JEANNE, "jack.a1"));
+        s.add(say(SIEG, "jack.a2"));
         s.add(say(JEANNE, "jack.1"));
         s.add(Steps.particles(ParticleTypes.CLOUD, 1190.5, Y + 0.5, zc, 200, 4.0D));
         s.add(Steps.fade(40, 20, 40, true));
@@ -620,7 +687,17 @@ public class StoryScenes {
         s.add(say(JEANNE, "jack.2"));
         s.add(say(SIEG, "jack.3"));
         s.add(Steps.spawnNpc("jack", NpcType.JACK, 1205.5, Y, lz, 90.0F));
-        s.add(Steps.npcWalk("jack", 1197.5, Y, lz, 0.8D, 300, false));
+        s.add(Steps.npcWalk("jack", 1202.5, Y, lz, 0.8D, 300, false));
+        s.add(Steps.spawnNpc("reika", NpcType.REIKA, 1210.5, Y, lz + 1.5, 90.0F));
+        s.add(say(REIKA, "jack.r1"));
+        s.add(say(JACK, "jack.r2"));
+        s.add(Steps.npcWalk("jack", 1208.0, Y, lz + 1.0, 1.6D, 120, false));
+        s.add(Steps.npcSwing("jack"));
+        s.add(Steps.npcHurt("reika"));
+        s.add(Steps.lightning(1210.5, Y, lz + 1.5));
+        s.add(say(REIKA, "jack.r3"));
+        s.add(Steps.npcLeave("reika"));
+        s.add(Steps.npcWalk("jack", 1197.5, Y, lz, 1.0D, 200, false));
         s.add(say(JACK, "jack.4"));
 
         // бой с тенями
@@ -687,8 +764,15 @@ public class StoryScenes {
                         cam(v(px + 3, Y + 2.2, pz + 6), v(px, Y + 1.8, pz), v(px + 2, Y + 2.0, pz + 4.5), v(px, Y + 1.8, pz), 260),
                         cam(v(px - 8, Y + 2.3, pz + 8), v(px - 5.5, Y + 1.7, pz + 4.5), v(px - 7, Y + 2.0, pz + 7), v(px - 5.5, Y + 1.7, pz + 4.5), 160)),
                 seq(say(ROCHE, "avi.3"), say(AVICEBRON, "avi.4"), say(ROCHE, "avi.5"))));
+        s.add(Steps.npcWalk("avicebron", px - 3.5, Y, pz + 3.5, 1.3D, 120, false));
+        s.add(Steps.npcSwing("avicebron"));
+        s.add(Steps.lightning(px - 5.5, Y, pz + 4.5));
+        s.add(Steps.npcHurt("roche"));
+        s.add(Steps.wait(15));
+        s.add(Steps.npcSwing("avicebron"));
         s.add(Steps.lightning(px - 5.5, Y, pz + 4.5));
         s.add(Steps.npcDie("roche"));
+        s.add(Steps.npcWalk("avicebron", px, Y, pz, 1.0D, 120, false));
         s.add(Steps.wait(40));
 
         // 3. Пробуждение Голема Адама
