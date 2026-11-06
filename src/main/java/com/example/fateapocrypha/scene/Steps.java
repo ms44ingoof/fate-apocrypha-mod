@@ -75,7 +75,7 @@ public class Steps {
 
             @Override
             public boolean update(SceneContext c) {
-                return c.stepTicks >= ticks;
+                return c.stepTicks >= ticks || c.consumeSkip();
             }
         };
     }
@@ -753,6 +753,16 @@ public class Steps {
                 animal.moveTo(p[0], p[1], p[2], (float) ((i * 70) % 360), 0.0F);
                 level.addFreshEntity(animal);
                 c.mobs.add(animal.getUUID());
+            }
+        });
+    }
+
+    /** Меняет отображаемое имя NPC. */
+    public static Step npcRename(String key, String nameKey) {
+        return run(c -> {
+            StoryNpcEntity npc = c.npc(key);
+            if (npc != null) {
+                npc.setCustomName(Component.translatable(nameKey));
             }
         });
     }

@@ -24,9 +24,19 @@ public class SceneContext {
     public UUID cameraId;
     public boolean cinematic;
     public int stepTicks;
+    public int skipTick = -1000;
 
     public SceneContext(ServerPlayer player) {
         this.player = player;
+    }
+
+    /** Игрок нажал пропуск недавно: реплика заканчивается. Запрос сгорает через несколько тиков. */
+    public boolean consumeSkip() {
+        if (player.tickCount - skipTick <= 4) {
+            skipTick = -1000;
+            return true;
+        }
+        return false;
     }
 
     public ServerLevel trifas() {

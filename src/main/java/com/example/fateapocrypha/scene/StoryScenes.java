@@ -45,6 +45,7 @@ public class StoryScenes {
     private static final String VLAD = "npc.fateapocrypha.vlad";
     private static final String REIKA = "npc.fateapocrypha.reika";
     private static final String FARMER = "npc.fateapocrypha.farmer";
+    private static final String DRACULA = "npc.fateapocrypha.dracula";
 
     private static Step say(String speaker, String line) {
         return Steps.say(speaker, "dialogue.fateapocrypha." + line, 120);
@@ -71,6 +72,9 @@ public class StoryScenes {
             case JACK -> jack();
             case INTERLUDE_AVICEBRON -> interludeAvicebron();
             case GOLEM_ADAM -> golemAdam();
+            case INTERLUDE_DARNIC -> interludeDarnic();
+            case INTERLUDE_GRAIL -> interludeGrail();
+            case RESISTANCE -> resistance();
             case TO_BE_CONTINUED -> List.of();
         };
     }
@@ -821,14 +825,156 @@ public class StoryScenes {
         s.add(Steps.wait(30));
         s.add(say(SIEG, "gol.9"));
         s.add(say(ASTOLFO, "gol.10"));
-        s.add(Steps.fade(30, 20, 40, true));
+        s.add(Steps.fade(30, 10, 5, true));
         s.add(Steps.despawnAllNpcs());
         s.add(Steps.discardMobs());
         s.add(Steps.dismissServant());
-        s.add(Steps.teleport(StoryWorld.FOREST_CX + 0.5, Y, StoryWorld.FOREST_CZ + 0.5, -90.0F));
-        s.add(Steps.restoreServant(ServantType.ASTOLFO));
+        s.add(Steps.advance(StoryChapter.INTERLUDE_DARNIC));
+        return s;
+    }
+
+    // ================= Интерлюдия: падение Чёрной фракции (третье лицо) =================
+    // Дэрник проигрывает войну и сливает свою душу с Владом III. Тот превращается в Дракулу и теряет
+    // контроль. Жанна и Мордред останавливают его. Влад гибнет, Дэрник исчезает вместе с ним.
+    private static List<Step> interludeDarnic() {
+        final double cx = StoryWorld.STAGE_RUINS_X + 0.5;
+        final double cz = StoryWorld.STAGE_RUINS_Z + 0.5;
+        List<Step> s = new ArrayList<>();
+        interludeStart(s, "interlude_darnic", cx, cz + 12, v(cx - 3, Y + 5, cz + 10), v(cx - 7, Y + 1.8, cz));
+        s.add(Steps.spawnNpc("darnic", NpcType.DARNIC, cx - 9.0, Y, cz, -90.0F));
+        s.add(Steps.spawnNpc("vlad", NpcType.VLAD, cx - 5.5, Y, cz, 90.0F));
+
+        // 1. Дэрник предлагает слить души
+        s.add(par(
+                seq(cam(v(cx - 3, Y + 5, cz + 10), v(cx - 7, Y + 1.8, cz), v(cx - 5, Y + 3.2, cz + 7), v(cx - 7, Y + 1.8, cz), 200),
+                        cam(v(cx - 4, Y + 2.2, cz + 3), v(cx - 5.5, Y + 1.8, cz), v(cx - 4.5, Y + 2.0, cz + 2.6), v(cx - 5.5, Y + 1.8, cz), 280),
+                        cam(v(cx - 11, Y + 2.2, cz + 3), v(cx - 9, Y + 1.8, cz), v(cx - 10.5, Y + 2.0, cz + 2.6), v(cx - 9, Y + 1.8, cz), 280),
+                        cam(v(cx - 7, Y + 2.6, cz + 5), v(cx - 7, Y + 1.8, cz), v(cx - 7, Y + 3.0, cz + 6.5), v(cx - 7, Y + 1.8, cz), 200)),
+                seq(say(VLAD, "darnic.1"), say(DARNIC, "darnic.2"), say(VLAD, "darnic.3"),
+                        say(DARNIC, "darnic.4"), say(VLAD, "darnic.5"), say(DARNIC, "darnic.6"))));
+
+        // 2. слияние душ: Влад становится Дракулой
+        s.add(Steps.lightning(cx - 7.0, Y, cz));
+        s.add(Steps.particles(ParticleTypes.SOUL_FIRE_FLAME, cx - 7.0, Y + 1.0, cz, 180, 2.0D));
+        s.add(Steps.sound(SoundEvents.GENERIC_EXPLODE));
+        s.add(Steps.wait(15));
+        s.add(Steps.lightning(cx - 5.0, Y, cz + 1.0));
+        s.add(Steps.npcLeave("darnic"));
+        s.add(Steps.npcRename("vlad", "npc.fateapocrypha.dracula"));
+        s.add(par(
+                cam(v(cx - 2, Y + 2.0, cz + 4), v(cx - 5.5, Y + 1.8, cz), v(cx - 3.5, Y + 3.0, cz + 6), v(cx - 5.5, Y + 2.2, cz), 200),
+                seq(Steps.wait(20), say(DRACULA, "darnic.7"))));
+        s.add(Steps.lightning(cx - 3.0, Y, cz - 3.0));
+        s.add(Steps.lightning(cx - 8.0, Y, cz + 4.0));
+
+        // 3. Жанна и Мордред вмешиваются
+        s.add(Steps.spawnNpc("jeanne", NpcType.JEANNE, cx + 15.0, Y, cz + 3.0, 90.0F));
+        s.add(Steps.spawnNpc("mordred", NpcType.MORDRED, cx + 15.0, Y, cz - 3.0, 90.0F));
+        s.add(par(
+                cam(v(cx + 8, Y + 3.0, cz + 8), v(cx + 12, Y + 1.8, cz), v(cx + 2, Y + 2.8, cz + 6), v(cx - 2, Y + 1.8, cz), 180),
+                Steps.npcWalk("jeanne", cx + 1.5, Y, cz + 2.5, 1.8D, 150, false),
+                Steps.npcWalk("mordred", cx + 1.5, Y, cz - 2.5, 1.8D, 150, false)));
+        s.add(par(
+                cam(v(cx + 4, Y + 2.2, cz + 4), v(cx + 0.5, Y + 1.8, cz + 1.5), v(cx + 3, Y + 2.2, cz + 3), v(cx + 0.5, Y + 1.8, cz + 1.5), 240),
+                seq(say(JEANNE, "darnic.8"), say(MORDRED, "darnic.9"))));
+
+        // 4. бой с Дракулой
+        s.add(par(
+                cam(v(cx - 1, Y + 5.5, cz + 8), v(cx - 4, Y + 1.8, cz), v(cx - 4, Y + 3.5, cz + 5), v(cx - 5, Y + 1.8, cz), 90),
+                Steps.npcWalk("mordred", cx - 3.0, Y, cz - 1.5, 2.2D, 100, false),
+                Steps.npcWalk("jeanne", cx - 2.5, Y, cz + 2.0, 2.0D, 100, false)));
+        s.add(Steps.npcSwing("mordred"));
+        s.add(Steps.lightning(cx - 5.0, Y, cz));
+        s.add(Steps.particlesAtNpc("jeanne", ParticleTypes.FLAME, 80));
+        s.add(Steps.npcSwing("jeanne"));
+        s.add(Steps.npcHurt("vlad"));
+        s.add(Steps.wait(10));
+        s.add(Steps.particles(ParticleTypes.FLAME, cx - 5.0, Y + 1.0, cz, 120, 1.8D));
+        s.add(Steps.npcSwing("mordred"));
+        s.add(Steps.lightning(cx - 5.5, Y, cz + 0.5));
+        s.add(Steps.npcHurt("vlad"));
+        s.add(Steps.wait(20));
+        s.add(par(
+                cam(v(cx - 1.5, Y + 2.0, cz + 3), v(cx - 5, Y + 1.8, cz), v(cx - 2.5, Y + 2.0, cz + 2.5), v(cx - 5, Y + 1.8, cz), 220),
+                say(VLAD, "darnic.10")));
+        s.add(Steps.npcDie("vlad"));
+        s.add(par(
+                cam(v(cx + 1, Y + 2.2, cz + 3), v(cx + 0.5, Y + 1.8, cz), v(cx + 4, Y + 4.5, cz + 8), v(cx, Y + 2.5, cz), 300),
+                seq(Steps.wait(30), say(JEANNE, "darnic.11"), say(MORDRED, "darnic.12"))));
+        interludeEnd(s, StoryChapter.INTERLUDE_GRAIL);
+        return s;
+    }
+
+    // ================= Интерлюдия: Висячие сады (третье лицо) =================
+    // Чёрная фракция разрушена. Широ получает Грааль, Семирамис поднимает Висячие сады Вавилона.
+    private static List<Step> interludeGrail() {
+        final double gx = StoryWorld.GARDEN_X + 0.5;
+        final double gz = StoryWorld.GARDEN_Z + 0.5;
+        final double top = Y + 60;   // уровень, на котором стоят герои в садах
+        List<Step> s = new ArrayList<>();
+        interludeStart(s, "interlude_grail", gx, gz - 18, v(gx, Y + 1.5, gz - 24), v(gx, Y + 52, gz));
+        s.add(Steps.run(c -> StoryWorld.ensureStages(c.trifas())));
+        s.add(Steps.spawnNpc("shiro", NpcType.SHIRO, gx, top, gz + 2.5, 180.0F));
+        s.add(Steps.spawnNpc("semiramis", NpcType.SEMIRAMIS, gx + 2.0, top, gz + 0.5, 150.0F));
+
+        // 1. пустое небо; голос Широ и приказ Семирамис
+        s.add(par(
+                cam(v(gx, Y + 1.5, gz - 24), v(gx, Y + 52, gz), v(gx, Y + 2.0, gz - 22), v(gx, Y + 45, gz), 330),
+                seq(say(SHIRO, "grail.1"), say(SEMIRAMIS, "grail.2"))));
+        s.add(Steps.fade(15, 10, 20, true));
+        s.add(Steps.run(c -> StoryWorld.ensureGardens(c.trifas())));
+        s.add(Steps.lightning(gx, Y, gz - 10));
+        s.add(Steps.sound(SoundEvents.GENERIC_EXPLODE));
+
+        // 2. Висячие сады парят в небе
+        s.add(par(
+                cam(v(gx, Y + 2.0, gz - 26), v(gx, Y + 40, gz), v(gx, Y + 4.0, gz - 20), v(gx, Y + 66, gz), 280),
+                Steps.particles(ParticleTypes.CLOUD, gx, Y + 40, gz, 200, 12.0D)));
+
+        // 3. на вершине: Широ и Семирамис
+        s.add(par(
+                seq(cam(v(gx - 3, top + 2.4, gz - 4), v(gx, top + 1.8, gz + 2.5), v(gx - 2, top + 2.2, gz - 1.5), v(gx, top + 1.8, gz + 2.5), 360),
+                        cam(v(gx + 5, top + 2.4, gz - 2), v(gx + 2, top + 1.8, gz + 0.5), v(gx + 4, top + 2.2, gz - 1.5), v(gx + 2, top + 1.8, gz + 0.5), 360),
+                        cam(v(gx, top + 3.0, gz - 5), v(gx + 1, top + 1.9, gz + 1.5), v(gx, top + 6.5, gz - 4.8), v(gx + 1, top + 2.2, gz + 1.5), 360)),
+                seq(say(SHIRO, "grail.3"), say(SEMIRAMIS, "grail.4"), say(SHIRO, "grail.5"),
+                        say(SEMIRAMIS, "grail.6"), say(SHIRO, "grail.7"))));
+        interludeEnd(s, StoryChapter.RESISTANCE);
+        return s;
+    }
+
+    // ================= Глава Зига: последнее сопротивление =================
+    // Союзники собираются у разрушенной стены замка: Широ нужно остановить.
+    private static List<Step> resistance() {
+        final double cx = StoryWorld.STAGE_SIEGE_X + 0.5;
+        List<Step> s = new ArrayList<>();
+        s.add(Steps.fade(0, 20, 40, false));
+        s.add(Steps.dismissServant());
+        s.add(Steps.run(c -> StoryWorld.ensureStagesB(c.trifas())));
+        s.add(Steps.teleport(cx, Y, 882.5, 0.0F));
+        s.add(Steps.spawnNpc("jeanne", NpcType.JEANNE, cx - 2.5, Y, 892.5, 0.0F));
+        s.add(Steps.spawnNpc("astolfo", NpcType.ASTOLFO, cx + 2.5, Y, 892.5, 0.0F));
+        s.add(Steps.spawnNpc("mordred", NpcType.MORDRED, cx - 6.5, Y, 890.5, 45.0F));
+        s.add(Steps.spawnNpc("kairi", NpcType.KAIRI, cx - 8.5, Y, 891.5, 45.0F));
+        s.add(Steps.spawnNpc("caules", NpcType.CAULES, cx + 6.5, Y, 890.5, -45.0F));
+        s.add(Steps.title("story.fateapocrypha.resistance.title", "story.fateapocrypha.resistance.subtitle"));
+        s.add(Steps.wait(80));
+        s.add(Steps.waitInZone(zone(cx - 4, 884, cx + 4, 892)));
+        s.add(say(JEANNE, "res.1"));
+        s.add(say(ASTOLFO, "res.2"));
+        s.add(say(KAIRI, "res.3"));
+        s.add(say(MORDRED, "res.4"));
+        s.add(say(CAULES, "res.5"));
+        s.add(say(JEANNE, "res.6"));
+        s.add(say(SIEG, "res.7"));
+        s.add(say(ASTOLFO, "res.8"));
+        s.add(say(JEANNE, "res.9"));
+        s.add(Steps.wait(30));
         s.add(Steps.title("story.fateapocrypha.to_be_continued.title", "story.fateapocrypha.to_be_continued.subtitle"));
         s.add(Steps.wait(100));
+        s.add(Steps.fade(30, 10, 5, true));
+        s.add(Steps.despawnAllNpcs());
+        s.add(Steps.teleport(StoryWorld.FOREST_CX + 0.5, Y, StoryWorld.FOREST_CZ + 0.5, -90.0F));
+        s.add(Steps.restoreServant(ServantType.ASTOLFO));
         s.add(Steps.advance(StoryChapter.TO_BE_CONTINUED));
         return s;
     }

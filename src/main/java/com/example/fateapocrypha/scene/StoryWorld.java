@@ -1462,4 +1462,143 @@ public class StoryWorld {
         woodlandRing(l, 1165, 1170, 1217, 1220, 6, 2, 5001L);
         set(l, FARM_X, Y0 - 1, FARM_Z, s(Blocks.ROOTED_DIRT));   // метка "построено"
     }
+
+    // ================= Висячие сады Вавилона (летающая крепость Семирамис) =================
+    public static final int GARDEN_X = 1600;
+    public static final int GARDEN_Z = 1100;
+    public static final int GARDEN_TOP = Y0 + 60;    // уровень пола садов (стоять на Y0 + 61)
+
+    public static void ensureGardens(ServerLevel l) {
+        if (l != null && !l.getBlockState(new BlockPos(GARDEN_X, Y0 - 1, GARDEN_Z)).is(Blocks.ROOTED_DIRT)) {
+            buildGardens(l);
+        }
+    }
+
+    private static void buildGardens(ServerLevel l) {
+        int cx = GARDEN_X;
+        int cz = GARDEN_Z;
+        int top = GARDEN_TOP;
+        Random rnd = new Random(77L);
+
+        // парящий остров: сверху трава, снизу перевёрнутый каменный конус
+        for (int dy = 0; dy <= 18; dy++) {
+            double r = 36.0D - dy * 1.9D;
+            if (r < 3.0D) {
+                break;
+            }
+            int ri = (int) Math.ceil(r);
+            for (int x = cx - ri; x <= cx + ri; x++) {
+                for (int z = cz - ri; z <= cz + ri; z++) {
+                    if (Math.hypot(x - cx, z - cz) <= r) {
+                        BlockState state;
+                        if (dy == 0) {
+                            state = s(Blocks.GRASS_BLOCK);
+                        } else if (dy <= 2) {
+                            state = s(Blocks.DIRT);
+                        } else {
+                            int roll = rnd.nextInt(8);
+                            state = roll == 0 ? s(Blocks.ANDESITE) : roll == 1 ? s(Blocks.MOSSY_COBBLESTONE)
+                                    : s(Blocks.STONE);
+                        }
+                        set(l, x, top - dy, z, state);
+                    }
+                }
+            }
+        }
+
+        // аллеи из белого кварца от дворца к краю в четыре стороны
+        for (int t = 8; t <= 35; t++) {
+            for (int w = -1; w <= 1; w++) {
+                set(l, cx + t, top, cz + w, s(Blocks.SMOOTH_QUARTZ));
+                set(l, cx - t, top, cz + w, s(Blocks.SMOOTH_QUARTZ));
+                set(l, cx + w, top, cz + t, s(Blocks.SMOOTH_QUARTZ));
+                set(l, cx + w, top, cz - t, s(Blocks.SMOOTH_QUARTZ));
+            }
+            if (t % 5 == 0) {
+                for (int[] d : new int[][] {{t, 2}, {t, -2}, {-t, 2}, {-t, -2}, {2, t}, {-2, t}, {2, -t}, {-2, -t}}) {
+                    set(l, cx + d[0], top + 1, cz + d[1], s(Blocks.SEA_LANTERN));
+                }
+            }
+        }
+
+        // дворец: кварцевая площадка, кольцо колонн с золотыми капителями, крыша и трон
+        for (int x = cx - 9; x <= cx + 9; x++) {
+            for (int z = cz - 9; z <= cz + 9; z++) {
+                if (Math.hypot(x - cx, z - cz) <= 9.0D) {
+                    set(l, x, top, z, ((x + z) & 1) == 0 ? s(Blocks.SMOOTH_QUARTZ) : s(Blocks.QUARTZ_BLOCK));
+                }
+            }
+        }
+        for (int k = 0; k < 12; k++) {
+            int px = cx + (int) Math.round(7.0D * Math.cos(k * Math.PI / 6.0D));
+            int pz = cz + (int) Math.round(7.0D * Math.sin(k * Math.PI / 6.0D));
+            fill(l, px, top + 1, pz, px, top + 8, pz, s(Blocks.QUARTZ_PILLAR));
+            set(l, px, top + 9, pz, s(Blocks.GOLD_BLOCK));
+        }
+        for (int x = cx - 8; x <= cx + 8; x++) {
+            for (int z = cz - 8; z <= cz + 8; z++) {
+                double d = Math.hypot(x - cx, z - cz);
+                if (d <= 8.0D) {
+                    set(l, x, top + 10, z, d > 7.0D ? s(Blocks.GOLD_BLOCK) : s(Blocks.SMOOTH_QUARTZ));
+                }
+            }
+        }
+        fill(l, cx - 2, top + 1, cz + 4, cx + 2, top + 1, cz + 5, s(Blocks.GOLD_BLOCK));
+        fill(l, cx - 1, top + 2, cz + 5, cx + 1, top + 2, cz + 5, s(Blocks.QUARTZ_BLOCK));
+        for (int[] c : new int[][] {{-4, 3}, {4, 3}, {-4, -3}, {4, -3}}) {
+            set(l, cx + c[0], top + 9, cz + c[1], HANGING_LANTERN);
+        }
+
+        // сады: деревья, пруды с кувшинками, цветы
+        for (int i = 0; i < 70; i++) {
+            double angle = rnd.nextDouble() * Math.PI * 2.0D;
+            double radius = 14.0D + rnd.nextDouble() * 18.0D;
+            int x = cx + (int) Math.round(radius * Math.cos(angle));
+            int z = cz + (int) Math.round(radius * Math.sin(angle));
+            if (Math.abs(x - cx) <= 3 || Math.abs(z - cz) <= 3) {
+                continue;   // аллеи свободны
+            }
+            oak(l, x, top + 1, z, 4 + rnd.nextInt(3));
+        }
+        for (int[] pool : new int[][] {{-20, -20}, {20, -20}, {-20, 20}, {20, 20}}) {
+            for (int dx = -3; dx <= 3; dx++) {
+                for (int dz = -3; dz <= 3; dz++) {
+                    if (dx * dx + dz * dz <= 9) {
+                        set(l, cx + pool[0] + dx, top, cz + pool[1] + dz, s(Blocks.WATER));
+                        if (rnd.nextInt(4) == 0) {
+                            set(l, cx + pool[0] + dx, top + 1, cz + pool[1] + dz, s(Blocks.LILY_PAD));
+                        }
+                    }
+                }
+            }
+        }
+        BlockState[] flowers = {s(Blocks.ROSE_BUSH), s(Blocks.POPPY), s(Blocks.DANDELION), s(Blocks.AZURE_BLUET),
+                s(Blocks.CORNFLOWER), s(Blocks.ALLIUM)};
+        for (int i = 0; i < 260; i++) {
+            double angle = rnd.nextDouble() * Math.PI * 2.0D;
+            double radius = 10.0D + rnd.nextDouble() * 24.0D;
+            int x = cx + (int) Math.round(radius * Math.cos(angle));
+            int z = cz + (int) Math.round(radius * Math.sin(angle));
+            BlockPos pos = new BlockPos(x, top + 1, z);
+            if (l.getBlockState(pos).isAir() && l.getBlockState(pos.below()).is(Blocks.GRASS_BLOCK)) {
+                BlockState flower = flowers[rnd.nextInt(flowers.length)];
+                l.setBlock(pos, flower.is(Blocks.ROSE_BUSH) ? s(Blocks.POPPY) : flower, 2);
+            }
+        }
+
+        // ограждение по краю острова
+        for (int x = cx - 36; x <= cx + 36; x++) {
+            for (int z = cz - 36; z <= cz + 36; z++) {
+                double d = Math.hypot(x - cx, z - cz);
+                if (d > 34.7D && d <= 36.0D) {
+                    set(l, x, top + 1, z, BARS);
+                    set(l, x, top + 2, z, BARS);
+                }
+            }
+        }
+
+        // земля под островом: поляна и лесное кольцо, чтобы снизу было красиво
+        woodlandRing(l, cx - 30, cz - 30, cx + 30, cz + 30, 6, 3, 6001L);
+        set(l, GARDEN_X, Y0 - 1, GARDEN_Z, s(Blocks.ROOTED_DIRT));   // метка "построено"
+    }
 }

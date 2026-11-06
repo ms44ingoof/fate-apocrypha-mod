@@ -32,6 +32,14 @@ public class SceneManager {
         }
     }
 
+    /** Игрок просит пропустить реплику. */
+    public static void requestSkip(ServerPlayer player) {
+        SceneRunner runner = RUNNERS.get(player.getUUID());
+        if (runner != null) {
+            runner.context().skipTick = player.tickCount;
+        }
+    }
+
     public static void clear() {
         for (SceneRunner runner : new HashSet<>(RUNNERS.values())) {
             runner.cancel();

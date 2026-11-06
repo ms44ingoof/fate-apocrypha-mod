@@ -1,7 +1,10 @@
 package com.example.fateapocrypha.client;
 
 import com.example.fateapocrypha.FateApocrypha;
+import com.example.fateapocrypha.network.ModNetwork;
+import com.example.fateapocrypha.network.SkipDialoguePacket;
 import java.util.Set;
+import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGuiOverlayEvent;
 import net.minecraftforge.client.event.RenderHandEvent;
@@ -21,6 +24,12 @@ public class ClientStoryEvents {
     public static void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase == TickEvent.Phase.END) {
             ClientStoryState.clientTick();
+            while (ClientKeys.SKIP_DIALOGUE.consumeClick()) {
+                if (Minecraft.getInstance().player != null && ClientStoryState.hasDialogue()) {
+                    ModNetwork.CHANNEL.sendToServer(new SkipDialoguePacket());
+                    ClientStoryState.clearDialogue();
+                }
+            }
         }
     }
 

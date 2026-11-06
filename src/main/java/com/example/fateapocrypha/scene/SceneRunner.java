@@ -19,6 +19,10 @@ public class SceneRunner {
         this.ctx = new SceneContext(player);
     }
 
+    public SceneContext context() {
+        return ctx;
+    }
+
     /** @return true, когда сцена закончилась */
     public boolean tick() {
         while (!cancelled && index < steps.size()) {

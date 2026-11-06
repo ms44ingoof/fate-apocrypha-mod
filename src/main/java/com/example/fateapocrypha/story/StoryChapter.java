@@ -19,6 +19,9 @@ public enum StoryChapter {
     JACK,
     INTERLUDE_AVICEBRON,
     GOLEM_ADAM,
+    INTERLUDE_DARNIC,
+    INTERLUDE_GRAIL,
+    RESISTANCE,
     TO_BE_CONTINUED;
 
     public String titleKey() {

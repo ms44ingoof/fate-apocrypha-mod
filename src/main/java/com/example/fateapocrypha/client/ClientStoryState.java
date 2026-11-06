@@ -53,6 +53,14 @@ public class ClientStoryState {
         }
     }
 
+    public static boolean hasDialogue() {
+        return now() < dialogueEnd;
+    }
+
+    public static void clearDialogue() {
+        dialogueEnd = 0L;
+    }
+
     private static long now() {
         return System.currentTimeMillis();
     }
@@ -108,7 +116,7 @@ public class ClientStoryState {
         Font font = Minecraft.getInstance().font;
         int boxWidth = Math.min(width - 40, 420);
         List<FormattedCharSequence> lines = font.split(text, boxWidth - 20);
-        int boxHeight = 24 + lines.size() * 10;
+        int boxHeight = 34 + lines.size() * 10;
         int x = (width - boxWidth) / 2;
         int bottom = cinematic ? height - height / 8 - 12 : height - 70;
         int y = bottom - boxHeight;
@@ -119,5 +127,8 @@ public class ClientStoryState {
         for (int i = 0; i < lines.size(); i++) {
             graphics.drawString(font, lines.get(i), x + 10, y + 20 + i * 10, 0xFFFFFF, true);
         }
+        Component hint = Component.translatable("hud.fateapocrypha.skip",
+                ClientKeys.SKIP_DIALOGUE.getTranslatedKeyMessage());
+        graphics.drawString(font, hint, x + boxWidth - font.width(hint) - 8, y + boxHeight - 12, 0xAAAAAA, false);
     }
 }
