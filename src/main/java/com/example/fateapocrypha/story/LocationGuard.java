@@ -2,6 +2,8 @@ package com.example.fateapocrypha.story;
 
 import com.example.fateapocrypha.ModDimensions;
 import com.example.fateapocrypha.scene.SceneManager;
+import com.example.fateapocrypha.scene.StoryWorld;
+import com.example.fateapocrypha.world.WorldDecor;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -36,6 +38,14 @@ public class LocationGuard {
         if (!player.level().dimension().equals(ModDimensions.TRIFAS)) {
             return;
         }
+        // мир живёт вокруг игрока: локации строятся заранее (ворота видны издалека), появляются дома и колодцы
+        if (player.tickCount % 100 == 0) {
+            prebuild(player);
+        }
+        if (player.tickCount % 40 == 0) {
+            WorldDecor.tick(player.serverLevel(), player);
+        }
+
         StoryChapter chapter = StoryManager.getChapter(player);
         if (chapter.ordinal() >= StoryChapter.TO_BE_CONTINUED.ordinal()) {
             return;   // сюжет пройден: мир открыт
@@ -72,6 +82,26 @@ public class LocationGuard {
         }
         if (open != null && !StoryManager.isStarted(player) && player.tickCount % 40 == 0) {
             guide(player, open);
+        }
+    }
+
+    /** Строит локации, до которых игроку осталось меньше 280 блоков (с запасом, чтобы не было задержки у входа). */
+    private static void prebuild(ServerPlayer player) {
+        ServerLevel level = player.serverLevel();
+        for (StoryLocation location : StoryLocation.values()) {
+            if (location.distanceTo(player.getX(), player.getZ()) > location.radius() + 280.0D) {
+                continue;
+            }
+            switch (location) {
+                case CASTLE_LAB, CASTLE_CORRIDOR, CASTLE_GATE -> StoryWorld.ensureBuilt(level);
+                case FOREST -> StoryWorld.ensureForest(level);
+                case RED_CAMP, CHAPEL, RUINS -> StoryWorld.ensureStages(level);
+                case STREET, SIEGE, LONDON, PLAIN -> StoryWorld.ensureStagesB(level);
+                case FARM -> StoryWorld.ensureFarm(level);
+                case GARDENS -> StoryWorld.ensureGardens(level);
+                default -> {
+                }
+            }
         }
     }
 

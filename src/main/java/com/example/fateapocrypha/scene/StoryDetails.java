@@ -1,5 +1,7 @@
 package com.example.fateapocrypha.scene;
 
+import com.example.fateapocrypha.story.StoryLocation;
+import com.example.fateapocrypha.world.StoryGates;
 import java.util.Random;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -39,6 +41,29 @@ public final class StoryDetails {
         run(l, StoryWorld.STAGE_STREET_X, StoryWorld.STAGE_STREET_Z, 3);
         run(l, StoryWorld.FARM_X, StoryWorld.FARM_Z, 4);
         run(l, StoryWorld.GARDEN_X, StoryWorld.GARDEN_Z, 5);
+
+        // ворота и проходы через кольцо деревьев
+        gates(l, 100, 100, StoryLocation.CASTLE_LAB, StoryLocation.CASTLE_CORRIDOR, StoryLocation.CASTLE_GATE);
+        gates(l, StoryWorld.FOREST_CX, StoryWorld.FOREST_CZ, StoryLocation.FOREST);
+        gates(l, StoryWorld.STAGE_RED_X, StoryWorld.STAGE_RED_Z, StoryLocation.RED_CAMP, StoryLocation.CHAPEL, StoryLocation.RUINS);
+        gates(l, StoryWorld.STAGE_STREET_X, StoryWorld.STAGE_STREET_Z, StoryLocation.STREET, StoryLocation.SIEGE,
+                StoryLocation.LONDON, StoryLocation.PLAIN);
+        gates(l, StoryWorld.FARM_X, StoryWorld.FARM_Z, StoryLocation.FARM);
+        gates(l, StoryWorld.GARDEN_X, StoryWorld.GARDEN_Z, StoryLocation.GARDENS);
+    }
+
+    private static void gates(ServerLevel l, int mx, int mz, StoryLocation... locations) {
+        if (!l.getBlockState(new BlockPos(mx, Y0 - 1, mz)).is(Blocks.ROOTED_DIRT)) {
+            return;
+        }
+        BlockPos done = new BlockPos(mx + 2, Y0 - 1, mz);
+        if (l.getBlockState(done).is(Blocks.MOSS_BLOCK)) {
+            return;
+        }
+        l.setBlock(done, s(Blocks.MOSS_BLOCK), 2);
+        for (StoryLocation location : locations) {
+            StoryGates.build(l, location);
+        }
     }
 
     private static void run(ServerLevel l, int mx, int mz, int kind) {

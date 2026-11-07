@@ -233,8 +233,24 @@ public final class TrifasTerrain {
     public static final int KIND_SAND = 3;
     public static final int KIND_GRAVEL = 4;
     public static final int KIND_MESA = 5;
+    public static final int KIND_ROAD = 6;
+    public static final int KIND_ROAD_EDGE = 7;
+
+    /** Столбец лежит на дороге (мост через воду, тропа на суше). */
+    public static boolean onRoad(int x, int z) {
+        return padDist(x, z) > 0.5D && TrifasRoads.roadDist(x, z) <= 1.6D;
+    }
 
     public static int surfaceKind(int x, int z, int h, int slope) {
+        if (padDist(x, z) > 0.5D && h > SEA) {
+            double rd = TrifasRoads.roadDist(x, z);
+            if (rd <= 1.6D) {
+                return KIND_ROAD;
+            }
+            if (rd <= 2.7D) {
+                return KIND_ROAD_EDGE;
+            }
+        }
         if (padWeight(x, z) > 0.5D) {
             return KIND_GRASS;
         }

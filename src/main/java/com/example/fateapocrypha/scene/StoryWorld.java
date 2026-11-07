@@ -66,6 +66,7 @@ public class StoryWorld {
         if (!level.getBlockState(new BlockPos(100, Y0 - 1, 100)).is(Blocks.ROOTED_DIRT)) {
             buildCastle(level);
         }
+        StoryDetails.ensure(level);
     }
 
     public static void ensureForest(ServerLevel level) {

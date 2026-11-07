@@ -43,6 +43,9 @@ public class TrifasChunkGenerator extends ChunkGenerator {
     private static final BlockState GRAVEL = Blocks.GRAVEL.defaultBlockState();
     private static final BlockState SNOW = Blocks.SNOW_BLOCK.defaultBlockState();
     private static final BlockState WATER = Blocks.WATER.defaultBlockState();
+    private static final BlockState PATH = Blocks.DIRT_PATH.defaultBlockState();
+    private static final BlockState COARSE = Blocks.COARSE_DIRT.defaultBlockState();
+    private static final BlockState PLANKS = Blocks.OAK_PLANKS.defaultBlockState();
     private static final BlockState ANDESITE = Blocks.ANDESITE.defaultBlockState();
     private static final BlockState TUFF = Blocks.TUFF.defaultBlockState();
     private static final BlockState[] BANDS = {
@@ -173,6 +176,9 @@ public class TrifasChunkGenerator extends ChunkGenerator {
                 for (int y = h + 1; y <= TrifasTerrain.SEA; y++) {
                     put(chunk, pos, floorMap, surfMap, lx, y, lz, WATER);
                 }
+                if (h < TrifasTerrain.SEA && TrifasTerrain.onRoad(wx, wz)) {
+                    put(chunk, pos, floorMap, surfMap, lx, TrifasTerrain.SEA, lz, PLANKS);   // мост через реку
+                }
 
                 // парящий остров над землёй
                 double thick = TrifasTerrain.islandThickness(wx, wz);
@@ -214,6 +220,8 @@ public class TrifasChunkGenerator extends ChunkGenerator {
                 case TrifasTerrain.KIND_SNOW: return SNOW;
                 case TrifasTerrain.KIND_SAND: return SAND;
                 case TrifasTerrain.KIND_GRAVEL: return GRAVEL;
+                case TrifasTerrain.KIND_ROAD: return PATH;
+                case TrifasTerrain.KIND_ROAD_EDGE: return hash(wx, y, wz) % 3 == 0 ? GRAVEL : COARSE;
                 default: return GRASS;
             }
         }
