@@ -26,7 +26,7 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
  *  Лес (с рельефом)   x500-659, z350-509   |  Поляна боя        центр (520, 430)
  */
 public class StoryWorld {
-    public static final int Y0 = -60;
+    public static final int Y0 = 72;      // уровень пола локаций (над уровнем моря 63; рельеф мира выровнен под него)
 
     public static final int FOREST_X0 = 500;
     public static final int FOREST_Z0 = 350;

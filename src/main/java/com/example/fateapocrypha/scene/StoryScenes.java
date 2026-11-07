@@ -1127,6 +1127,7 @@ public class StoryScenes {
         s.add(Steps.fade(30, 20, 5, true));
         s.add(Steps.despawnAllNpcs());
         s.add(Steps.discardMobs());
+        s.add(Steps.teleport(StoryWorld.STAGE_SIEGE_X + 0.5, Y, 882.5, 0.0F));
         s.add(Steps.advance(StoryChapter.GARDENS_ASSAULT));
         return s;
     }

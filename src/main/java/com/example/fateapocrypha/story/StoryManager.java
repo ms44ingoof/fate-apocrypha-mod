@@ -15,6 +15,7 @@ public class StoryManager {
     private static final String PERSISTED = "PlayerPersisted";
     private static final String KEY = "fateapocrypha_chapter";
     private static final String SERVANT = "fateapocrypha_servant";
+    private static final String STARTED = "fateapocrypha_started";
 
     private static CompoundTag persisted(Player player) {
         CompoundTag data = player.getPersistentData();
@@ -30,6 +31,26 @@ public class StoryManager {
 
     public static void setChapter(Player player, StoryChapter chapter) {
         persisted(player).putInt(KEY, chapter.ordinal());
+        persisted(player).putBoolean(STARTED, false);
+    }
+
+    /** Сцена текущей главы уже запускалась (игрок пришёл в нужную локацию). */
+    public static boolean isStarted(Player player) {
+        return persisted(player).getBoolean(STARTED);
+    }
+
+    public static void setStarted(Player player, boolean started) {
+        persisted(player).putBoolean(STARTED, started);
+    }
+
+    /** Строка "Место: ... (X, Z)" для глав, которые начинаются при входе в локацию. */
+    public static void sendLocationHint(Player player, StoryChapter chapter) {
+        StoryLocation location = StoryLocation.forChapter(chapter);
+        if (location != null) {
+            player.sendSystemMessage(Component.translatable("story.fateapocrypha.location_hint",
+                    Component.translatable(location.nameKey()), location.cx(), location.cz())
+                    .withStyle(ChatFormatting.AQUA));
+        }
     }
 
     /** Переводит игрока на главу (если она дальше текущей) и запускает её сцену. */
@@ -42,6 +63,7 @@ public class StoryManager {
             player.sendSystemMessage(Component.translatable("story.fateapocrypha.new_chapter",
                     Component.translatable(chapter.titleKey())).withStyle(ChatFormatting.GOLD));
             player.sendSystemMessage(Component.translatable(chapter.objectiveKey()).withStyle(ChatFormatting.YELLOW));
+            sendLocationHint(player, chapter);
             player.level().playSound(null, player.blockPosition(), SoundEvents.PLAYER_LEVELUP,
                     SoundSource.PLAYERS, 1.0F, 1.0F);
             if (player instanceof ServerPlayer serverPlayer) {
@@ -64,5 +86,6 @@ public class StoryManager {
         player.sendSystemMessage(Component.translatable("story.fateapocrypha.chapter_header",
                 Component.translatable(chapter.titleKey())).withStyle(ChatFormatting.GOLD));
         player.sendSystemMessage(Component.translatable(chapter.objectiveKey()).withStyle(ChatFormatting.YELLOW));
+        sendLocationHint(player, chapter);
     }
 }

@@ -18,6 +18,10 @@ public class SceneManager {
         RUNNERS.put(player.getUUID(), new SceneRunner(player, steps));
     }
 
+    public static boolean isRunning(UUID playerId) {
+        return RUNNERS.containsKey(playerId);
+    }
+
     public static void stop(UUID playerId) {
         SceneRunner runner = RUNNERS.remove(playerId);
         if (runner != null) {

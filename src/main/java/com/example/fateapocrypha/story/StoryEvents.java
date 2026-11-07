@@ -32,6 +32,7 @@ public class StoryEvents {
     @SubscribeEvent
     public static void onLogout(PlayerEvent.PlayerLoggedOutEvent event) {
         SceneManager.stop(event.getEntity().getUUID());
+        LocationGuard.forget(event.getEntity().getUUID());
     }
 
     @SubscribeEvent
@@ -48,6 +49,7 @@ public class StoryEvents {
             return;
         }
         SceneManager.tick(player);
+        LocationGuard.tick(player);
 
         // Зиг слаб после резервуара: в лаборатории идёт медленно
         if (player.tickCount % 20 == 0) {

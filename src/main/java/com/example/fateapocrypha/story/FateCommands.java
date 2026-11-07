@@ -2,6 +2,7 @@ package com.example.fateapocrypha.story;
 
 import com.example.fateapocrypha.ModDimensions;
 import com.example.fateapocrypha.ModItems;
+import com.example.fateapocrypha.scene.SceneManager;
 import com.example.fateapocrypha.scene.StoryWorld;
 import com.example.fateapocrypha.servant.ServantActions;
 import com.mojang.brigadier.CommandDispatcher;
@@ -23,6 +24,7 @@ public class FateCommands {
                 .then(Commands.literal("story").executes(ctx -> showStory(ctx.getSource())))
                 .then(Commands.literal("kit").executes(ctx -> kit(ctx.getSource())))
                 .then(Commands.literal("trifas").executes(ctx -> travel(ctx.getSource())))
+                .then(Commands.literal("go").executes(ctx -> go(ctx.getSource())))
                 .then(Commands.literal("restart")
                         .requires(source -> source.hasPermission(2))
                         .executes(ctx -> restart(ctx.getSource())))
@@ -61,12 +63,25 @@ public class FateCommands {
         ServerPlayer player = source.getPlayerOrException();
         StoryManager.setChapter(player, StoryChapter.byId(id));
         StoryManager.showObjective(player);
-        StoryDirector.startScene(player);
+        StoryDirector.startScene(player, true);
         return 1;
     }
 
     private static int restart(CommandSourceStack source) throws CommandSyntaxException {
-        StoryDirector.startScene(source.getPlayerOrException());
+        StoryDirector.startScene(source.getPlayerOrException(), true);
+        return 1;
+    }
+
+    /** Быстрое перемещение к границе локации текущей цели сюжета. */
+    private static int go(CommandSourceStack source) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        StoryLocation location = StoryLocation.forChapter(StoryManager.getChapter(player));
+        ServerLevel trifas = source.getServer().getLevel(ModDimensions.TRIFAS);
+        if (location == null || trifas == null || SceneManager.isRunning(player.getUUID())) {
+            source.sendFailure(Component.translatable("command.fateapocrypha.go_none"));
+            return 0;
+        }
+        location.teleportNear(player, trifas);
         return 1;
     }
 
@@ -103,7 +118,10 @@ public class FateCommands {
             player.teleportTo(overworld, spawn.getX() + 0.5D, spawn.getY(), spawn.getZ() + 0.5D,
                     player.getYRot(), player.getXRot());
         } else {
-            player.teleportTo(trifas, 0.5D, -58.0D, 0.5D, player.getYRot(), player.getXRot());
+            int tx = StoryWorld.FOREST_CX;
+            int tz = StoryWorld.FOREST_CZ;
+            int ty = trifas.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, tx, tz);
+            player.teleportTo(trifas, tx + 0.5D, ty, tz + 0.5D, player.getYRot(), player.getXRot());
         }
         return 1;
     }

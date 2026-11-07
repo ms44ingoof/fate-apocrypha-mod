@@ -1,16 +1,34 @@
 {
   "type": "fateapocrypha:trifas",
   "generator": {
-    "type": "minecraft:flat",
-    "settings": {
-      "biome": "minecraft:plains",
-      "features": false,
-      "lakes": false,
-      "structure_overrides": [],
-      "layers": [
-        { "block": "minecraft:bedrock", "height": 1 },
-        { "block": "minecraft:dirt", "height": 3 },
-        { "block": "minecraft:grass_block", "height": 1 }
+    "type": "fateapocrypha:trifas",
+    "biome_source": {
+      "type": "fateapocrypha:trifas",
+      "biomes": [
+        "minecraft:the_void",
+        "minecraft:ocean",
+        "minecraft:deep_ocean",
+        "minecraft:river",
+        "minecraft:beach",
+        "minecraft:plains",
+        "minecraft:sunflower_plains",
+        "minecraft:meadow",
+        "minecraft:forest",
+        "minecraft:birch_forest",
+        "minecraft:dark_forest",
+        "minecraft:flower_forest",
+        "minecraft:cherry_grove",
+        "minecraft:taiga",
+        "minecraft:snowy_taiga",
+        "minecraft:snowy_plains",
+        "minecraft:grove",
+        "minecraft:windswept_hills",
+        "minecraft:jagged_peaks",
+        "minecraft:frozen_peaks",
+        "minecraft:stony_peaks",
+        "minecraft:badlands",
+        "minecraft:eroded_badlands",
+        "minecraft:savanna"
       ]
     }
   }

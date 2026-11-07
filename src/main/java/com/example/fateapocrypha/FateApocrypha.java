@@ -15,6 +15,8 @@ public class FateApocrypha {
         ModItems.ITEMS.register(bus);
         ModEntities.ENTITIES.register(bus);
         ModCreativeTabs.TABS.register(bus);
+        com.example.fateapocrypha.world.ModWorldgen.CHUNK_GENERATORS.register(bus);
+        com.example.fateapocrypha.world.ModWorldgen.BIOME_SOURCES.register(bus);
         bus.addListener(this::commonSetup);
     }
 
