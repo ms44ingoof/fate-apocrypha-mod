@@ -72,6 +72,7 @@ public class StoryWorld {
         if (level != null && !level.getBlockState(new BlockPos(FOREST_CX, Y0 - 1, FOREST_CZ)).is(Blocks.ROOTED_DIRT)) {
             buildForest(level);
         }
+        StoryDetails.ensure(level);
     }
 
     public static void buildAll(ServerLevel l) {
@@ -587,6 +588,7 @@ public class StoryWorld {
         if (l != null && !l.getBlockState(new BlockPos(STAGE_RED_X, Y0 - 1, STAGE_RED_Z)).is(Blocks.ROOTED_DIRT)) {
             buildStages(l);
         }
+        StoryDetails.ensure(l);
     }
 
     private static void buildStages(ServerLevel l) {
@@ -963,6 +965,7 @@ public class StoryWorld {
         if (l != null && !l.getBlockState(new BlockPos(STAGE_STREET_X, Y0 - 1, STAGE_STREET_Z)).is(Blocks.ROOTED_DIRT)) {
             buildStagesB(l);
         }
+        StoryDetails.ensure(l);
     }
 
     private static void buildStagesB(ServerLevel l) {
@@ -1333,6 +1336,7 @@ public class StoryWorld {
         if (l != null && !l.getBlockState(new BlockPos(FARM_X, Y0 - 1, FARM_Z)).is(Blocks.ROOTED_DIRT)) {
             buildFarm(l);
         }
+        StoryDetails.ensure(l);
     }
 
     private static void pyramidRoof(ServerLevel l, int x1, int z1, int x2, int z2, int y, BlockState state) {
@@ -1472,6 +1476,7 @@ public class StoryWorld {
         if (l != null && !l.getBlockState(new BlockPos(GARDEN_X, Y0 - 1, GARDEN_Z)).is(Blocks.ROOTED_DIRT)) {
             buildGardens(l);
         }
+        StoryDetails.ensure(l);
     }
 
     private static void buildGardens(ServerLevel l) {
@@ -1607,11 +1612,97 @@ public class StoryWorld {
     public static final int GRAIL_Z = 1100;
     public static final int REVERSE_X = 2000;    // Обратная сторона мира: тёмная площадка, радиус 30
     public static final int REVERSE_Z = 1300;
+    public static final int DREAM_X = 2400;       // сон о драконе: купол с лавой, радиус 30
+    public static final int DREAM_Z = 1100;
+
+    public static void ensureDreamStage(ServerLevel l) {
+        if (l != null && !l.getBlockState(new BlockPos(DREAM_X, Y0 - 1, DREAM_Z)).is(Blocks.ROOTED_DIRT)) {
+            buildDreamStage(l);
+        }
+    }
+
+    /** Сон Зига: каменная чаша под куполом, лавовое кольцо, горящие кусты, рёбра дракона. */
+    private static void buildDreamStage(ServerLevel l) {
+        int cx = DREAM_X;
+        int cz = DREAM_Z;
+        Random rnd = new Random(404L);
+        for (int x = cx - 30; x <= cx + 30; x++) {
+            for (int z = cz - 30; z <= cz + 30; z++) {
+                double d = Math.hypot(x - cx, z - cz);
+                if (d > 30.0D) {
+                    continue;
+                }
+                BlockState floor;
+                if (d <= 17.0D) {
+                    int r = rnd.nextInt(8);
+                    floor = r == 0 ? s(Blocks.BASALT) : r == 1 ? s(Blocks.POLISHED_BASALT)
+                            : r == 2 ? s(Blocks.BLACKSTONE) : s(Blocks.POLISHED_BLACKSTONE);
+                } else if (d <= 21.0D) {
+                    floor = s(Blocks.MAGMA_BLOCK);
+                } else if (d <= 25.0D) {
+                    floor = s(Blocks.LAVA);
+                } else {
+                    floor = rnd.nextInt(3) == 0 ? s(Blocks.NETHERRACK) : s(Blocks.BLACKSTONE);
+                }
+                if (floor.is(Blocks.LAVA)) {
+                    set(l, x, Y0 - 1, z, s(Blocks.BLACKSTONE));
+                    set(l, x, Y0, z, floor);
+                } else {
+                    set(l, x, Y0, z, floor);
+                }
+            }
+        }
+        // купол: тёмная скорлупа, внутри светят только лава и огонь
+        for (int x = cx - 32; x <= cx + 32; x++) {
+            for (int z = cz - 32; z <= cz + 32; z++) {
+                for (int y = Y0 + 1; y <= Y0 + 32; y++) {
+                    double d = Math.sqrt((x - cx) * (x - cx) + (y - Y0) * (y - Y0) + (z - cz) * (z - cz));
+                    if (d >= 30.0D && d < 31.2D) {
+                        set(l, x, y, z, rnd.nextInt(6) == 0 ? s(Blocks.OBSIDIAN) : s(Blocks.BLACKSTONE));
+                    }
+                }
+            }
+        }
+        // горящие участки по краю чаши (не ближе 14 блоков к центру)
+        for (int i = 0; i < 40; i++) {
+            double ang = rnd.nextDouble() * Math.PI * 2.0D;
+            double rad = 14.0D + rnd.nextDouble() * 3.0D;
+            int x = cx + (int) Math.round(rad * Math.cos(ang));
+            int z = cz + (int) Math.round(rad * Math.sin(ang));
+            set(l, x, Y0, z, s(Blocks.NETHERRACK));
+            set(l, x, Y0 + 1, z, s(Blocks.FIRE));
+        }
+        // мёртвые деревья
+        for (int i = 0; i < 12; i++) {
+            double ang = i * Math.PI / 6.0D + rnd.nextDouble() * 0.3D;
+            int x = cx + (int) Math.round(16.0D * Math.cos(ang));
+            int z = cz + (int) Math.round(16.0D * Math.sin(ang));
+            int h = 4 + rnd.nextInt(4);
+            fill(l, x, Y0 + 1, z, x, Y0 + h, z, s(Blocks.STRIPPED_CRIMSON_STEM));
+            set(l, x, Y0 + h + 1, z, s(Blocks.SHROOMLIGHT));
+        }
+        // рёбра дракона за его спиной (по оси z на юг)
+        for (int rib = 0; rib < 3; rib++) {
+            int z = cz + 16 + rib * 3;
+            for (int a = 0; a <= 180; a += 6) {
+                double rad = Math.toRadians(a);
+                int x = cx + (int) Math.round(10.0D * Math.cos(rad));
+                int y = Y0 + 1 + (int) Math.round(8.0D * Math.sin(rad));
+                set(l, x, y, z, s(Blocks.BONE_BLOCK));
+            }
+        }
+        // светильники в центре, чтобы было видно героя и дракона
+        for (int[] p : new int[][] {{-6, -6}, {6, -6}, {-6, 6}, {6, 6}}) {
+            set(l, cx + p[0], Y0, cz + p[1], s(Blocks.SHROOMLIGHT));
+        }
+        set(l, cx, Y0 - 1, cz, s(Blocks.ROOTED_DIRT));   // метка "построено"
+    }
 
     public static void ensureGrailStages(ServerLevel l) {
         if (l != null && !l.getBlockState(new BlockPos(GRAIL_X, Y0 - 1, GRAIL_Z)).is(Blocks.ROOTED_DIRT)) {
             buildGrailStages(l);
         }
+        StoryDetails.ensure(l);
     }
 
     private static void buildGrailStages(ServerLevel l) {

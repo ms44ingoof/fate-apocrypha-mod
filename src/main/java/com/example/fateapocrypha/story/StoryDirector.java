@@ -25,6 +25,7 @@ public class StoryDirector {
             return;
         }
         StoryWorld.ensureBuilt(trifas);
+        com.example.fateapocrypha.scene.StoryDetails.ensure(trifas);
         SceneManager.start(player, steps);
     }
 

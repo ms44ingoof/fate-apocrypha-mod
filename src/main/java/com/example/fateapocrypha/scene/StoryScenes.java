@@ -49,6 +49,7 @@ public class StoryScenes {
     private static final String ACHILLES = "npc.fateapocrypha.achilles";
     private static final String KARNA = "npc.fateapocrypha.karna";
     private static final String JUSTICE = "npc.fateapocrypha.justice";
+    private static final String FAFNIR = "npc.fateapocrypha.fafnir";
 
     private static Step say(String speaker, String line) {
         return Steps.say(speaker, "dialogue.fateapocrypha." + line, 120);
@@ -78,6 +79,10 @@ public class StoryScenes {
             case INTERLUDE_DARNIC -> interludeDarnic();
             case INTERLUDE_GRAIL -> interludeGrail();
             case RESISTANCE -> resistance();
+            case DREAM_FAFNIR -> dreamFafnir();
+            case FRANKEN_LEGACY -> frankenLegacy();
+            case NIGHT_TALK -> nightTalk();
+            case DREAM_FAFNIR_2 -> dreamFafnir2();
             case GARDENS_ASSAULT -> gardensAssault();
             case INTERLUDE_ACHILLES -> interludeAchilles();
             case KARNA -> karna();
@@ -354,7 +359,7 @@ public class StoryScenes {
         s.add(Steps.fade(30, 10, 5, true));
         s.add(Steps.despawnAllNpcs());
         s.add(Steps.discardMobs());
-        s.add(Steps.advance(StoryChapter.INTERLUDE_RED));
+        s.add(Steps.advance(StoryChapter.DREAM_FAFNIR));
         return s;
     }
 
@@ -670,7 +675,7 @@ public class StoryScenes {
         s.add(par(
                 cam(v(cx + 4, Y + 2.2, 895), v(cx + 4.5, Y + 1.8, 897), v(cx + 8, Y + 5.5, 888), v(cx, Y + 3, 899), 260),
                 seq(Steps.wait(30), say(MORDRED, "spartacus.9"))));
-        interludeEnd(s, StoryChapter.CELENIKE);
+        interludeEnd(s, StoryChapter.FRANKEN_LEGACY);
         return s;
     }
 
@@ -826,7 +831,7 @@ public class StoryScenes {
         s.add(say(JEANNE, "gol.5"));
         s.add(Steps.particles(ParticleTypes.HAPPY_VILLAGER, px, Y + 1, pz + 8, 200, 6.0D));
         s.add(Steps.sound(SoundEvents.ANVIL_LAND));
-        s.add(Steps.bossFight(new double[][] {{px, Y, pz + 6}}, 300.0D, 12.0D, "npc.fateapocrypha.golem_adam"));
+        s.add(Steps.bossFight(new double[][] {{px, Y, pz + 6}}, 160.0D, 9.0D, "npc.fateapocrypha.golem_adam"));
         s.add(Steps.sound(SoundEvents.GENERIC_EXPLODE));
         s.add(Steps.wait(30));
         s.add(say(AVICEBRON, "gol.6"));
@@ -982,6 +987,146 @@ public class StoryScenes {
         s.add(Steps.wait(30));
         s.add(Steps.fade(30, 10, 5, true));
         s.add(Steps.despawnAllNpcs());
+        s.add(Steps.advance(StoryChapter.NIGHT_TALK));
+        return s;
+    }
+
+
+    // ================= Новые главы: сны, наследие Франкенштейн, ночь перед штурмом =================
+    private static final double DX = StoryWorld.DREAM_X + 0.5;
+    private static final double DZ = StoryWorld.DREAM_Z + 0.5;
+
+    private static void sleepIn(List<Step> s) {
+        s.add(Steps.fade(0, 20, 40, false));
+        s.add(Steps.dismissServant());
+        s.add(Steps.run(c -> StoryWorld.ensureDreamStage(c.trifas())));
+        s.add(Steps.teleport(DX, Y, DZ - 10.0, 0.0F));
+        s.add(Steps.spawnNpc("siegfried", NpcType.SIEGFRIED, DX - 6.0, Y, DZ - 7.0, -50.0F));
+        s.add(Steps.spawnDragon(DX, Y, DZ + 12.0, 180.0F, true));
+    }
+
+    // Глава: первый сон. Зиг встречает огненного дракона Фафнира; испытание огнём.
+    private static List<Step> dreamFafnir() {
+        List<Step> s = new ArrayList<>();
+        sleepIn(s);
+        s.add(Steps.title("story.fateapocrypha.dream_fafnir.title", "story.fateapocrypha.dream_fafnir.subtitle"));
+        s.add(Steps.wait(80));
+        s.add(say(SIEG, "drm.1"));
+        s.add(say(SIEGFRIED, "drm.2"));
+        s.add(say(SIEG, "drm.3"));
+        s.add(say(SIEGFRIED, "drm.4"));
+        s.add(Steps.sound(SoundEvents.ENDER_DRAGON_GROWL));
+        s.add(say(FAFNIR, "drm.5"));
+        s.add(say(SIEG, "drm.6"));
+        s.add(say(FAFNIR, "drm.7"));
+        s.add(Steps.fireTrial(7, 50, "boss.fateapocrypha.fafnir_fire"));
+        s.add(Steps.wait(20));
+        s.add(say(FAFNIR, "drm.8"));
+        s.add(say(SIEGFRIED, "drm.9"));
+        s.add(say(FAFNIR, "drm.10"));
+        s.add(say(SIEG, "drm.11"));
+        s.add(say(FAFNIR, "drm.12"));
+        s.add(Steps.fade(30, 20, 5, true));
+        s.add(Steps.despawnAllNpcs());
+        s.add(Steps.discardMobs());
+        s.add(Steps.teleport(1189.5, Y, 1217.5, 180.0F));
+        s.add(Steps.healPlayer());
+        s.add(Steps.advance(StoryChapter.INTERLUDE_RED));
+        return s;
+    }
+
+    // Глава: Франкенштейн оставляет Зигу свою молнию (источник силы для финальных боёв).
+    private static List<Step> frankenLegacy() {
+        final double cx = StoryWorld.STAGE_RUINS_X + 0.5;
+        final double cz = StoryWorld.STAGE_RUINS_Z + 0.5;
+        List<Step> s = new ArrayList<>();
+        s.add(Steps.fade(0, 20, 40, false));
+        s.add(Steps.dismissServant());
+        s.add(Steps.run(c -> StoryWorld.ensureStages(c.trifas())));
+        s.add(Steps.teleport(cx, Y, cz + 14.0, 180.0F));
+        s.add(Steps.spawnNpc("caules", NpcType.CAULES, cx, Y, cz - 1.0, 0.0F));
+        s.add(Steps.spawnNpc("astolfo", NpcType.ASTOLFO, cx + 2.5, Y, cz + 12.0, 180.0F));
+        s.add(Steps.title("story.fateapocrypha.franken_legacy.title", "story.fateapocrypha.franken_legacy.subtitle"));
+        s.add(Steps.wait(80));
+        s.add(Steps.waitInZone(zone(cx - 5, cz + 3, cx + 5, cz + 9)));
+        s.add(say(ASTOLFO, "frl.1"));
+        s.add(say(CAULES, "frl.2"));
+        s.add(say(SIEG, "frl.3"));
+        s.add(say(CAULES, "frl.4"));
+        s.add(Steps.particles(ParticleTypes.ELECTRIC_SPARK, cx, Y + 1.5, cz + 1.0, 120, 1.5D));
+        s.add(Steps.sound(SoundEvents.LIGHTNING_BOLT_THUNDER));
+        s.add(say(FRANKENSTEIN, "frl.5"));
+        s.add(Steps.frankenSpark(400));
+        s.add(say(SIEG, "frl.6"));
+        s.add(say(ASTOLFO, "frl.7"));
+        s.add(say(CAULES, "frl.8"));
+        s.add(say(SIEG, "frl.9"));
+        s.add(Steps.wait(30));
+        s.add(Steps.fade(30, 10, 5, true));
+        s.add(Steps.despawnAllNpcs());
+        s.add(Steps.clearEffects());
+        s.add(Steps.advance(StoryChapter.CELENIKE));
+        return s;
+    }
+
+    // Глава: ночь перед штурмом. Разговор Зига и Жанны у костра.
+    private static List<Step> nightTalk() {
+        final double cx = StoryWorld.STAGE_SIEGE_X + 0.5;
+        List<Step> s = new ArrayList<>();
+        s.add(Steps.fade(0, 20, 40, false));
+        s.add(Steps.dismissServant());
+        s.add(Steps.run(c -> StoryWorld.ensureStagesB(c.trifas())));
+        s.add(Steps.run(c -> {
+            if (c.trifas() != null) {
+                c.trifas().setBlock(net.minecraft.core.BlockPos.containing(cx, Y, 886.5),
+                        net.minecraft.world.level.block.Blocks.CAMPFIRE.defaultBlockState(), 3);
+            }
+        }));
+        s.add(Steps.teleport(cx + 3.0, Y, 886.5, 90.0F));
+        s.add(Steps.spawnNpc("jeanne", NpcType.JEANNE, cx - 3.0, Y, 886.5, -90.0F));
+        s.add(Steps.spawnNpc("astolfo", NpcType.ASTOLFO, cx, Y, 883.0, 0.0F));
+        s.add(Steps.title("story.fateapocrypha.night_talk.title", "story.fateapocrypha.night_talk.subtitle"));
+        s.add(Steps.wait(80));
+        s.add(say(ASTOLFO, "ngt.1"));
+        s.add(say(JEANNE, "ngt.2"));
+        s.add(say(ASTOLFO, "ngt.3"));
+        s.add(Steps.npcLeave("astolfo"));
+        s.add(Steps.wait(30));
+        s.add(say(JEANNE, "ngt.4"));
+        s.add(say(SIEG, "ngt.5"));
+        s.add(say(JEANNE, "ngt.6"));
+        s.add(say(SIEG, "ngt.7"));
+        s.add(say(JEANNE, "ngt.8"));
+        s.add(say(SIEG, "ngt.9"));
+        s.add(say(JEANNE, "ngt.10"));
+        s.add(say(SIEG, "ngt.11"));
+        s.add(say(JEANNE, "ngt.12"));
+        s.add(Steps.particlesAtNpc("jeanne", ParticleTypes.HEART, 6));
+        s.add(Steps.wait(60));
+        s.add(Steps.fade(40, 30, 5, true));
+        s.add(Steps.despawnAllNpcs());
+        s.add(Steps.advance(StoryChapter.DREAM_FAFNIR_2));
+        return s;
+    }
+
+    // Глава: второй сон. Фафнир и Зигфрид говорят об Обратной стороне мира.
+    private static List<Step> dreamFafnir2() {
+        List<Step> s = new ArrayList<>();
+        sleepIn(s);
+        s.add(Steps.title("story.fateapocrypha.dream_fafnir_2.title", "story.fateapocrypha.dream_fafnir_2.subtitle"));
+        s.add(Steps.wait(80));
+        s.add(say(SIEG, "dr2.1"));
+        s.add(Steps.sound(SoundEvents.ENDER_DRAGON_GROWL));
+        s.add(say(FAFNIR, "dr2.2"));
+        s.add(say(SIEG, "dr2.3"));
+        s.add(say(FAFNIR, "dr2.4"));
+        s.add(say(SIEGFRIED, "dr2.5"));
+        s.add(say(SIEG, "dr2.6"));
+        s.add(say(FAFNIR, "dr2.7"));
+        s.add(say(SIEGFRIED, "dr2.8"));
+        s.add(Steps.fade(30, 20, 5, true));
+        s.add(Steps.despawnAllNpcs());
+        s.add(Steps.discardMobs());
         s.add(Steps.advance(StoryChapter.GARDENS_ASSAULT));
         return s;
     }
@@ -1136,7 +1281,7 @@ public class StoryScenes {
         s.add(Steps.siegfriedHeart(9000));
 
         // фаза 1
-        s.add(Steps.npcBoss("karna", 150.0D, 6.0D, 0.5D, true, 500,
+        s.add(Steps.npcBoss("karna", 90.0D, 5.0D, 0.5D, true, 500,
                 "boss.fateapocrypha.vasavi", "npc.fateapocrypha.karna", net.minecraft.world.BossEvent.BossBarColor.YELLOW));
         s.add(say(KARNA, "kar.7"));
         s.add(say(SIEG, "kar.8"));
@@ -1145,7 +1290,7 @@ public class StoryScenes {
         s.add(say(KARNA, "kar.9"));
 
         // фаза 2
-        s.add(Steps.npcBoss("karna", 150.0D, 7.0D, 0.1D, false, 400,
+        s.add(Steps.npcBoss("karna", 90.0D, 6.0D, 0.1D, false, 400,
                 "boss.fateapocrypha.vasavi", "npc.fateapocrypha.karna", net.minecraft.world.BossEvent.BossBarColor.YELLOW));
         s.add(Steps.clearEffects());
         s.add(Steps.healPlayer());
@@ -1294,7 +1439,7 @@ public class StoryScenes {
         s.add(Steps.siegfriedHeart(12000));
 
         // фаза 1
-        s.add(Steps.npcBoss("shiro", 180.0D, 5.0D, 0.5D, true, 450,
+        s.add(Steps.npcBoss("shiro", 110.0D, 4.0D, 0.5D, true, 450,
                 "boss.fateapocrypha.grail_beam", "npc.fateapocrypha.shiro", net.minecraft.world.BossEvent.BossBarColor.PURPLE));
         s.add(say(SIEG, "fin.8"));
         s.add(Steps.frankenSpark(9000));
@@ -1302,7 +1447,7 @@ public class StoryScenes {
         s.add(say(SHIRO, "fin.9"));
 
         // фаза 2
-        s.add(Steps.npcBoss("shiro", 180.0D, 6.0D, 0.1D, false, 350,
+        s.add(Steps.npcBoss("shiro", 110.0D, 5.0D, 0.1D, false, 350,
                 "boss.fateapocrypha.grail_beam", "npc.fateapocrypha.shiro", net.minecraft.world.BossEvent.BossBarColor.PURPLE));
         s.add(Steps.clearEffects());
         s.add(Steps.healPlayer());

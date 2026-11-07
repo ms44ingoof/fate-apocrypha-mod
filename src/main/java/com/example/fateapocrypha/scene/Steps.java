@@ -9,6 +9,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.BossEvent;
 import net.minecraft.server.level.ServerBossEvent;
 import com.example.fateapocrypha.network.CameraPacket;
+import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleOptions;
@@ -279,8 +280,8 @@ public class Steps {
                         continue;
                     }
                     golem.moveTo(p[0], p[1], p[2], 90.0F, 0.0F);
-                    golem.getAttribute(Attributes.MAX_HEALTH).setBaseValue(40.0D);
-                    golem.setHealth(40.0F);
+                    golem.getAttribute(Attributes.MAX_HEALTH).setBaseValue(28.0D);
+                    golem.setHealth(28.0F);
                     golem.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(5.0D);
                     golem.addTag("fate_golem");
                     golem.setCustomName(Component.translatable("npc.fateapocrypha.golem"));
@@ -860,7 +861,7 @@ public class Steps {
                                     mark.x + 3.0D, mark.y + 3.0D, mark.z + 3.0D);
                             for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class, area,
                                     t -> t != npc && t.isAlive() && !(t instanceof StoryNpcEntity))) {
-                                target.hurt(npc.damageSources().magic(), 8.0F);
+                                target.hurt(npc.damageSources().magic(), 6.0F);
                             }
                         }
                     } else {
@@ -921,6 +922,11 @@ public class Steps {
 
     /** Дракон Фафнир (огромный фантом без ИИ). Убирается шагом discardMobs. */
     public static Step spawnDragon(double x, double y, double z, float yaw) {
+        return spawnDragon(x, y, z, yaw, false);
+    }
+
+    /** burning=true: огненный дракон сна (горит, но не страдает от огня). */
+    public static Step spawnDragon(double x, double y, double z, float yaw, boolean burning) {
         return run(c -> {
             ServerLevel level = c.trifas();
             if (level == null) {
@@ -938,8 +944,69 @@ public class Steps {
             dragon.setPersistenceRequired();
             dragon.setCustomName(Component.translatable("npc.fateapocrypha.fafnir"));
             dragon.setCustomNameVisible(true);
+            if (burning) {
+                dragon.setRemainingFireTicks(20 * 60 * 15);
+            }
             level.addFreshEntity(dragon);
             c.mobs.add(dragon.getUUID());
         });
+    }
+
+    /**
+     * Испытание огнём из сна: каждые intervalTicks тиков под игроком и рядом с ним отмечаются три круга,
+     * через 2 секунды в них бьёт пламя (4 урона; если здоровья мало, пламя не вредит: это сон).
+     */
+    public static Step fireTrial(int rounds, int intervalTicks, String warnKey) {
+        return new Step() {
+            private int round = 0;
+            private int timer = 0;
+            private int charge = 0;
+            private final List<Vec3> marks = new ArrayList<>();
+
+            @Override
+            public boolean update(SceneContext c) {
+                ServerLevel level = c.trifas();
+                if (level == null) {
+                    return true;
+                }
+                if (charge > 0) {
+                    charge--;
+                    if (charge % 4 == 0) {
+                        for (Vec3 m : marks) {
+                            level.sendParticles(ParticleTypes.FLAME, m.x, m.y + 0.2D, m.z, 10, 1.2D, 0.05D, 1.2D, 0.01D);
+                        }
+                    }
+                    if (charge == 0) {
+                        for (Vec3 m : marks) {
+                            level.sendParticles(ParticleTypes.LAVA, m.x, m.y + 0.5D, m.z, 25, 1.2D, 0.4D, 1.2D, 0.0D);
+                            level.sendParticles(ParticleTypes.FLAME, m.x, m.y + 0.5D, m.z, 60, 1.0D, 1.2D, 1.0D, 0.05D);
+                            level.playSound(null, BlockPos.containing(m), SoundEvents.FIRECHARGE_USE,
+                                    SoundSource.HOSTILE, 1.3F, 0.7F);
+                            if (c.player.position().distanceToSqr(m) <= 6.25D && c.player.getHealth() > 6.0F) {
+                                c.player.hurt(level.damageSources().magic(), 4.0F);
+                            }
+                        }
+                        marks.clear();
+                        round++;
+                        timer = 0;
+                        return round >= rounds;
+                    }
+                    return false;
+                }
+                timer++;
+                if (timer >= intervalTicks) {
+                    marks.clear();
+                    Vec3 p = c.player.position();
+                    marks.add(p);
+                    var rnd = level.getRandom();
+                    for (int i = 0; i < 2; i++) {
+                        marks.add(p.add(rnd.nextDouble() * 10.0D - 5.0D, 0.0D, rnd.nextDouble() * 10.0D - 5.0D));
+                    }
+                    charge = 40;
+                    c.player.displayClientMessage(Component.translatable(warnKey).withStyle(ChatFormatting.GOLD), true);
+                }
+                return false;
+            }
+        };
     }
 }
