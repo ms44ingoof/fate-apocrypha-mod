@@ -46,6 +46,9 @@ public class StoryScenes {
     private static final String REIKA = "npc.fateapocrypha.reika";
     private static final String FARMER = "npc.fateapocrypha.farmer";
     private static final String DRACULA = "npc.fateapocrypha.dracula";
+    private static final String ACHILLES = "npc.fateapocrypha.achilles";
+    private static final String KARNA = "npc.fateapocrypha.karna";
+    private static final String JUSTICE = "npc.fateapocrypha.justice";
 
     private static Step say(String speaker, String line) {
         return Steps.say(speaker, "dialogue.fateapocrypha." + line, 120);
@@ -75,6 +78,14 @@ public class StoryScenes {
             case INTERLUDE_DARNIC -> interludeDarnic();
             case INTERLUDE_GRAIL -> interludeGrail();
             case RESISTANCE -> resistance();
+            case GARDENS_ASSAULT -> gardensAssault();
+            case INTERLUDE_ACHILLES -> interludeAchilles();
+            case KARNA -> karna();
+            case INTERLUDE_SEMIRAMIS -> interludeSemiramis();
+            case INTERLUDE_PUCELLE -> interludePucelle();
+            case SHIRO_FINAL -> shiroFinal();
+            case GRAIL_INSIDE -> grailInside();
+            case EPILOGUE -> epilogue();
             case TO_BE_CONTINUED -> List.of();
         };
     }
@@ -969,13 +980,463 @@ public class StoryScenes {
         s.add(say(ASTOLFO, "res.8"));
         s.add(say(JEANNE, "res.9"));
         s.add(Steps.wait(30));
-        s.add(Steps.title("story.fateapocrypha.to_be_continued.title", "story.fateapocrypha.to_be_continued.subtitle"));
-        s.add(Steps.wait(100));
         s.add(Steps.fade(30, 10, 5, true));
         s.add(Steps.despawnAllNpcs());
+        s.add(Steps.advance(StoryChapter.GARDENS_ASSAULT));
+        return s;
+    }
+
+    // ================= Финал: Висячие сады Вавилона =================
+    private static final double GX = StoryWorld.GARDEN_X + 0.5;
+    private static final double GZ = StoryWorld.GARDEN_Z + 0.5;
+    private static final double TOP = Y + 60;   // уровень, на котором стоят герои на Садах
+
+    private static AABB gzone(double x1, double z1, double x2, double z2) {
+        return new AABB(x1, TOP - 1, z1, x2, TOP + 10, z2);
+    }
+
+    /** Начало интерлюдии в Садах: невидимый игрок стоит под островом, камера смотрит на сцену. */
+    private static void gardenStart(List<Step> s, String key, Vec3 camPos, Vec3 camLook) {
+        s.add(Steps.fade(0, 10, 50, true));
+        s.add(Steps.run(c -> StoryWorld.ensureGardens(c.trifas())));
+        s.add(Steps.teleport(GX, Y, GZ - 17.5, 0.0F));
+        s.add(Steps.cinematicStart(camPos, camLook));
+        s.add(Steps.title("story.fateapocrypha." + key + ".title", "story.fateapocrypha." + key + ".subtitle"));
+        s.add(Steps.wait(60));
+    }
+
+    // Глава: штурм Садов. Зиг и союзники прибывают, сражаются со сторожами и расходятся.
+    private static List<Step> gardensAssault() {
+        List<Step> s = new ArrayList<>();
+        s.add(Steps.fade(0, 20, 40, false));
+        s.add(Steps.dismissServant());
+        s.add(Steps.run(c -> StoryWorld.ensureGardens(c.trifas())));
+        s.add(Steps.teleport(GX, TOP, GZ - 30.0, 0.0F));
+        s.add(Steps.spawnNpc("jeanne", NpcType.JEANNE, GX - 3.0, TOP, GZ - 28.5, 0.0F));
+        s.add(Steps.spawnNpc("astolfo", NpcType.ASTOLFO, GX + 3.0, TOP, GZ - 28.5, 0.0F));
+        s.add(Steps.spawnNpc("chiron", NpcType.CHIRON, GX + 6.0, TOP, GZ - 29.5, 0.0F));
+        s.add(Steps.spawnNpc("mordred", NpcType.MORDRED, GX - 6.0, TOP, GZ - 29.5, 0.0F));
+        s.add(Steps.spawnNpc("kairi", NpcType.KAIRI, GX - 8.0, TOP, GZ - 30.5, 0.0F));
+        s.add(Steps.spawnNpc("caules", NpcType.CAULES, GX + 8.0, TOP, GZ - 30.5, 0.0F));
+        s.add(Steps.title("story.fateapocrypha.gardens_assault.title", "story.fateapocrypha.gardens_assault.subtitle"));
+        s.add(Steps.wait(80));
+        s.add(say(ASTOLFO, "gar.1"));
+        s.add(say(CHIRON, "gar.2"));
+        s.add(say(JEANNE, "gar.3"));
+        s.add(say(KAIRI, "gar.4"));
+        s.add(say(MORDRED, "gar.5"));
+        s.add(say(CHIRON, "gar.6"));
+        s.add(say(CAULES, "gar.7"));
+        s.add(say(SIEG, "gar.8"));
+
+        // сторожа Садов: големы Семирамис; Астольфо присоединяется как Слуга
+        s.add(say(ASTOLFO, "gar.9"));
+        s.add(Steps.npcLeave("astolfo"));
+        s.add(Steps.restoreServant(ServantType.ASTOLFO));
+        s.add(Steps.golemFight(new double[][] {
+                {GX - 6.0, TOP, GZ - 20.0}, {GX + 6.0, TOP, GZ - 20.0},
+                {GX - 3.0, TOP, GZ - 16.0}, {GX + 3.0, TOP, GZ - 16.0}}));
+        s.add(Steps.discardMobs());
+        s.add(Steps.wait(20));
+        s.add(say(ASTOLFO, "gar.10"));
+        s.add(say(CHIRON, "gar.11"));
+        s.add(say(JEANNE, "gar.12"));
+        s.add(say(SIEG, "gar.13"));
+        s.add(Steps.fade(30, 10, 5, true));
+        s.add(Steps.despawnAllNpcs());
+        s.add(Steps.dismissServant());
+        s.add(Steps.advance(StoryChapter.INTERLUDE_ACHILLES));
+        return s;
+    }
+
+    // Интерлюдия: Хирон и Ахиллес (учитель против ученика)
+    private static List<Step> interludeAchilles() {
+        final double cx = GX + 22.0;
+        final double cz = GZ;
+        List<Step> s = new ArrayList<>();
+        gardenStart(s, "interlude_achilles", v(cx, TOP + 5, cz - 12), v(cx, TOP + 1.8, cz));
+        s.add(Steps.spawnNpc("chiron", NpcType.CHIRON, cx - 7.0, TOP, cz, -90.0F));
+        s.add(Steps.spawnNpc("achilles", NpcType.ACHILLES, cx + 7.0, TOP, cz, 90.0F));
+
+        // 1. встреча
+        s.add(par(
+                seq(cam(v(cx, TOP + 5, cz - 12), v(cx, TOP + 1.8, cz), v(cx - 2, TOP + 3, cz - 9), v(cx, TOP + 1.8, cz), 240),
+                        cam(v(cx - 4, TOP + 2.2, cz - 3), v(cx - 7, TOP + 1.8, cz), v(cx - 4.5, TOP + 2.2, cz - 3), v(cx - 7, TOP + 1.8, cz), 240),
+                        cam(v(cx + 4, TOP + 2.2, cz - 3), v(cx + 7, TOP + 1.8, cz), v(cx + 4.5, TOP + 2.2, cz - 3), v(cx + 7, TOP + 1.8, cz), 240),
+                        cam(v(cx, TOP + 2.8, cz - 8), v(cx, TOP + 1.8, cz), v(cx, TOP + 3.0, cz - 9), v(cx, TOP + 1.8, cz), 240)),
+                seq(say(ACHILLES, "ach.1"), say(CHIRON, "ach.2"), say(ACHILLES, "ach.3"),
+                        say(CHIRON, "ach.4"))));
+        s.add(say(ACHILLES, "ach.5"));
+
+        // 2. схватка
+        s.add(par(
+                cam(v(cx, TOP + 5.5, cz - 10), v(cx, TOP + 1.8, cz), v(cx, TOP + 4.0, cz - 8), v(cx, TOP + 1.8, cz), 100),
+                Steps.npcWalk("chiron", cx - 1.5, TOP, cz, 2.0D, 100, false),
+                Steps.npcWalk("achilles", cx + 1.5, TOP, cz, 2.4D, 100, false)));
+        s.add(Steps.npcSwing("achilles"));
+        s.add(Steps.sound(SoundEvents.PLAYER_ATTACK_SWEEP));
+        s.add(Steps.particles(ParticleTypes.CRIT, cx, TOP + 1.2, cz, 40, 0.8D));
+        s.add(Steps.npcHurt("chiron"));
+        s.add(Steps.wait(12));
+        s.add(Steps.npcSwing("chiron"));
+        s.add(Steps.particles(ParticleTypes.END_ROD, cx + 1.0, TOP + 1.2, cz, 25, 0.7D));
+        s.add(Steps.npcHurt("achilles"));
+        s.add(Steps.wait(12));
+        s.add(Steps.npcWalk("chiron", cx - 6.0, TOP, cz, 2.0D, 60, false));
+        s.add(Steps.npcSwing("chiron"));
+        s.add(Steps.particles(ParticleTypes.END_ROD, cx - 2.0, TOP + 1.4, cz, 25, 0.4D));
+        s.add(Steps.npcHurt("achilles"));
+        s.add(par(
+                cam(v(cx - 3, TOP + 2.5, cz - 4), v(cx - 5, TOP + 1.8, cz), v(cx + 1, TOP + 2.5, cz - 5), v(cx + 2, TOP + 1.8, cz), 240),
+                seq(say(CHIRON, "ach.6"), say(ACHILLES, "ach.7"))));
+        s.add(Steps.npcWalk("achilles", cx - 4.0, TOP, cz, 2.6D, 80, false));
+        s.add(Steps.lightning(cx - 4.5, TOP, cz));
+        s.add(Steps.npcSwing("achilles"));
+        s.add(Steps.sound(SoundEvents.ANVIL_LAND));
+        s.add(Steps.npcHurt("chiron"));
+        s.add(Steps.wait(20));
+        s.add(say(CHIRON, "ach.8"));
+        s.add(Steps.npcSwing("chiron"));
+        s.add(Steps.particles(ParticleTypes.END_ROD, cx - 4.0, TOP + 1.4, cz, 60, 0.6D));
+        s.add(Steps.lightning(cx - 4.0, TOP, cz));
+        s.add(Steps.npcHurt("achilles"));
+        s.add(Steps.wait(20));
+
+        // 3. гибель Хирона и Ахиллеса
+        s.add(par(
+                cam(v(cx - 1, TOP + 2.2, cz - 4), v(cx - 5, TOP + 1.8, cz), v(cx - 2, TOP + 2.0, cz - 3), v(cx - 5, TOP + 1.8, cz), 260),
+                seq(say(CHIRON, "ach.9"))));
+        s.add(Steps.npcDie("chiron"));
+        s.add(par(
+                cam(v(cx - 1, TOP + 2.4, cz - 4), v(cx - 3, TOP + 1.8, cz), v(cx + 2, TOP + 3.5, cz - 7), v(cx - 3, TOP + 1.8, cz), 300),
+                seq(Steps.wait(30), say(ACHILLES, "ach.10"))));
+        s.add(Steps.npcDie("achilles"));
+        s.add(Steps.wait(40));
+        interludeEnd(s, StoryChapter.KARNA);
+        return s;
+    }
+
+    // Глава: Карна. Первый настоящий бой Зига: Сердце Зигфрида, затем сила Франкенштейн.
+    private static List<Step> karna() {
+        List<Step> s = new ArrayList<>();
+        s.add(Steps.fade(0, 20, 40, false));
+        s.add(Steps.dismissServant());
+        s.add(Steps.run(c -> StoryWorld.ensureGardens(c.trifas())));
+        s.add(Steps.teleport(GX, TOP, GZ - 26.0, 0.0F));
+        s.add(Steps.spawnNpc("karna", NpcType.KARNA, GX, TOP, GZ - 13.0, 180.0F));
+        s.add(Steps.title("story.fateapocrypha.karna.title", "story.fateapocrypha.karna.subtitle"));
+        s.add(Steps.wait(80));
+        s.add(Steps.waitInZone(gzone(GX - 6, GZ - 30, GX + 6, GZ - 20)));
+        s.add(say(KARNA, "kar.1"));
+        s.add(say(SIEG, "kar.2"));
+        s.add(say(KARNA, "kar.3"));
+        s.add(say(SIEG, "kar.4"));
+        s.add(say(KARNA, "kar.5"));
+        s.add(say(SIEG, "kar.6"));
+        s.add(Steps.siegfriedHeart(9000));
+
+        // фаза 1
+        s.add(Steps.npcBoss("karna", 150.0D, 6.0D, 0.5D, true, 500,
+                "boss.fateapocrypha.vasavi", "npc.fateapocrypha.karna", net.minecraft.world.BossEvent.BossBarColor.YELLOW));
+        s.add(say(KARNA, "kar.7"));
+        s.add(say(SIEG, "kar.8"));
+        s.add(Steps.frankenSpark(6000));
+        s.add(Steps.sound(SoundEvents.LIGHTNING_BOLT_THUNDER));
+        s.add(say(KARNA, "kar.9"));
+
+        // фаза 2
+        s.add(Steps.npcBoss("karna", 150.0D, 7.0D, 0.1D, false, 400,
+                "boss.fateapocrypha.vasavi", "npc.fateapocrypha.karna", net.minecraft.world.BossEvent.BossBarColor.YELLOW));
+        s.add(Steps.clearEffects());
+        s.add(Steps.healPlayer());
+        s.add(say(KARNA, "kar.10"));
+        s.add(say(SIEG, "kar.11"));
+        s.add(say(KARNA, "kar.12"));
+        s.add(Steps.npcDie("karna"));
+        s.add(Steps.wait(40));
+        s.add(Steps.fade(30, 10, 5, true));
+        s.add(Steps.despawnAllNpcs());
+        s.add(Steps.advance(StoryChapter.INTERLUDE_SEMIRAMIS));
+        return s;
+    }
+
+    // Интерлюдия: Мордред и Кайри против Семирамис
+    private static List<Step> interludeSemiramis() {
+        final double cx = GX;
+        final double cz = GZ;
+        List<Step> s = new ArrayList<>();
+        gardenStart(s, "interlude_semiramis", v(cx, TOP + 5, cz - 14), v(cx, TOP + 1.8, cz));
+        s.add(Steps.spawnNpc("semiramis", NpcType.SEMIRAMIS, cx, TOP, cz + 3.5, 180.0F));
+        s.add(Steps.spawnNpc("mordred", NpcType.MORDRED, cx - 1.5, TOP, cz - 9.0, 0.0F));
+        s.add(Steps.spawnNpc("kairi", NpcType.KAIRI, cx + 1.5, TOP, cz - 11.0, 0.0F));
+
+        // 1. вторжение в тронный зал
+        s.add(par(
+                seq(cam(v(cx - 3, TOP + 4, cz - 14), v(cx, TOP + 1.8, cz + 2), v(cx + 3, TOP + 3.5, cz - 10), v(cx, TOP + 1.8, cz + 2), 240),
+                        cam(v(cx - 4, TOP + 2.4, cz + 0.5), v(cx, TOP + 1.8, cz + 3.5), v(cx - 3, TOP + 2.4, cz + 1), v(cx, TOP + 1.8, cz + 3.5), 240),
+                        cam(v(cx + 3, TOP + 2.4, cz - 8), v(cx + 1.5, TOP + 1.8, cz - 11), v(cx + 3, TOP + 2.4, cz - 9), v(cx + 1.5, TOP + 1.8, cz - 11), 240),
+                        cam(v(cx, TOP + 3.5, cz - 6), v(cx, TOP + 1.8, cz + 2), v(cx, TOP + 3.5, cz - 7), v(cx, TOP + 1.8, cz + 2), 120)),
+                seq(say(SEMIRAMIS, "sem.1"), say(KAIRI, "sem.2"), say(MORDRED, "sem.3"), say(SEMIRAMIS, "sem.4"))));
+
+        // 2. бой
+        s.add(par(
+                cam(v(cx - 5, TOP + 4, cz - 8), v(cx, TOP + 1.8, cz), v(cx + 5, TOP + 4, cz - 6), v(cx, TOP + 1.8, cz), 120),
+                Steps.npcWalk("mordred", cx - 1.0, TOP, cz + 0.5, 2.4D, 120, false)));
+        s.add(Steps.particlesAtNpc("semiramis", ParticleTypes.WITCH, 60));
+        s.add(Steps.lightning(cx - 2.0, TOP, cz - 1.0));
+        s.add(Steps.npcHurt("mordred"));
+        s.add(Steps.wait(10));
+        s.add(Steps.npcSwing("mordred"));
+        s.add(Steps.particlesAtNpc("semiramis", ParticleTypes.SWEEP_ATTACK, 3));
+        s.add(Steps.npcHurt("semiramis"));
+        s.add(Steps.wait(10));
+        s.add(Steps.particlesAtNpc("mordred", ParticleTypes.SOUL_FIRE_FLAME, 40));
+        s.add(Steps.particlesAtNpc("kairi", ParticleTypes.SOUL, 40));
+        s.add(Steps.lightning(cx + 1.0, TOP, cz + 1.0));
+        s.add(par(
+                cam(v(cx - 3, TOP + 2.6, cz - 3), v(cx, TOP + 1.8, cz + 1.5), v(cx - 1, TOP + 2.6, cz - 3), v(cx, TOP + 1.8, cz + 1.5), 200),
+                seq(say(KAIRI, "sem.5"), say(MORDRED, "sem.6"))));
+        s.add(Steps.sound(SoundEvents.PLAYER_ATTACK_STRONG));
+        s.add(Steps.npcSwing("mordred"));
+        s.add(Steps.particlesAtNpc("semiramis", ParticleTypes.SWEEP_ATTACK, 6));
+        s.add(Steps.particlesAtNpc("semiramis", ParticleTypes.FLAME, 80));
+        s.add(Steps.lightning(cx, TOP, cz + 2.0));
+        s.add(Steps.npcHurt("semiramis"));
+        s.add(par(
+                cam(v(cx + 2, TOP + 2.2, cz - 1), v(cx, TOP + 1.8, cz + 3), v(cx + 2, TOP + 2.2, cz), v(cx, TOP + 1.8, cz + 3), 150),
+                say(SEMIRAMIS, "sem.7")));
+        s.add(Steps.npcLeave("semiramis"));
+
+        // 3. Кайри ранен, оба погибают
+        s.add(Steps.npcHurt("kairi"));
+        s.add(Steps.wait(20));
+        s.add(par(
+                seq(cam(v(cx + 1, TOP + 2.4, cz - 5), v(cx - 0.5, TOP + 1.8, cz - 7), v(cx, TOP + 2.2, cz - 6), v(cx - 0.5, TOP + 1.8, cz - 7), 360),
+                        cam(v(cx - 1, TOP + 2.2, cz - 5), v(cx, TOP + 1.8, cz - 8), v(cx + 2, TOP + 4.0, cz - 8), v(cx, TOP + 2.0, cz - 8), 240)),
+                seq(Steps.npcWalk("mordred", cx - 0.5, TOP, cz - 8.0, 1.8D, 120, false),
+                        say(MORDRED, "sem.8"), say(KAIRI, "sem.9"), say(MORDRED, "sem.10"),
+                        say(KAIRI, "sem.11"), say(MORDRED, "sem.12"))));
+        s.add(Steps.npcDie("kairi"));
+        s.add(Steps.wait(30));
+        s.add(Steps.npcDie("mordred"));
+        s.add(Steps.wait(40));
+        interludeEnd(s, StoryChapter.INTERLUDE_PUCELLE);
+        return s;
+    }
+
+    // Интерлюдия: Жанна против Широ
+    private static List<Step> interludePucelle() {
+        final double cx = GX;
+        final double cz = GZ;
+        List<Step> s = new ArrayList<>();
+        gardenStart(s, "interlude_pucelle", v(cx, TOP + 5, cz - 14), v(cx, TOP + 1.8, cz + 2));
+        s.add(Steps.spawnNpc("shiro", NpcType.SHIRO, cx, TOP, cz + 3.0, 180.0F));
+        s.add(Steps.spawnNpc("jeanne", NpcType.JEANNE, cx, TOP, cz - 12.0, 0.0F));
+
+        // 1. спор
+        s.add(par(
+                seq(cam(v(cx - 4, TOP + 4, cz - 13), v(cx, TOP + 1.8, cz - 5), v(cx + 4, TOP + 3.5, cz - 9), v(cx, TOP + 1.8, cz), 240),
+                        cam(v(cx - 3, TOP + 2.4, cz - 6), v(cx, TOP + 1.8, cz - 4), v(cx - 3, TOP + 2.4, cz - 5), v(cx, TOP + 1.8, cz - 4), 240),
+                        cam(v(cx + 3, TOP + 2.4, cz + 7), v(cx, TOP + 1.8, cz + 3), v(cx + 3, TOP + 2.4, cz + 6), v(cx, TOP + 1.8, cz + 3), 240),
+                        cam(v(cx - 3, TOP + 2.4, cz - 6), v(cx, TOP + 1.8, cz - 4), v(cx - 3, TOP + 2.4, cz - 5), v(cx, TOP + 1.8, cz - 4), 240),
+                        cam(v(cx + 3, TOP + 2.4, cz + 7), v(cx, TOP + 1.8, cz + 3), v(cx + 3, TOP + 2.4, cz + 6), v(cx, TOP + 1.8, cz + 3), 240),
+                        cam(v(cx - 5, TOP + 2.6, cz - 2), v(cx, TOP + 1.8, cz - 1), v(cx - 4, TOP + 2.6, cz - 2), v(cx, TOP + 1.8, cz - 1), 120)),
+                seq(Steps.npcWalk("jeanne", cx, TOP, cz - 5.0, 1.0D, 160, false),
+                        say(JEANNE, "pul.1"), say(SHIRO, "pul.2"), say(JEANNE, "pul.3"),
+                        say(SHIRO, "pul.4"), say(JEANNE, "pul.5"), say(SHIRO, "pul.6"))));
+
+        // 2. La Pucelle
+        s.add(say(JEANNE, "pul.7"));
+        s.add(Steps.particlesAtNpc("jeanne", ParticleTypes.FLAME, 120));
+        s.add(Steps.sound(SoundEvents.BEACON_POWER_SELECT));
+        s.add(par(
+                cam(v(cx - 6, TOP + 3.5, cz - 8), v(cx, TOP + 2.0, cz - 2), v(cx + 5, TOP + 5.0, cz - 10), v(cx, TOP + 2.5, cz), 160),
+                Steps.npcWalk("jeanne", cx, TOP, cz + 0.5, 1.6D, 100, false)));
+        s.add(Steps.lightning(cx, TOP, cz + 2.0));
+        s.add(Steps.particles(ParticleTypes.FLAME, cx, TOP + 1.5, cz + 2.5, 250, 2.5D));
+        s.add(Steps.sound(SoundEvents.GENERIC_EXPLODE));
+        s.add(Steps.npcHurt("shiro"));
+        s.add(Steps.wait(40));
+        s.add(par(
+                cam(v(cx + 2, TOP + 2.4, cz + 7), v(cx, TOP + 1.8, cz + 3), v(cx + 1.5, TOP + 2.2, cz + 6), v(cx, TOP + 1.8, cz + 3), 200),
+                say(SHIRO, "pul.8")));
+        s.add(par(
+                cam(v(cx - 2, TOP + 2.4, cz - 4), v(cx, TOP + 1.8, cz), v(cx - 1, TOP + 2.2, cz - 3.5), v(cx, TOP + 1.8, cz), 240),
+                say(JEANNE, "pul.9")));
+        s.add(Steps.npcDie("jeanne"));
+        s.add(par(
+                cam(v(cx + 2, TOP + 2.4, cz + 7), v(cx, TOP + 1.8, cz + 3), v(cx, TOP + 4.0, cz + 10), v(cx, TOP + 2.0, cz + 3), 200),
+                Steps.wait(100)));
+        interludeEnd(s, StoryChapter.SHIRO_FINAL);
+        return s;
+    }
+
+    // Глава: Зиг против Широ. Две фазы, затем гибель Широ и Семирамис.
+    private static List<Step> shiroFinal() {
+        List<Step> s = new ArrayList<>();
+        s.add(Steps.fade(0, 20, 40, false));
+        s.add(Steps.dismissServant());
+        s.add(Steps.run(c -> StoryWorld.ensureGardens(c.trifas())));
+        s.add(Steps.teleport(GX, TOP, GZ - 13.0, 0.0F));
+        s.add(Steps.spawnNpc("shiro", NpcType.SHIRO, GX, TOP, GZ + 1.5, 180.0F));
+        s.add(Steps.spawnNpc("semiramis", NpcType.SEMIRAMIS, GX + 3.5, TOP, GZ + 3.5, 160.0F));
+        s.add(Steps.title("story.fateapocrypha.shiro_final.title", "story.fateapocrypha.shiro_final.subtitle"));
+        s.add(Steps.wait(80));
+        s.add(Steps.waitInZone(gzone(GX - 6, GZ - 12, GX + 6, GZ - 5)));
+        s.add(say(SHIRO, "fin.1"));
+        s.add(say(SIEG, "fin.2"));
+        s.add(say(SHIRO, "fin.3"));
+        s.add(say(SIEG, "fin.4"));
+        s.add(say(SHIRO, "fin.5"));
+        s.add(say(SIEG, "fin.6"));
+        s.add(say(SHIRO, "fin.7"));
+        s.add(Steps.healPlayer());
+        s.add(Steps.siegfriedHeart(12000));
+
+        // фаза 1
+        s.add(Steps.npcBoss("shiro", 180.0D, 5.0D, 0.5D, true, 450,
+                "boss.fateapocrypha.grail_beam", "npc.fateapocrypha.shiro", net.minecraft.world.BossEvent.BossBarColor.PURPLE));
+        s.add(say(SIEG, "fin.8"));
+        s.add(Steps.frankenSpark(9000));
+        s.add(Steps.sound(SoundEvents.LIGHTNING_BOLT_THUNDER));
+        s.add(say(SHIRO, "fin.9"));
+
+        // фаза 2
+        s.add(Steps.npcBoss("shiro", 180.0D, 6.0D, 0.1D, false, 350,
+                "boss.fateapocrypha.grail_beam", "npc.fateapocrypha.shiro", net.minecraft.world.BossEvent.BossBarColor.PURPLE));
+        s.add(Steps.clearEffects());
+        s.add(Steps.healPlayer());
+        s.add(Steps.npcWalk("semiramis", GX + 1.5, TOP, GZ + 2.5, 1.4D, 80, false));
+        s.add(say(SHIRO, "fin.10"));
+        s.add(say(SEMIRAMIS, "fin.11"));
+        s.add(say(SHIRO, "fin.12"));
+        s.add(say(SEMIRAMIS, "fin.13"));
+        s.add(say(SIEG, "fin.14"));
+        s.add(Steps.npcDie("shiro"));
+        s.add(Steps.wait(30));
+        s.add(Steps.npcDie("semiramis"));
+        s.add(Steps.wait(50));
+        s.add(Steps.fade(30, 20, 5, true));
+        s.add(Steps.despawnAllNpcs());
+        s.add(Steps.advance(StoryChapter.GRAIL_INSIDE));
+        return s;
+    }
+
+    // Глава: внутри Грааля. Выбор Зига; превращение в Фафнира.
+    private static List<Step> grailInside() {
+        final double gx = StoryWorld.GRAIL_X + 0.5;
+        final double gz = StoryWorld.GRAIL_Z + 0.5;
+        List<Step> s = new ArrayList<>();
+        s.add(Steps.fade(0, 20, 40, false));
+        s.add(Steps.dismissServant());
+        s.add(Steps.run(c -> StoryWorld.ensureGrailStages(c.trifas())));
+        s.add(Steps.clearEffects());
+        s.add(Steps.teleport(gx, Y, gz - 8.0, 0.0F));
+        s.add(Steps.spawnNpc("astolfo", NpcType.ASTOLFO, gx - 2.0, Y, gz - 7.0, 0.0F));
+        s.add(Steps.spawnNpc("justice", NpcType.JUSTICE, gx, Y, gz + 4.0, 180.0F));
+        s.add(Steps.title("story.fateapocrypha.grail_inside.title", "story.fateapocrypha.grail_inside.subtitle"));
+        s.add(Steps.wait(80));
+        s.add(say(ASTOLFO, "grl.1"));
+        s.add(Steps.npcWalk("justice", gx, Y, gz - 2.0, 0.8D, 120, false));
+        s.add(say(JUSTICE, "grl.2"));
+        s.add(say(SIEG, "grl.3"));
+        s.add(say(JUSTICE, "grl.4"));
+        s.add(say(ASTOLFO, "grl.5"));
+        s.add(say(JUSTICE, "grl.6"));
+        s.add(say(SIEG, "grl.7"));
+        s.add(say(JUSTICE, "grl.8"));
+        s.add(say(ASTOLFO, "grl.9"));
+        s.add(say(SIEG, "grl.10"));
+        s.add(say(ASTOLFO, "grl.11"));
+        s.add(say(SIEG, "grl.12"));
+        s.add(say(ASTOLFO, "grl.13"));
+        s.add(say(SIEG, "grl.14"));
+
+        // превращение: кино-камера, Зиг становится драконом
+        s.add(Steps.cinematicStart(v(gx - 9, Y + 4, gz - 12), v(gx, Y + 2, gz - 4)));
+        s.add(Steps.sound(SoundEvents.BEACON_ACTIVATE));
+        s.add(Steps.particles(ParticleTypes.END_ROD, gx, Y + 1.5, gz - 8.0, 250, 1.5D));
+        s.add(Steps.lightning(gx, Y, gz - 8.0));
+        s.add(Steps.lightning(gx - 3.0, Y, gz - 6.0));
+        s.add(Steps.wait(20));
+        s.add(Steps.spawnDragon(gx, Y, gz - 4.0, 0.0F));
+        s.add(Steps.sound(SoundEvents.ENDER_DRAGON_GROWL));
+        s.add(par(
+                cam(v(gx - 9, Y + 4, gz - 12), v(gx, Y + 2, gz - 4), v(gx - 3, Y + 7, gz - 20), v(gx, Y + 3, gz - 4), 260),
+                seq(Steps.wait(60), say(ASTOLFO, "grl.15"))));
+        s.add(Steps.wait(40));
+        s.add(Steps.fade(30, 20, 5, true));
+        s.add(Steps.despawnAllNpcs());
+        s.add(Steps.discardMobs());
+        s.add(Steps.cinematicEnd());
+        s.add(Steps.advance(StoryChapter.EPILOGUE));
+        return s;
+    }
+
+    private static Step fate(String id) {
+        return Steps.title("story.fateapocrypha.epilogue.fate_" + id + ".title",
+                "story.fateapocrypha.epilogue.fate_" + id + ".subtitle");
+    }
+
+    // Эпилог: судьбы героев и встреча Жанны с Зигом на Обратной стороне мира.
+    private static List<Step> epilogue() {
+        final double cx = StoryWorld.STAGE_RUINS_X + 0.5;
+        final double cz = StoryWorld.STAGE_RUINS_Z + 0.5;
+        final double rx = StoryWorld.REVERSE_X + 0.5;
+        final double rz = StoryWorld.REVERSE_Z + 0.5;
+        List<Step> s = new ArrayList<>();
+
+        // часть 1: судьбы героев
+        interludeStart(s, "epilogue", cx, cz + 12, v(cx - 12, Y + 8, cz - 12), v(cx, Y + 2, cz));
+        s.add(par(
+                cam(v(cx - 12, Y + 8, cz - 12), v(cx, Y + 2, cz), v(cx + 12, Y + 6, cz - 8), v(cx, Y + 2, cz), 580),
+                seq(fate("astolfo"), Steps.wait(115), fate("caules"), Steps.wait(115), fate("fiore"), Steps.wait(115),
+                        fate("letizia"), Steps.wait(115), fate("jeanne"), Steps.wait(115))));
+
+        // часть 2: Обратная сторона мира
+        s.add(Steps.fade(30, 20, 40, true));
+        s.add(Steps.cinematicEnd());
+        s.add(Steps.run(c -> StoryWorld.ensureGrailStages(c.trifas())));
+        s.add(Steps.teleport(rx, Y, rz - 22.0, 0.0F));
+        s.add(Steps.cinematicStart(v(rx - 10, Y + 5, rz - 12), v(rx, Y + 2, rz + 2)));
+        s.add(Steps.spawnDragon(rx, Y, rz + 2.0, 180.0F));
+        s.add(Steps.spawnNpc("jeanne", NpcType.JEANNE, rx, Y, rz - 14.0, 0.0F));
+        s.add(Steps.title("story.fateapocrypha.epilogue_reverse.title", "story.fateapocrypha.epilogue_reverse.subtitle"));
+        s.add(par(
+                cam(v(rx - 10, Y + 5, rz - 12), v(rx, Y + 2, rz + 2), v(rx - 6, Y + 3, rz - 8), v(rx, Y + 2, rz - 2), 240),
+                Steps.npcWalk("jeanne", rx, Y, rz - 4.5, 0.9D, 260, false)));
+        s.add(par(
+                seq(cam(v(rx - 3, Y + 2.4, rz - 9), v(rx, Y + 1.8, rz - 4.5), v(rx - 2.5, Y + 2.4, rz - 8), v(rx, Y + 1.8, rz - 4.5), 360),
+                        cam(v(rx - 5, Y + 3, rz - 3), v(rx, Y + 2.0, rz + 2), v(rx - 6, Y + 3.5, rz - 4), v(rx, Y + 2.0, rz + 2), 120)),
+                seq(say(JEANNE, "epi.1"), say(JEANNE, "epi.2"), say(JEANNE, "epi.3"))));
+
+        // Зиг возвращает человеческий облик
+        s.add(Steps.sound(SoundEvents.BEACON_ACTIVATE));
+        s.add(Steps.particles(ParticleTypes.END_ROD, rx, Y + 2.0, rz + 2.0, 300, 2.0D));
+        s.add(Steps.lightning(rx, Y, rz + 2.0));
+        s.add(Steps.wait(20));
+        s.add(Steps.discardMobs());
+        s.add(Steps.spawnNpc("zig", NpcType.ZIG, rx, Y, rz + 1.0, 180.0F));
+        s.add(Steps.particles(ParticleTypes.HEART, rx, Y + 2.0, rz + 1.0, 25, 0.8D));
+        s.add(par(
+                cam(v(rx - 3, Y + 2.4, rz - 6), v(rx, Y + 1.8, rz - 1), v(rx - 2.5, Y + 2.2, rz - 5), v(rx, Y + 1.8, rz - 1), 360),
+                seq(Steps.npcWalk("jeanne", rx, Y, rz - 1.5, 1.0D, 100, false),
+                        say(SIEG, "epi.4"), say(JEANNE, "epi.5"), say(SIEG, "epi.6"))));
+        s.add(par(
+                cam(v(rx - 3, Y + 2.2, rz - 5), v(rx, Y + 1.8, rz - 1), v(rx + 2, Y + 7.0, rz - 14), v(rx, Y + 2.5, rz), 280),
+                Steps.wait(40)));
+        s.add(Steps.title("story.fateapocrypha.epilogue_end.title", "story.fateapocrypha.epilogue_end.subtitle"));
+        s.add(Steps.wait(130));
+
+        // возвращение: свободная игра
+        s.add(Steps.fade(30, 20, 5, true));
+        s.add(Steps.despawnAllNpcs());
+        s.add(Steps.discardMobs());
+        s.add(Steps.cinematicEnd());
         s.add(Steps.teleport(StoryWorld.FOREST_CX + 0.5, Y, StoryWorld.FOREST_CZ + 0.5, -90.0F));
         s.add(Steps.restoreServant(ServantType.ASTOLFO));
         s.add(Steps.advance(StoryChapter.TO_BE_CONTINUED));
         return s;
     }
+
 }

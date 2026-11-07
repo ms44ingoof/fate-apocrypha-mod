@@ -1601,4 +1601,105 @@ public class StoryWorld {
         woodlandRing(l, cx - 30, cz - 30, cx + 30, cz + 30, 6, 3, 6001L);
         set(l, GARDEN_X, Y0 - 1, GARDEN_Z, s(Blocks.ROOTED_DIRT));   // метка "построено"
     }
+
+    // ================= Внутри Грааля и Обратная сторона мира =================
+    public static final int GRAIL_X = 2000;      // внутри Грааля: белый зал, радиус 30
+    public static final int GRAIL_Z = 1100;
+    public static final int REVERSE_X = 2000;    // Обратная сторона мира: тёмная площадка, радиус 30
+    public static final int REVERSE_Z = 1300;
+
+    public static void ensureGrailStages(ServerLevel l) {
+        if (l != null && !l.getBlockState(new BlockPos(GRAIL_X, Y0 - 1, GRAIL_Z)).is(Blocks.ROOTED_DIRT)) {
+            buildGrailStages(l);
+        }
+    }
+
+    private static void buildGrailStages(ServerLevel l) {
+        // --- Внутри Грааля ---
+        int cx = GRAIL_X;
+        int cz = GRAIL_Z;
+        for (int x = cx - 30; x <= cx + 30; x++) {
+            for (int z = cz - 30; z <= cz + 30; z++) {
+                double d = Math.hypot(x - cx, z - cz);
+                if (d > 30.0D) {
+                    continue;
+                }
+                BlockState floor;
+                if (d <= 3.0D) {
+                    floor = s(Blocks.GOLD_BLOCK);
+                } else if (d >= 13.0D && d <= 14.5D) {
+                    floor = s(Blocks.GOLD_BLOCK);
+                } else if (d <= 13.0D) {
+                    floor = ((x + z) & 1) == 0 ? s(Blocks.SMOOTH_QUARTZ) : s(Blocks.QUARTZ_BLOCK);
+                } else {
+                    floor = s(Blocks.WHITE_CONCRETE);
+                }
+                set(l, x, Y0, z, floor);
+            }
+        }
+        for (int k = 0; k < 8; k++) {
+            int px = cx + (int) Math.round(12.0D * Math.cos(k * Math.PI / 4.0D));
+            int pz = cz + (int) Math.round(12.0D * Math.sin(k * Math.PI / 4.0D));
+            fill(l, px, Y0 + 1, pz, px, Y0 + 9, pz, s(Blocks.WHITE_STAINED_GLASS));
+            set(l, px, Y0 + 10, pz, LAMP);
+            set(l, px, Y0, pz, LAMP);
+        }
+        for (int k = 0; k < 16; k++) {
+            int px = cx + (int) Math.round(6.0D * Math.cos(k * Math.PI / 8.0D));
+            int pz = cz + (int) Math.round(6.0D * Math.sin(k * Math.PI / 8.0D));
+            set(l, px, Y0 + 1, pz, s(Blocks.END_ROD));
+        }
+        set(l, cx, Y0 + 1, cz, s(Blocks.GLOWSTONE));
+        fill(l, cx, Y0 + 2, cz, cx, Y0 + 5, cz, s(Blocks.WHITE_STAINED_GLASS));
+        for (int x = cx - 12; x <= cx + 12; x++) {
+            for (int z = cz - 12; z <= cz + 12; z++) {
+                if (Math.hypot(x - cx, z - cz) <= 12.0D) {
+                    set(l, x, Y0 + 24, z, s(Blocks.BARRIER));   // потолок: фантом не горит на солнце
+                }
+            }
+        }
+
+        // --- Обратная сторона мира ---
+        int rx = REVERSE_X;
+        int rz = REVERSE_Z;
+        Random rnd = new Random(909L);
+        for (int x = rx - 30; x <= rx + 30; x++) {
+            for (int z = rz - 30; z <= rz + 30; z++) {
+                double d = Math.hypot(x - rx, z - rz);
+                if (d > 30.0D) {
+                    continue;
+                }
+                BlockState floor;
+                if (d <= 14.0D) {
+                    floor = ((x + z) & 1) == 0 ? s(Blocks.DEEPSLATE_TILES) : s(Blocks.POLISHED_DEEPSLATE);
+                } else if (d <= 15.5D) {
+                    floor = s(Blocks.AMETHYST_BLOCK);
+                } else {
+                    floor = rnd.nextInt(6) == 0 ? s(Blocks.COBBLED_DEEPSLATE) : s(Blocks.DEEPSLATE);
+                }
+                set(l, x, Y0, z, floor);
+            }
+        }
+        for (int k = 0; k < 10; k++) {
+            int px = rx + (int) Math.round(17.0D * Math.cos(k * Math.PI / 5.0D));
+            int pz = rz + (int) Math.round(17.0D * Math.sin(k * Math.PI / 5.0D));
+            fill(l, px, Y0 + 1, pz, px, Y0 + 7 + rnd.nextInt(4), pz, s(Blocks.DEEPSLATE_BRICKS));
+            set(l, px, Y0 + 11, pz, s(Blocks.SOUL_LANTERN));
+        }
+        for (int i = 0; i < 40; i++) {
+            double angle = rnd.nextDouble() * Math.PI * 2.0D;
+            double radius = 4.0D + rnd.nextDouble() * 10.0D;
+            int x = rx + (int) Math.round(radius * Math.cos(angle));
+            int z = rz + (int) Math.round(radius * Math.sin(angle));
+            set(l, x, Y0 + 1, z, rnd.nextInt(3) == 0 ? s(Blocks.AMETHYST_CLUSTER) : s(Blocks.END_ROD));
+        }
+        for (int x = rx - 12; x <= rx + 12; x++) {
+            for (int z = rz - 12; z <= rz + 12; z++) {
+                if (Math.hypot(x - rx, z - rz) <= 12.0D) {
+                    set(l, x, Y0 + 24, z, s(Blocks.BARRIER));
+                }
+            }
+        }
+        set(l, GRAIL_X, Y0 - 1, GRAIL_Z, s(Blocks.ROOTED_DIRT));   // метка "построено"
+    }
 }

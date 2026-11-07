@@ -26,7 +26,11 @@ public enum NpcType {
     DARNIC("darnic", false, Items.AIR),
     VLAD("vlad", false, Items.IRON_SWORD),
     FIORE("fiore", false, Items.AIR),
-    REIKA("reika", false, Items.AIR);
+    REIKA("reika", false, Items.AIR),
+    ACHILLES("achilles", false, Items.IRON_SWORD),
+    KARNA("karna", false, Items.TRIDENT),
+    JUSTICE("justice", true, Items.AIR),
+    ZIG("zig", false, Items.AIR);
 
     private final String id;
     private final boolean slim;

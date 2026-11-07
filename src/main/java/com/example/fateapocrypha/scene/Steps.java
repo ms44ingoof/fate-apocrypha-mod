@@ -4,6 +4,10 @@ import com.example.fateapocrypha.ModEntities;
 import com.example.fateapocrypha.entity.ServantEntity;
 import com.example.fateapocrypha.entity.StoryCameraEntity;
 import net.minecraft.world.entity.monster.Vex;
+import net.minecraft.world.entity.monster.Phantom;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.BossEvent;
+import net.minecraft.server.level.ServerBossEvent;
 import com.example.fateapocrypha.network.CameraPacket;
 import java.util.List;
 import net.minecraft.core.BlockPos;
@@ -764,6 +768,178 @@ public class Steps {
             if (npc != null) {
                 npc.setCustomName(Component.translatable(nameKey));
             }
+        });
+    }
+
+    // ================= Финальные главы: боссы, силы Зига, дракон =================
+
+    /**
+     * Бой с уже созданным сюжетным NPC (spawnNpc с тем же key). NPC на время боя становится уязвим.
+     * Бой заканчивается, когда здоровье падает до endFraction от максимума (NPC не погибает, а снова
+     * становится неуязвимым: его гибель играет сцена). resetHealth=false продолжает бой со второй фазы.
+     * Каждые specialEvery тиков босс помечает точку под игроком: через 2,5 с там бьёт молния (8 урона).
+     */
+    public static Step npcBoss(String key, double health, double damage, double endFraction, boolean resetHealth,
+                               int specialEvery, String specialKey, String nameKey, BossEvent.BossBarColor color) {
+        return new Step() {
+            private ServerBossEvent bar;
+            private int sinceSpecial = 0;
+            private int charge = 0;
+            private Vec3 mark = Vec3.ZERO;
+
+            @Override
+            public void begin(SceneContext c) {
+                StoryNpcEntity npc = c.npc(key);
+                if (npc == null) {
+                    return;
+                }
+                if (resetHealth) {
+                    npc.getAttribute(Attributes.MAX_HEALTH).setBaseValue(health);
+                    npc.setHealth((float) health);
+                }
+                npc.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(damage);
+                npc.setInvulnerable(false);
+                npc.setTarget(c.player);
+                bar = new ServerBossEvent(Component.translatable(nameKey), color, BossEvent.BossBarOverlay.PROGRESS);
+                bar.addPlayer(c.player);
+            }
+
+            private void finish(StoryNpcEntity npc) {
+                if (bar != null) {
+                    bar.removeAllPlayers();
+                    bar = null;
+                }
+                if (npc != null) {
+                    npc.setInvulnerable(true);
+                    npc.setTarget(null);
+                    npc.getNavigation().stop();
+                }
+            }
+
+            @Override
+            public boolean update(SceneContext c) {
+                StoryNpcEntity npc = c.npc(key);
+                ServerLevel level = c.trifas();
+                if (npc == null || !npc.isAlive() || level == null || c.stepTicks > 12000) {
+                    finish(npc);
+                    return true;
+                }
+                float max = npc.getMaxHealth();
+                if (npc.getHealth() <= max * endFraction) {
+                    npc.setHealth(Math.max(1.0F, (float) (max * endFraction)));
+                    finish(npc);
+                    return true;
+                }
+                if (bar != null) {
+                    bar.setProgress(Math.max(0.0F, Math.min(1.0F, npc.getHealth() / max)));
+                }
+                if (c.stepTicks % 20 == 0 && (npc.getTarget() == null || !npc.getTarget().isAlive())) {
+                    npc.setTarget(c.player);
+                }
+                if (specialEvery > 0) {
+                    if (charge > 0) {
+                        charge--;
+                        if (charge % 4 == 0) {
+                            level.sendParticles(ParticleTypes.FLAME, mark.x, mark.y + 0.2D, mark.z,
+                                    14, 1.6D, 0.05D, 1.6D, 0.01D);
+                            level.sendParticles(ParticleTypes.END_ROD, mark.x, mark.y + 1.5D, mark.z,
+                                    4, 0.3D, 1.0D, 0.3D, 0.02D);
+                        }
+                        if (charge == 0) {
+                            LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(level);
+                            if (bolt != null) {
+                                bolt.moveTo(mark.x, mark.y, mark.z);
+                                bolt.setVisualOnly(true);
+                                level.addFreshEntity(bolt);
+                            }
+                            level.sendParticles(ParticleTypes.EXPLOSION, mark.x, mark.y + 1.0D, mark.z,
+                                    6, 1.0D, 0.5D, 1.0D, 0.0D);
+                            level.playSound(null, BlockPos.containing(mark), SoundEvents.GENERIC_EXPLODE,
+                                    SoundSource.HOSTILE, 1.5F, 1.0F);
+                            AABB area = new AABB(mark.x - 3.0D, mark.y - 1.0D, mark.z - 3.0D,
+                                    mark.x + 3.0D, mark.y + 3.0D, mark.z + 3.0D);
+                            for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class, area,
+                                    t -> t != npc && t.isAlive() && !(t instanceof StoryNpcEntity))) {
+                                target.hurt(npc.damageSources().magic(), 8.0F);
+                            }
+                        }
+                    } else {
+                        sinceSpecial++;
+                        if (sinceSpecial >= specialEvery) {
+                            sinceSpecial = 0;
+                            charge = 50;
+                            mark = c.player.position();
+                            c.player.displayClientMessage(
+                                    Component.translatable(specialKey).withStyle(ChatFormatting.RED), true);
+                            npc.swing(InteractionHand.MAIN_HAND);
+                            level.playSound(null, BlockPos.containing(mark), SoundEvents.BEACON_POWER_SELECT,
+                                    SoundSource.HOSTILE, 1.5F, 0.8F);
+                        }
+                    }
+                }
+                return false;
+            }
+        };
+    }
+
+    /** Сердце Зигфрида: на время боя сила, защита и регенерация. */
+    public static Step siegfriedHeart(int ticks) {
+        return run(c -> {
+            c.player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, ticks, 1, false, true));
+            c.player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, ticks, 0, false, true));
+            c.player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, ticks, 0, false, true));
+            ServerLevel level = c.trifas();
+            if (level != null) {
+                level.sendParticles(ParticleTypes.END_ROD, c.player.getX(), c.player.getY(1.0D), c.player.getZ(),
+                        60, 0.6D, 1.0D, 0.6D, 0.1D);
+            }
+            c.player.level().playSound(null, c.player.blockPosition(), SoundEvents.BEACON_POWER_SELECT,
+                    SoundSource.PLAYERS, 1.0F, 1.0F);
+        });
+    }
+
+    /** Сила Франкенштейн: молния бьёт в Зига, но не вредит ему, и даёт скорость и ещё больше силы. */
+    public static Step frankenSpark(int ticks) {
+        return run(c -> {
+            ServerLevel level = c.trifas();
+            if (level != null) {
+                LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(level);
+                if (bolt != null) {
+                    bolt.moveTo(c.player.getX(), c.player.getY(), c.player.getZ());
+                    bolt.setVisualOnly(true);
+                    level.addFreshEntity(bolt);
+                }
+                level.sendParticles(ParticleTypes.ELECTRIC_SPARK, c.player.getX(), c.player.getY(1.0D),
+                        c.player.getZ(), 80, 0.7D, 1.0D, 0.7D, 0.3D);
+            }
+            c.player.removeEffect(MobEffects.DAMAGE_BOOST);
+            c.player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, ticks, 2, false, true));
+            c.player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, ticks, 1, false, true));
+            c.player.setHealth(c.player.getMaxHealth());
+        });
+    }
+
+    /** Дракон Фафнир (огромный фантом без ИИ). Убирается шагом discardMobs. */
+    public static Step spawnDragon(double x, double y, double z, float yaw) {
+        return run(c -> {
+            ServerLevel level = c.trifas();
+            if (level == null) {
+                return;
+            }
+            Phantom dragon = EntityType.PHANTOM.create(level);
+            if (dragon == null) {
+                return;
+            }
+            dragon.moveTo(x, y, z, yaw, 0.0F);
+            dragon.setPhantomSize(30);
+            dragon.setNoAi(true);
+            dragon.setInvulnerable(true);
+            dragon.setSilent(true);
+            dragon.setPersistenceRequired();
+            dragon.setCustomName(Component.translatable("npc.fateapocrypha.fafnir"));
+            dragon.setCustomNameVisible(true);
+            level.addFreshEntity(dragon);
+            c.mobs.add(dragon.getUUID());
         });
     }
 }

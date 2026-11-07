@@ -22,7 +22,15 @@ public enum StoryChapter {
     INTERLUDE_DARNIC,
     INTERLUDE_GRAIL,
     RESISTANCE,
-    TO_BE_CONTINUED;
+    GARDENS_ASSAULT,
+    INTERLUDE_ACHILLES,
+    KARNA,
+    INTERLUDE_SEMIRAMIS,
+    INTERLUDE_PUCELLE,
+    SHIRO_FINAL,
+    GRAIL_INSIDE,
+    EPILOGUE,
+    TO_BE_CONTINUED;   // после эпилога: свободная игра
 
     public String titleKey() {
         return "story.fateapocrypha." + name().toLowerCase(Locale.ROOT) + ".title";
