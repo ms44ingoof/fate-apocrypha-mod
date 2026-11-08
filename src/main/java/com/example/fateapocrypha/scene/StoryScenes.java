@@ -1081,7 +1081,7 @@ public class StoryScenes {
         s.add(Steps.run(c -> StoryWorld.ensureStagesB(c.trifas())));
         s.add(Steps.run(c -> {
             if (c.trifas() != null) {
-                c.trifas().setBlock(Reloc.pos((int) Math.floor(cx), Y, 886),
+                c.trifas().setBlock(Reloc.pos((int) Math.floor(cx), (int) Y, 886),
                         net.minecraft.world.level.block.Blocks.CAMPFIRE.defaultBlockState(), 3);
             }
         }));
