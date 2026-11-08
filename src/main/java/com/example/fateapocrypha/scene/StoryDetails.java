@@ -53,10 +53,10 @@ public final class StoryDetails {
     }
 
     private static void gates(ServerLevel l, int mx, int mz, StoryLocation... locations) {
-        if (!l.getBlockState(new BlockPos(mx, Y0 - 1, mz)).is(Blocks.ROOTED_DIRT)) {
+        if (!l.getBlockState(Reloc.pos(mx, Y0 - 1, mz)).is(Blocks.ROOTED_DIRT)) {
             return;
         }
-        BlockPos done = new BlockPos(mx + 2, Y0 - 1, mz);
+        BlockPos done = Reloc.pos(mx + 2, Y0 - 1, mz);
         if (l.getBlockState(done).is(Blocks.MOSS_BLOCK)) {
             return;
         }
@@ -68,10 +68,10 @@ public final class StoryDetails {
 
     private static void run(ServerLevel l, int mx, int mz, int kind) {
         // локация построена, но детали ещё не ставились
-        if (!l.getBlockState(new BlockPos(mx, Y0 - 1, mz)).is(Blocks.ROOTED_DIRT)) {
+        if (!l.getBlockState(Reloc.pos(mx, Y0 - 1, mz)).is(Blocks.ROOTED_DIRT)) {
             return;
         }
-        BlockPos done = new BlockPos(mx + 1, Y0 - 1, mz);
+        BlockPos done = Reloc.pos(mx + 1, Y0 - 1, mz);
         if (l.getBlockState(done).is(Blocks.MOSS_BLOCK)) {
             return;
         }
@@ -89,7 +89,7 @@ public final class StoryDetails {
 
     /** Ставит блок, только если там воздух, а под ним твёрдая опора. */
     private static boolean put(ServerLevel l, int x, int y, int z, BlockState state) {
-        BlockPos pos = new BlockPos(x, y, z);
+        BlockPos pos = Reloc.pos(x, y, z);
         if (!l.getBlockState(pos).isAir()) {
             return false;
         }
@@ -102,7 +102,7 @@ public final class StoryDetails {
     }
 
     private static boolean free(ServerLevel l, int x, int y, int z) {
-        return l.getBlockState(new BlockPos(x, y, z)).isAir();
+        return l.getBlockState(Reloc.pos(x, y, z)).isAir();
     }
 
     /** Столб высотой h: основание и верх (фонарь, знамя). Ничего не ставит, если место занято. */
@@ -117,18 +117,18 @@ public final class StoryDetails {
         }
         if (put(l, x, y, z, body)) {
             for (int i = 1; i < h; i++) {
-                l.setBlock(new BlockPos(x, y + i, z), body, 2);
+                l.setBlock(Reloc.pos(x, y + i, z), body, 2);
             }
-            l.setBlock(new BlockPos(x, y + h, z), top, 2);
+            l.setBlock(Reloc.pos(x, y + h, z), top, 2);
         }
     }
 
     private static int surface(ServerLevel l, int x, int z) {
-        return l.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+        return Reloc.height(l, x, z);
     }
 
     private static boolean onGrass(ServerLevel l, int x, int y, int z) {
-        BlockState below = l.getBlockState(new BlockPos(x, y - 1, z));
+        BlockState below = l.getBlockState(Reloc.pos(x, y - 1, z));
         return below.is(Blocks.GRASS_BLOCK) || below.is(Blocks.PODZOL) || below.is(Blocks.DIRT);
     }
 
@@ -177,7 +177,7 @@ public final class StoryDetails {
                 for (int k = 0; k < len && ok; k++) {
                     int lx = axis == Direction.Axis.X ? x + k : x;
                     int lz = axis == Direction.Axis.Z ? z + k : z;
-                    l.setBlock(new BlockPos(lx, y, lz), log, 2);
+                    l.setBlock(Reloc.pos(lx, y, lz), log, 2);
                 }
             } else if (roll == 17 && dc > 16.0D) {
                 // мшистый валун 2x2
@@ -248,8 +248,8 @@ public final class StoryDetails {
             int z = rz + (int) Math.round(rad * Math.sin(ang));
             if (free(l, x, y, z) && !free(l, x, Y0, z)) {
                 if (i % 3 == 0) {
-                    l.setBlock(new BlockPos(x, Y0, z), s(Blocks.NETHERRACK), 2);
-                    l.setBlock(new BlockPos(x, y, z), s(Blocks.FIRE), 2);
+                    l.setBlock(Reloc.pos(x, Y0, z), s(Blocks.NETHERRACK), 2);
+                    l.setBlock(Reloc.pos(x, y, z), s(Blocks.FIRE), 2);
                 } else if (i % 3 == 1) {
                     put(l, x, y, z, s(Blocks.COBBLESTONE));
                     put(l, x + 1, y, z, s(Blocks.COBBLESTONE_SLAB));
@@ -359,13 +359,13 @@ public final class StoryDetails {
                 for (int dx = -2; dx <= 2; dx++) {
                     for (int dz = -2; dz <= 2; dz++) {
                         boolean rim = Math.abs(dx) == 2 || Math.abs(dz) == 2;
-                        l.setBlock(new BlockPos(fx + dx, y, fz + dz),
+                        l.setBlock(Reloc.pos(fx + dx, y, fz + dz),
                                 rim ? s(Blocks.SMOOTH_QUARTZ) : s(Blocks.WATER), 2);
                     }
                 }
-                l.setBlock(new BlockPos(fx, y, fz), s(Blocks.QUARTZ_PILLAR), 2);
-                l.setBlock(new BlockPos(fx, y + 1, fz), s(Blocks.QUARTZ_PILLAR), 2);
-                l.setBlock(new BlockPos(fx, y + 2, fz), s(Blocks.SEA_LANTERN), 2);
+                l.setBlock(Reloc.pos(fx, y, fz), s(Blocks.QUARTZ_PILLAR), 2);
+                l.setBlock(Reloc.pos(fx, y + 1, fz), s(Blocks.QUARTZ_PILLAR), 2);
+                l.setBlock(Reloc.pos(fx, y + 2, fz), s(Blocks.SEA_LANTERN), 2);
             }
         }
     }

@@ -3,6 +3,7 @@ package com.example.fateapocrypha.world;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.DoorBlock;
@@ -38,6 +39,21 @@ final class BuildKit {
                     set(x, y, z, state);
                 }
             }
+        }
+    }
+
+    /** Убирает только растительность (листья, брёвна, траву, цветы): постройки не затрагиваются. */
+    void clearVegetation(int x, int y, int z) {
+        BlockPos pos = new BlockPos(x, y, z);
+        BlockState st = level.getBlockState(pos);
+        if (st.isAir()) {
+            return;
+        }
+        if (st.is(BlockTags.LEAVES) || st.is(BlockTags.LOGS) || st.is(BlockTags.FLOWERS) || st.is(BlockTags.SAPLINGS)
+                || st.is(Blocks.GRASS) || st.is(Blocks.TALL_GRASS) || st.is(Blocks.FERN) || st.is(Blocks.LARGE_FERN)
+                || st.is(Blocks.SNOW) || st.is(Blocks.VINE) || st.is(Blocks.DEAD_BUSH) || st.is(Blocks.SWEET_BERRY_BUSH)
+                || st.is(Blocks.BAMBOO) || st.is(Blocks.BROWN_MUSHROOM) || st.is(Blocks.RED_MUSHROOM)) {
+            level.setBlock(pos, AIR, 2);
         }
     }
 

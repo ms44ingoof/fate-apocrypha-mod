@@ -63,14 +63,14 @@ public class StoryWorld {
 
     // ================= Построение =================
     public static void ensureBuilt(ServerLevel level) {
-        if (!level.getBlockState(new BlockPos(100, Y0 - 1, 100)).is(Blocks.ROOTED_DIRT)) {
+        if (!level.getBlockState(Reloc.pos(100, Y0 - 1, 100)).is(Blocks.ROOTED_DIRT)) {
             buildCastle(level);
         }
         StoryDetails.ensure(level);
     }
 
     public static void ensureForest(ServerLevel level) {
-        if (level != null && !level.getBlockState(new BlockPos(FOREST_CX, Y0 - 1, FOREST_CZ)).is(Blocks.ROOTED_DIRT)) {
+        if (level != null && !level.getBlockState(Reloc.pos(FOREST_CX, Y0 - 1, FOREST_CZ)).is(Blocks.ROOTED_DIRT)) {
             buildForest(level);
         }
         StoryDetails.ensure(level);
@@ -101,11 +101,11 @@ public class StoryWorld {
 
     // ================= Помощники =================
     private static void set(ServerLevel l, int x, int y, int z, BlockState state) {
-        l.setBlock(new BlockPos(x, y, z), state, 2);
+        l.setBlock(Reloc.pos(x, y, z), state, 2);
     }
 
     private static void setSoft(ServerLevel l, int x, int y, int z, BlockState state) {
-        l.setBlock(new BlockPos(x, y, z), state, 3);   // с обновлением соседей (решётки, панели)
+        l.setBlock(Reloc.pos(x, y, z), state, 3);   // с обновлением соседей (решётки, панели)
     }
 
     private static void fill(ServerLevel l, int x1, int y1, int z1, int x2, int y2, int z2, BlockState state) {
@@ -113,7 +113,7 @@ public class StoryWorld {
         for (int x = Math.min(x1, x2); x <= Math.max(x1, x2); x++) {
             for (int y = Math.min(y1, y2); y <= Math.max(y1, y2); y++) {
                 for (int z = Math.min(z1, z2); z <= Math.max(z1, z2); z++) {
-                    l.setBlock(pos.set(x, y, z), state, 2);
+                    l.setBlock(Reloc.set(pos, x, y, z), state, 2);
                 }
             }
         }
@@ -125,7 +125,7 @@ public class StoryWorld {
         for (int x = Math.min(x1, x2); x <= Math.max(x1, x2); x++) {
             for (int y = Math.min(y1, y2); y <= Math.max(y1, y2); y++) {
                 for (int z = Math.min(z1, z2); z <= Math.max(z1, z2); z++) {
-                    l.setBlock(pos.set(x, y, z), rnd.nextDouble() < chanceB ? b : a, 2);
+                    l.setBlock(Reloc.set(pos, x, y, z), rnd.nextDouble() < chanceB ? b : a, 2);
                 }
             }
         }
@@ -257,10 +257,10 @@ public class StoryWorld {
         }
         for (int y = Y0 + 1; y <= Y0 + 4; y++) {
             for (int i = 113; i <= 117; i++) {
-                if (l.getBlockState(new BlockPos(i, y, 113)).isAir()
-                        || l.getBlockState(new BlockPos(i, y, 117)).isAir()
-                        || l.getBlockState(new BlockPos(113, y, i)).isAir()
-                        || l.getBlockState(new BlockPos(117, y, i)).isAir()) {
+                if (l.getBlockState(Reloc.pos(i, y, 113)).isAir()
+                        || l.getBlockState(Reloc.pos(i, y, 117)).isAir()
+                        || l.getBlockState(Reloc.pos(113, y, i)).isAir()
+                        || l.getBlockState(Reloc.pos(117, y, i)).isAir()) {
                     return true;
                 }
             }
@@ -502,7 +502,7 @@ public class StoryWorld {
             if (isPond(x, z) || heightAt(x, z) >= 12) {
                 continue;
             }
-            BlockPos pos = new BlockPos(x, Y0 + heightAt(x, z) + 1, z);
+            BlockPos pos = Reloc.pos(x, Y0 + heightAt(x, z) + 1, z);
             if (l.getBlockState(pos).isAir() && l.getBlockState(pos.below()).is(Blocks.GRASS_BLOCK)) {
                 l.setBlock(pos, cover[rnd.nextInt(cover.length)], 2);
             }
@@ -529,7 +529,7 @@ public class StoryWorld {
                     if (dy == 2 && (Math.abs(dx) > 1 || Math.abs(dz) > 1)) {
                         continue;
                     }
-                    BlockPos pos = new BlockPos(x + dx, top + dy, z + dz);
+                    BlockPos pos = Reloc.pos(x + dx, top + dy, z + dz);
                     if (l.getBlockState(pos).isAir()) {
                         l.setBlock(pos, leaf, 2);
                     }
@@ -552,7 +552,7 @@ public class StoryWorld {
                     if (Math.abs(dx) + Math.abs(dz) > r + (r > 1 ? 1 : 0)) {
                         continue;
                     }
-                    BlockPos pos = new BlockPos(x + dx, y, z + dz);
+                    BlockPos pos = Reloc.pos(x + dx, y, z + dz);
                     if (l.getBlockState(pos).isAir()) {
                         l.setBlock(pos, leaf, 2);
                     }
@@ -586,7 +586,7 @@ public class StoryWorld {
     public static final int STAGE_RUINS_Z = 1000;
 
     public static void ensureStages(ServerLevel l) {
-        if (l != null && !l.getBlockState(new BlockPos(STAGE_RED_X, Y0 - 1, STAGE_RED_Z)).is(Blocks.ROOTED_DIRT)) {
+        if (l != null && !l.getBlockState(Reloc.pos(STAGE_RED_X, Y0 - 1, STAGE_RED_Z)).is(Blocks.ROOTED_DIRT)) {
             buildStages(l);
         }
         StoryDetails.ensure(l);
@@ -737,6 +737,10 @@ public class StoryWorld {
      */
     private static void woodlandRing(ServerLevel l, int x1, int z1, int x2, int z2,
                                      int thickness, int step, long seed) {
+        // Кольца деревьев вокруг локаций скрывали границу плоского мира. В мире с рельефом они не нужны.
+        if (x1 >= 0) {
+            return;
+        }
         int inner = 3;
         int outer = inner + thickness;
         Random rnd = new Random(seed);
@@ -963,7 +967,7 @@ public class StoryWorld {
     public static final int STAGE_PLAIN_Z = 1100;
 
     public static void ensureStagesB(ServerLevel l) {
-        if (l != null && !l.getBlockState(new BlockPos(STAGE_STREET_X, Y0 - 1, STAGE_STREET_Z)).is(Blocks.ROOTED_DIRT)) {
+        if (l != null && !l.getBlockState(Reloc.pos(STAGE_STREET_X, Y0 - 1, STAGE_STREET_Z)).is(Blocks.ROOTED_DIRT)) {
             buildStagesB(l);
         }
         StoryDetails.ensure(l);
@@ -1107,7 +1111,7 @@ public class StoryWorld {
 
     // ================= Помощники украшений =================
     private static void setIfAir(ServerLevel l, int x, int y, int z, BlockState state) {
-        BlockPos pos = new BlockPos(x, y, z);
+        BlockPos pos = Reloc.pos(x, y, z);
         if (l.getBlockState(pos).isAir()) {
             l.setBlock(pos, state, 2);
         }
@@ -1227,7 +1231,7 @@ public class StoryWorld {
                         continue;
                     }
                     int y = Y0 + heightAt(px, pz);
-                    BlockState above = l.getBlockState(new BlockPos(px, y + 1, pz));
+                    BlockState above = l.getBlockState(Reloc.pos(px, y + 1, pz));
                     if (!above.isAir() && !above.canBeReplaced()) {
                         continue;   // стволы и листву не трогаем
                     }
@@ -1260,7 +1264,7 @@ public class StoryWorld {
             if (isPond(x, z) || heightAt(x, z) >= 12 || clearingDistance(x, z) < 12.0D) {
                 continue;
             }
-            BlockPos pos = new BlockPos(x, Y0 + heightAt(x, z) + 1, z);
+            BlockPos pos = Reloc.pos(x, Y0 + heightAt(x, z) + 1, z);
             if (l.getBlockState(pos).isAir() && l.getBlockState(pos.below()).is(Blocks.GRASS_BLOCK)) {
                 l.setBlock(pos, rnd.nextBoolean() ? s(Blocks.RED_MUSHROOM) : s(Blocks.BROWN_MUSHROOM), 2);
             }
@@ -1334,7 +1338,7 @@ public class StoryWorld {
     public static final int FARM_Z = 1200;
 
     public static void ensureFarm(ServerLevel l) {
-        if (l != null && !l.getBlockState(new BlockPos(FARM_X, Y0 - 1, FARM_Z)).is(Blocks.ROOTED_DIRT)) {
+        if (l != null && !l.getBlockState(Reloc.pos(FARM_X, Y0 - 1, FARM_Z)).is(Blocks.ROOTED_DIRT)) {
             buildFarm(l);
         }
         StoryDetails.ensure(l);
@@ -1474,7 +1478,7 @@ public class StoryWorld {
     public static final int GARDEN_TOP = Y0 + 60;    // уровень пола садов (стоять на Y0 + 61)
 
     public static void ensureGardens(ServerLevel l) {
-        if (l != null && !l.getBlockState(new BlockPos(GARDEN_X, Y0 - 1, GARDEN_Z)).is(Blocks.ROOTED_DIRT)) {
+        if (l != null && !l.getBlockState(Reloc.pos(GARDEN_X, Y0 - 1, GARDEN_Z)).is(Blocks.ROOTED_DIRT)) {
             buildGardens(l);
         }
         StoryDetails.ensure(l);
@@ -1585,7 +1589,7 @@ public class StoryWorld {
             double radius = 10.0D + rnd.nextDouble() * 24.0D;
             int x = cx + (int) Math.round(radius * Math.cos(angle));
             int z = cz + (int) Math.round(radius * Math.sin(angle));
-            BlockPos pos = new BlockPos(x, top + 1, z);
+            BlockPos pos = Reloc.pos(x, top + 1, z);
             if (l.getBlockState(pos).isAir() && l.getBlockState(pos.below()).is(Blocks.GRASS_BLOCK)) {
                 BlockState flower = flowers[rnd.nextInt(flowers.length)];
                 l.setBlock(pos, flower.is(Blocks.ROSE_BUSH) ? s(Blocks.POPPY) : flower, 2);
@@ -1617,7 +1621,7 @@ public class StoryWorld {
     public static final int DREAM_Z = 1100;
 
     public static void ensureDreamStage(ServerLevel l) {
-        if (l != null && !l.getBlockState(new BlockPos(DREAM_X, Y0 - 1, DREAM_Z)).is(Blocks.ROOTED_DIRT)) {
+        if (l != null && !l.getBlockState(Reloc.pos(DREAM_X, Y0 - 1, DREAM_Z)).is(Blocks.ROOTED_DIRT)) {
             buildDreamStage(l);
         }
     }
@@ -1700,7 +1704,7 @@ public class StoryWorld {
     }
 
     public static void ensureGrailStages(ServerLevel l) {
-        if (l != null && !l.getBlockState(new BlockPos(GRAIL_X, Y0 - 1, GRAIL_Z)).is(Blocks.ROOTED_DIRT)) {
+        if (l != null && !l.getBlockState(Reloc.pos(GRAIL_X, Y0 - 1, GRAIL_Z)).is(Blocks.ROOTED_DIRT)) {
             buildGrailStages(l);
         }
         StoryDetails.ensure(l);

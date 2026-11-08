@@ -1,16 +1,15 @@
 package com.example.fateapocrypha.world;
 
 import com.example.fateapocrypha.story.StoryLocation;
-import java.util.HashSet;
-import java.util.Set;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
 /**
- * Ворота на границе каждой сюжетной локации и проход через кольцо деревьев: путь из ворот ведёт
- * к площадке. Стиль ворот зависит от локации (замок, лес, лагерь, церковь, руины, город, сады...).
+ * Ворота на границе каждой сюжетной локации: от них к площадке ведёт дорога (её рисует генератор мира).
+ * Стиль ворот зависит от локации (замок, лес, лагерь, церковь, руины, город, сады...).
+ * Ворота ставятся поверх местности и убирают только растительность: постройки не ломаются.
  */
 public final class StoryGates {
     private StoryGates() {
@@ -70,35 +69,7 @@ public final class StoryGates {
         BuildKit kit = new BuildKit(level);
         Style style = style(location);
         for (TrifasRoads.Opening o : TrifasRoads.openings(location)) {
-            carve(kit, o);
             gate(kit, o, style);
-        }
-    }
-
-    /** Пробивает кольцо деревьев и насыпь: проход шириной 7 от края площадки до ворот, поверх него тропа. */
-    private static void carve(BuildKit kit, TrifasRoads.Opening o) {
-        double len = Math.hypot(o.gx() - o.ex(), o.gz() - o.ez());
-        Set<Long> seen = new HashSet<>();
-        for (double t = -2.0D; t <= len + 3.0D; t += 0.7D) {
-            double cx = o.ex() + o.ux() * t;
-            double cz = o.ez() + o.uz() * t;
-            for (int sd = -3; sd <= 3; sd++) {
-                int x = (int) Math.round(cx - o.uz() * sd);
-                int z = (int) Math.round(cz + o.ux() * sd);
-                if (!seen.add(((long) x << 32) ^ (z & 0xFFFFFFFFL))) {
-                    continue;
-                }
-                int base = BuildKit.ground(x, z);
-                for (int y = base + 1; y <= base + 14; y++) {
-                    if (!kit.isAir(x, y, z)) {
-                        kit.set(x, y, z, BuildKit.AIR);
-                    }
-                }
-                if (base >= TrifasTerrain.SEA) {
-                    boolean edge = Math.abs(sd) == 3;
-                    kit.set(x, base, z, edge ? BuildKit.s(Blocks.COARSE_DIRT) : BuildKit.s(Blocks.DIRT_PATH));
-                }
-            }
         }
     }
 
@@ -115,7 +86,7 @@ public final class StoryGates {
                 int z = alongX ? gz + across : gz + along;
                 int base = BuildKit.ground(x, z);
                 for (int y = base + 1; y <= y0 + 9; y++) {
-                    kit.set(x, y, z, BuildKit.AIR);
+                    kit.clearVegetation(x, y, z);
                 }
                 kit.set(x, base, z, st.floor());
                 for (int y = base - 1; y >= base - 6; y--) {

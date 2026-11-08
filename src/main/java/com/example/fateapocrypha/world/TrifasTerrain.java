@@ -1,5 +1,6 @@
 package com.example.fateapocrypha.world;
 
+import com.example.fateapocrypha.scene.Reloc;
 import com.example.fateapocrypha.scene.StoryWorld;
 import java.util.Random;
 
@@ -15,7 +16,7 @@ public final class TrifasTerrain {
     public static final int FLOOR = StoryWorld.Y0;
 
     /** Площадки сюжетных локаций: x1, z1, x2, z2 (границы построек вместе с кольцом деревьев). */
-    private static final int[][] PADS = {
+    private static final int[][] RAW_PADS = {
             {100, 100, 190, 130}, {100, 298, 130, 306}, {100, 398, 208, 416},                       // замок
             {StoryWorld.FOREST_X0, StoryWorld.FOREST_Z0,
                     StoryWorld.FOREST_X0 + StoryWorld.FOREST_SIZE - 1, StoryWorld.FOREST_Z0 + StoryWorld.FOREST_SIZE - 1},
@@ -27,6 +28,17 @@ public final class TrifasTerrain {
             {StoryWorld.REVERSE_X - 34, StoryWorld.REVERSE_Z - 34, StoryWorld.REVERSE_X + 34, StoryWorld.REVERSE_Z + 34},
             {StoryWorld.DREAM_X - 34, StoryWorld.DREAM_Z - 34, StoryWorld.DREAM_X + 34, StoryWorld.DREAM_Z + 34}
     };
+    /** Площадки в настоящих мировых координатах (сюжетные координаты пересчитаны по смещению локаций). */
+    private static final int[][] PADS = remap(RAW_PADS);
+
+    private static int[][] remap(int[][] raw) {
+        int[][] out = new int[raw.length][];
+        for (int i = 0; i < raw.length; i++) {
+            out[i] = Reloc.rect(raw[i][0], raw[i][1], raw[i][2], raw[i][3]);
+        }
+        return out;
+    }
+
     private static final double PAD_MARGIN = 16.0D;   // внутри этого расстояния пол строго на уровне FLOOR
     private static final double PAD_BLEND = 46.0D;    // дальше площадка плавно переходит в естественный рельеф
 

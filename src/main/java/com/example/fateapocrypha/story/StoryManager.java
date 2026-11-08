@@ -16,6 +16,7 @@ public class StoryManager {
     private static final String KEY = "fateapocrypha_chapter";
     private static final String SERVANT = "fateapocrypha_servant";
     private static final String STARTED = "fateapocrypha_started";
+    private static final String RETURN = "fateapocrypha_return";
 
     private static CompoundTag persisted(Player player) {
         CompoundTag data = player.getPersistentData();
@@ -32,6 +33,39 @@ public class StoryManager {
     public static void setChapter(Player player, StoryChapter chapter) {
         persisted(player).putInt(KEY, chapter.ordinal());
         persisted(player).putBoolean(STARTED, false);
+        sync(player);
+    }
+
+    private static void sync(Player player) {
+        if (player instanceof ServerPlayer serverPlayer) {
+            QuestSync.send(serverPlayer);
+        }
+    }
+
+    /** Запоминает место, откуда игрок ушёл в интерлюдию или сон (повторный вызов ничего не меняет). */
+    public static void rememberPosition(ServerPlayer player) {
+        CompoundTag data = persisted(player);
+        if (data.contains(RETURN, Tag.TAG_COMPOUND) || !player.level().dimension().equals(com.example.fateapocrypha.ModDimensions.TRIFAS)) {
+            return;
+        }
+        CompoundTag pos = new CompoundTag();
+        pos.putDouble("x", player.getX());
+        pos.putDouble("y", player.getY());
+        pos.putDouble("z", player.getZ());
+        pos.putFloat("yaw", player.getYRot());
+        pos.putFloat("pitch", player.getXRot());
+        data.put(RETURN, pos);
+    }
+
+    /** Забирает запомненное место (null, если его нет). */
+    public static CompoundTag takeReturn(Player player) {
+        CompoundTag data = persisted(player);
+        if (!data.contains(RETURN, Tag.TAG_COMPOUND)) {
+            return null;
+        }
+        CompoundTag pos = data.getCompound(RETURN);
+        data.remove(RETURN);
+        return pos;
     }
 
     /** Сцена текущей главы уже запускалась (игрок пришёл в нужную локацию). */
@@ -41,6 +75,7 @@ public class StoryManager {
 
     public static void setStarted(Player player, boolean started) {
         persisted(player).putBoolean(STARTED, started);
+        sync(player);
     }
 
     /** Строка "Место: ... (X, Z)" для глав, которые начинаются при входе в локацию. */
@@ -59,11 +94,14 @@ public class StoryManager {
             return;
         }
         if (getChapter(player).ordinal() < chapter.ordinal()) {
+            StoryChapter completed = getChapter(player);
             setChapter(player, chapter);
+            if (player instanceof ServerPlayer rewarded) {
+                StoryRewards.grant(rewarded, completed);
+            }
             player.sendSystemMessage(Component.translatable("story.fateapocrypha.new_chapter",
                     Component.translatable(chapter.titleKey())).withStyle(ChatFormatting.GOLD));
             player.sendSystemMessage(Component.translatable(chapter.objectiveKey()).withStyle(ChatFormatting.YELLOW));
-            sendLocationHint(player, chapter);
             player.level().playSound(null, player.blockPosition(), SoundEvents.PLAYER_LEVELUP,
                     SoundSource.PLAYERS, 1.0F, 1.0F);
             if (player instanceof ServerPlayer serverPlayer) {
@@ -86,6 +124,6 @@ public class StoryManager {
         player.sendSystemMessage(Component.translatable("story.fateapocrypha.chapter_header",
                 Component.translatable(chapter.titleKey())).withStyle(ChatFormatting.GOLD));
         player.sendSystemMessage(Component.translatable(chapter.objectiveKey()).withStyle(ChatFormatting.YELLOW));
-        sendLocationHint(player, chapter);
+        sync(player);
     }
 }

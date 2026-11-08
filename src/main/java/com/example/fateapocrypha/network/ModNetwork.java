@@ -26,5 +26,7 @@ public class ModNetwork {
                 CameraPacket::encode, CameraPacket::decode, CameraPacket::handle);
         CHANNEL.registerMessage(id++, SkipDialoguePacket.class,
                 SkipDialoguePacket::encode, SkipDialoguePacket::decode, SkipDialoguePacket::handle);
+        CHANNEL.registerMessage(id++, QuestSyncPacket.class,
+                QuestSyncPacket::encode, QuestSyncPacket::decode, QuestSyncPacket::handle);
     }
 }

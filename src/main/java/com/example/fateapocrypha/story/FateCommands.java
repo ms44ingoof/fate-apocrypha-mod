@@ -2,6 +2,7 @@ package com.example.fateapocrypha.story;
 
 import com.example.fateapocrypha.ModDimensions;
 import com.example.fateapocrypha.ModItems;
+import com.example.fateapocrypha.scene.Reloc;
 import com.example.fateapocrypha.scene.SceneManager;
 import com.example.fateapocrypha.scene.StoryWorld;
 import com.example.fateapocrypha.servant.ServantActions;
@@ -118,8 +119,8 @@ public class FateCommands {
             player.teleportTo(overworld, spawn.getX() + 0.5D, spawn.getY(), spawn.getZ() + 0.5D,
                     player.getYRot(), player.getXRot());
         } else {
-            int tx = StoryWorld.FOREST_CX;
-            int tz = StoryWorld.FOREST_CZ;
+            int tx = (int) Reloc.x(StoryWorld.FOREST_CX, StoryWorld.FOREST_CZ);
+            int tz = (int) Reloc.z(StoryWorld.FOREST_CX, StoryWorld.FOREST_CZ);
             int ty = trifas.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, tx, tz);
             player.teleportTo(trifas, tx + 0.5D, ty, tz + 0.5D, player.getYRot(), player.getXRot());
         }

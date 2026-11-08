@@ -48,6 +48,7 @@ public class StoryDirector {
 
     /** Вход в мир или возрождение: продолжаем сюжет. */
     public static void resume(ServerPlayer player) {
+        QuestSync.send(player);
         StoryChapter chapter = StoryManager.getChapter(player);
         if (chapter.ordinal() >= StoryChapter.TO_BE_CONTINUED.ordinal()) {
             StoryManager.showObjective(player);

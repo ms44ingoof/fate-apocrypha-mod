@@ -24,6 +24,12 @@ public class ClientStoryEvents {
     public static void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase == TickEvent.Phase.END) {
             ClientStoryState.clientTick();
+            while (ClientKeys.JOURNAL.consumeClick()) {
+                Minecraft mc = Minecraft.getInstance();
+                if (mc.player != null && mc.screen == null && !ClientStoryState.isCinematic()) {
+                    mc.setScreen(new com.example.fateapocrypha.client.screen.QuestJournalScreen());
+                }
+            }
             while (ClientKeys.SKIP_DIALOGUE.consumeClick()) {
                 if (Minecraft.getInstance().player != null && ClientStoryState.hasDialogue()) {
                     ModNetwork.CHANNEL.sendToServer(new SkipDialoguePacket());

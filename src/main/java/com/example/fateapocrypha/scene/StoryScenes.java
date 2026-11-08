@@ -383,6 +383,7 @@ public class StoryScenes {
     /** Затемнение, телепорт невидимого игрока на сцену, включение камеры, титр интерлюдии. */
     private static void interludeStart(List<Step> s, String key, double playerX, double playerZ,
                                        Vec3 camPos, Vec3 camLook) {
+        s.add(Steps.rememberPosition());
         s.add(Steps.fade(0, 10, 50, true));
         s.add(Steps.run(c -> StoryWorld.ensureStages(c.trifas())));
         s.add(Steps.run(c -> StoryWorld.ensureStagesB(c.trifas())));
@@ -396,6 +397,7 @@ public class StoryScenes {
         s.add(Steps.fade(30, 20, 5, true));
         s.add(Steps.despawnAllNpcs());
         s.add(Steps.cinematicEnd());
+        s.add(Steps.returnToPosition());
         s.add(Steps.advance(next));
     }
 
@@ -997,6 +999,7 @@ public class StoryScenes {
     private static final double DZ = StoryWorld.DREAM_Z + 0.5;
 
     private static void sleepIn(List<Step> s) {
+        s.add(Steps.rememberPosition());
         s.add(Steps.fade(0, 20, 40, false));
         s.add(Steps.dismissServant());
         s.add(Steps.run(c -> StoryWorld.ensureDreamStage(c.trifas())));
@@ -1029,7 +1032,7 @@ public class StoryScenes {
         s.add(Steps.fade(30, 20, 5, true));
         s.add(Steps.despawnAllNpcs());
         s.add(Steps.discardMobs());
-        s.add(Steps.teleport(1189.5, Y, 1217.5, 180.0F));
+        s.add(Steps.returnToPosition(1189.5, Y, 1217.5));
         s.add(Steps.healPlayer());
         s.add(Steps.advance(StoryChapter.INTERLUDE_RED));
         return s;
@@ -1078,7 +1081,7 @@ public class StoryScenes {
         s.add(Steps.run(c -> StoryWorld.ensureStagesB(c.trifas())));
         s.add(Steps.run(c -> {
             if (c.trifas() != null) {
-                c.trifas().setBlock(net.minecraft.core.BlockPos.containing(cx, Y, 886.5),
+                c.trifas().setBlock(Reloc.pos((int) Math.floor(cx), Y, 886),
                         net.minecraft.world.level.block.Blocks.CAMPFIRE.defaultBlockState(), 3);
             }
         }));
@@ -1127,7 +1130,7 @@ public class StoryScenes {
         s.add(Steps.fade(30, 20, 5, true));
         s.add(Steps.despawnAllNpcs());
         s.add(Steps.discardMobs());
-        s.add(Steps.teleport(StoryWorld.STAGE_SIEGE_X + 0.5, Y, 882.5, 0.0F));
+        s.add(Steps.returnToPosition(StoryWorld.STAGE_SIEGE_X + 0.5, Y, 882.5));
         s.add(Steps.advance(StoryChapter.GARDENS_ASSAULT));
         return s;
     }
@@ -1143,6 +1146,7 @@ public class StoryScenes {
 
     /** Начало интерлюдии в Садах: невидимый игрок стоит под островом, камера смотрит на сцену. */
     private static void gardenStart(List<Step> s, String key, Vec3 camPos, Vec3 camLook) {
+        s.add(Steps.rememberPosition());
         s.add(Steps.fade(0, 10, 50, true));
         s.add(Steps.run(c -> StoryWorld.ensureGardens(c.trifas())));
         s.add(Steps.teleport(GX, Y, GZ - 17.5, 0.0F));
@@ -1579,6 +1583,7 @@ public class StoryScenes {
         s.add(Steps.despawnAllNpcs());
         s.add(Steps.discardMobs());
         s.add(Steps.cinematicEnd());
+        s.add(Steps.forgetPosition());
         s.add(Steps.teleport(StoryWorld.FOREST_CX + 0.5, Y, StoryWorld.FOREST_CZ + 0.5, -90.0F));
         s.add(Steps.restoreServant(ServantType.ASTOLFO));
         s.add(Steps.advance(StoryChapter.TO_BE_CONTINUED));

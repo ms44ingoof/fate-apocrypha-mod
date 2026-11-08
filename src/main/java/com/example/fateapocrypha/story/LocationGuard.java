@@ -14,7 +14,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.Mth;
 import net.minecraft.world.level.levelgen.Heightmap;
 
 /**
@@ -22,8 +21,6 @@ import net.minecraft.world.level.levelgen.Heightmap;
  * Вызывается каждый тик игрока из StoryEvents.
  */
 public class LocationGuard {
-    private static final String[] ARROWS = {"\u2B06", "\u2B08", "\u27A1", "\u2B0A", "\u2B07", "\u2B0B", "\u2B05", "\u2B09"};
-
     /** true: игрок сейчас внутри закрытой локации (ему разрешено выйти, но не заходить глубже заново). */
     private static final Map<UUID, Boolean> INSIDE = new HashMap<>();
 
@@ -79,9 +76,6 @@ public class LocationGuard {
 
         if (player.tickCount % 10 == 0) {
             drawBorder(player, open);
-        }
-        if (open != null && !StoryManager.isStarted(player) && player.tickCount % 40 == 0) {
-            guide(player, open);
         }
     }
 
@@ -146,17 +140,5 @@ public class LocationGuard {
                 }
             }
         }
-    }
-
-    /** Подсказка в панели действий: стрелка и расстояние до цели. */
-    private static void guide(ServerPlayer player, StoryLocation target) {
-        double dx = target.cx() - player.getX();
-        double dz = target.cz() - player.getZ();
-        double angle = Math.toDegrees(Math.atan2(-dx, dz));
-        double rel = Mth.wrapDegrees(angle - player.getYRot());
-        int index = Math.floorMod(Math.round((float) (rel / 45.0D)), 8);
-        long distance = Math.round(Math.hypot(dx, dz));
-        player.displayClientMessage(Component.translatable("story.fateapocrypha.go_to", ARROWS[index],
-                Component.translatable(target.nameKey()), distance).withStyle(ChatFormatting.GOLD), true);
     }
 }

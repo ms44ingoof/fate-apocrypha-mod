@@ -132,6 +132,10 @@ public class Steps {
     }
 
     public static Step teleport(double x, double y, double z, float yaw) {
+        return teleportRaw(Reloc.x(x, z), y, Reloc.z(x, z), yaw);
+    }
+
+    private static Step teleportRaw(double x, double y, double z, float yaw) {
         return run(c -> {
             ServerLevel level = c.trifas();
             if (level != null) {
@@ -170,6 +174,10 @@ public class Steps {
 
     /** Ждёт, пока игрок зайдёт в зону. */
     public static Step waitInZone(AABB zone) {
+        return waitInZoneRaw(Reloc.box(zone));
+    }
+
+    private static Step waitInZoneRaw(AABB zone) {
         return waitUntil(c -> zone.contains(c.player.position()));
     }
 
@@ -179,6 +187,10 @@ public class Steps {
 
     // ---------- NPC ----------
     public static Step spawnNpc(String key, NpcType type, double x, double y, double z, float yaw) {
+        return spawnNpcRaw(key, type, Reloc.x(x, z), y, Reloc.z(x, z), yaw);
+    }
+
+    private static Step spawnNpcRaw(String key, NpcType type, double x, double y, double z, float yaw) {
         return run(c -> {
             ServerLevel level = c.trifas();
             if (level == null) {
@@ -225,6 +237,11 @@ public class Steps {
      */
     public static Step npcWalk(String key, double x, double y, double z, double speed,
                                int timeoutTicks, boolean waitForPlayer) {
+        return npcWalkRaw(key, Reloc.x(x, z), y, Reloc.z(x, z), speed, timeoutTicks, waitForPlayer);
+    }
+
+    private static Step npcWalkRaw(String key, double x, double y, double z, double speed,
+                               int timeoutTicks, boolean waitForPlayer) {
         return new Step() {
             private int moving = 0;
 
@@ -267,6 +284,10 @@ public class Steps {
 
     /** Бой заканчивается, когда големов осталось не больше stopAtMostAlive (или прошло maxTicks тиков). */
     public static Step golemFight(double[][] positions, int stopAtMostAlive, int maxTicks) {
+        return golemFightRaw(Reloc.positions(positions), stopAtMostAlive, maxTicks);
+    }
+
+    private static Step golemFightRaw(double[][] positions, int stopAtMostAlive, int maxTicks) {
         return new Step() {
             @Override
             public void begin(SceneContext c) {
@@ -388,6 +409,10 @@ public class Steps {
 
     /** Включает кино-режим: игрок становится невидимым, неподвижным и неуязвимым, вид переходит на камеру. */
     public static Step cinematicStart(Vec3 pos, Vec3 look) {
+        return cinematicStartRaw(Reloc.vec(pos), Reloc.vec(look));
+    }
+
+    private static Step cinematicStartRaw(Vec3 pos, Vec3 look) {
         return run(c -> {
             ServerLevel level = c.trifas();
             if (level == null) {
@@ -417,6 +442,10 @@ public class Steps {
 
     /** Плавный пролёт камеры: from -> to за ticks тиков; камера всё время смотрит на точку look. */
     public static Step cameraMove(Vec3 fromPos, Vec3 fromLook, Vec3 toPos, Vec3 toLook, int ticks) {
+        return cameraMoveRaw(Reloc.vec(fromPos), Reloc.vec(fromLook), Reloc.vec(toPos), Reloc.vec(toLook), ticks);
+    }
+
+    private static Step cameraMoveRaw(Vec3 fromPos, Vec3 fromLook, Vec3 toPos, Vec3 toLook, int ticks) {
         return new Step() {
             @Override
             public boolean update(SceneContext c) {
@@ -490,6 +519,10 @@ public class Steps {
     }
 
     public static Step lightning(double x, double y, double z) {
+        return lightningRaw(Reloc.x(x, z), y, Reloc.z(x, z));
+    }
+
+    private static Step lightningRaw(double x, double y, double z) {
         return run(c -> {
             ServerLevel level = c.trifas();
             if (level == null) {
@@ -505,6 +538,10 @@ public class Steps {
     }
 
     public static Step particles(ParticleOptions particle, double x, double y, double z, int count, double spread) {
+        return particlesRaw(particle, Reloc.x(x, z), y, Reloc.z(x, z), count, spread);
+    }
+
+    private static Step particlesRaw(ParticleOptions particle, double x, double y, double z, int count, double spread) {
         return run(c -> {
             ServerLevel level = c.trifas();
             if (level != null) {
@@ -635,6 +672,10 @@ public class Steps {
     }
 
     public static Step npcTeleport(String key, double x, double y, double z, float yaw) {
+        return npcTeleportRaw(key, Reloc.x(x, z), y, Reloc.z(x, z), yaw);
+    }
+
+    private static Step npcTeleportRaw(String key, double x, double y, double z, float yaw) {
         return run(c -> {
             StoryNpcEntity npc = c.npc(key);
             if (npc != null) {
@@ -648,6 +689,10 @@ public class Steps {
     // ---------- Бои сцен ----------
     /** Тени (призрачные существа иллюзии): нападают на игрока, шаг ждёт, пока все побеждены. */
     public static Step shadeFight(double[][] positions) {
+        return shadeFightRaw(Reloc.positions(positions));
+    }
+
+    private static Step shadeFightRaw(double[][] positions) {
         return new Step() {
             @Override
             public void begin(SceneContext c) {
@@ -692,6 +737,10 @@ public class Steps {
 
     /** Босс-голем: много здоровья и сильный удар; шаг ждёт его гибели. */
     public static Step bossFight(double[][] positions, double health, double damage, String nameKey) {
+        return bossFightRaw(Reloc.positions(positions), health, damage, nameKey);
+    }
+
+    private static Step bossFightRaw(double[][] positions, double health, double damage, String nameKey) {
         return new Step() {
             @Override
             public void begin(SceneContext c) {
@@ -740,6 +789,10 @@ public class Steps {
 
     /** Корова, овца, курица по очереди: оживляют ферму. Исчезают в конце сцены. */
     public static Step spawnAnimals(double[][] positions) {
+        return spawnAnimalsRaw(Reloc.positions(positions));
+    }
+
+    private static Step spawnAnimalsRaw(double[][] positions) {
         return run(c -> {
             ServerLevel level = c.trifas();
             if (level == null) {
@@ -927,6 +980,10 @@ public class Steps {
 
     /** burning=true: огненный дракон сна (горит, но не страдает от огня). */
     public static Step spawnDragon(double x, double y, double z, float yaw, boolean burning) {
+        return spawnDragonRaw(Reloc.x(x, z), y, Reloc.z(x, z), yaw, burning);
+    }
+
+    private static Step spawnDragonRaw(double x, double y, double z, float yaw, boolean burning) {
         return run(c -> {
             ServerLevel level = c.trifas();
             if (level == null) {
@@ -1008,5 +1065,45 @@ public class Steps {
                 return false;
             }
         };
+    }
+
+    /** Запоминает, где игрок был до интерлюдии или сна (чтобы вернуть его туда по окончании). */
+    public static Step rememberPosition() {
+        return run(c -> StoryManager.rememberPosition(c.player));
+    }
+
+    /** Возвращает игрока на запомненное место (если его нет, остаётся на месте). */
+    public static Step returnToPosition() {
+        return returnToPositionRaw(false, 0.0D, 0.0D, 0.0D);
+    }
+
+    /** Возвращает игрока на запомненное место, а если его нет, ставит в (fx, fy, fz) сюжетных координат. */
+    public static Step returnToPosition(double fx, double fy, double fz) {
+        return returnToPositionRaw(true, Reloc.x(fx, fz), fy, Reloc.z(fx, fz));
+    }
+
+    private static Step returnToPositionRaw(boolean fallback, double fx, double fy, double fz) {
+        return run(c -> {
+            ServerLevel level = c.trifas();
+            if (level == null) {
+                return;
+            }
+            net.minecraft.nbt.CompoundTag tag = StoryManager.takeReturn(c.player);
+            if (tag != null) {
+                c.player.teleportTo(level, tag.getDouble("x"), tag.getDouble("y"), tag.getDouble("z"),
+                        tag.getFloat("yaw"), tag.getFloat("pitch"));
+            } else if (fallback) {
+                c.player.teleportTo(level, fx, fy, fz, c.player.getYRot(), 0.0F);
+            } else {
+                return;
+            }
+            c.player.setDeltaMovement(Vec3.ZERO);
+            c.player.fallDistance = 0.0F;
+        });
+    }
+
+    /** Стирает запомненное место (когда игрока возвращают куда-то ещё). */
+    public static Step forgetPosition() {
+        return run(c -> StoryManager.takeReturn(c.player));
     }
 }

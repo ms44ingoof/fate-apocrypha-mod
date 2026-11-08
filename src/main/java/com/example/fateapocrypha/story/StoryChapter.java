@@ -44,6 +44,29 @@ public enum StoryChapter {
         return "story.fateapocrypha." + name().toLowerCase(Locale.ROOT) + ".objective";
     }
 
+    /** Описание главы для журнала заданий. */
+    public String descKey() {
+        return "story.fateapocrypha." + name().toLowerCase(Locale.ROOT) + ".desc";
+    }
+
+    /** Номер акта (1-4): большие части сюжета в журнале. */
+    public int act() {
+        if (ordinal() <= FARM.ordinal()) {
+            return 1;
+        }
+        if (ordinal() <= INTERLUDE_GRAIL.ordinal()) {
+            return 2;
+        }
+        if (ordinal() <= SHIRO_FINAL.ordinal()) {
+            return 3;
+        }
+        return 4;
+    }
+
+    public String actKey() {
+        return "quest.fateapocrypha.act" + act();
+    }
+
     public static StoryChapter byId(int id) {
         StoryChapter[] all = values();
         return all[Math.max(0, Math.min(id, all.length - 1))];

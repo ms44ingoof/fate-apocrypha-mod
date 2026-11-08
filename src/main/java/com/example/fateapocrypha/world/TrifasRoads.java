@@ -1,6 +1,7 @@
 package com.example.fateapocrypha.world;
 
 import com.example.fateapocrypha.story.StoryLocation;
+import com.example.fateapocrypha.scene.Reloc;
 import com.example.fateapocrypha.scene.StoryWorld;
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -35,21 +36,28 @@ public final class TrifasRoads {
                 StoryWorld.GARDEN_X + 30, StoryWorld.GARDEN_Z + 30});
     }
 
+    static {
+        for (Map.Entry<StoryLocation, int[]> e : RECTS.entrySet()) {
+            int[] r = e.getValue();
+            e.setValue(Reloc.rect(r[0], r[1], r[2], r[3]));
+        }
+    }
+
     /** Связи между локациями: по ним проложены дороги и построены ворота. */
     private static final StoryLocation[][] EDGES = {
             {StoryLocation.CASTLE_LAB, StoryLocation.CASTLE_CORRIDOR},
             {StoryLocation.CASTLE_CORRIDOR, StoryLocation.CASTLE_GATE},
             {StoryLocation.CASTLE_GATE, StoryLocation.FOREST},
+            {StoryLocation.CASTLE_GATE, StoryLocation.FARM},
             {StoryLocation.FOREST, StoryLocation.RED_CAMP},
             {StoryLocation.RED_CAMP, StoryLocation.CHAPEL},
-            {StoryLocation.CHAPEL, StoryLocation.RUINS},
             {StoryLocation.RED_CAMP, StoryLocation.STREET},
             {StoryLocation.STREET, StoryLocation.SIEGE},
             {StoryLocation.SIEGE, StoryLocation.LONDON},
             {StoryLocation.LONDON, StoryLocation.PLAIN},
-            {StoryLocation.PLAIN, StoryLocation.FARM},
-            {StoryLocation.SIEGE, StoryLocation.GARDENS},
-            {StoryLocation.RUINS, StoryLocation.LONDON}
+            {StoryLocation.PLAIN, StoryLocation.RUINS},
+            {StoryLocation.RUINS, StoryLocation.LONDON},
+            {StoryLocation.SIEGE, StoryLocation.GARDENS}
     };
 
     /** Проход через кольцо деревьев и ворота: направление, край площадки (e) и граница локации (g). */
@@ -140,7 +148,7 @@ public final class TrifasRoads {
         double hx = (r[2] - r[0]) / 2.0D + 1.0D;
         double hz = (r[3] - r[1]) / 2.0D + 1.0D;
         double t = Math.min(Math.abs(ux) < 1.0e-6D ? 1.0e9D : hx / Math.abs(ux), Math.abs(uz) < 1.0e-6D ? 1.0e9D : hz / Math.abs(uz));
-        double gt = from.radius() - 5.0D;
+        double gt = from.radius() + 6.0D;   // ворота стоят сразу за границей локации: сначала арка, потом вход
         return new double[] {cx + ux * t, cz + uz * t, from.cx() + ux * gt, from.cz() + uz * gt, ux, uz};
     }
 

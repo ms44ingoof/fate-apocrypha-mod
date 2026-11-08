@@ -35,11 +35,14 @@ public class ClientEvents {
     @SubscribeEvent
     public static void onRegisterKeys(RegisterKeyMappingsEvent event) {
         event.register(ClientKeys.SKIP_DIALOGUE);
+        event.register(ClientKeys.JOURNAL);
     }
 
     @SubscribeEvent
     public static void onRegisterOverlays(RegisterGuiOverlaysEvent event) {
         event.registerAboveAll("story_overlay",
                 (gui, graphics, partialTick, width, height) -> ClientStoryState.render(graphics, width, height));
+        event.registerAboveAll("quest_hud",
+                (gui, graphics, partialTick, width, height) -> QuestHud.render(graphics, width, height, partialTick));
     }
 }
