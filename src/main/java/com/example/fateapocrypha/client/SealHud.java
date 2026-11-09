@@ -1,6 +1,8 @@
 package com.example.fateapocrypha.client;
 
+import com.example.fateapocrypha.FateApocrypha;
 import com.example.fateapocrypha.entity.ServantEntity;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.example.fateapocrypha.network.ModNetwork;
 import com.example.fateapocrypha.network.SealActionPacket;
 import com.example.fateapocrypha.servant.ServantActions;
@@ -9,6 +11,7 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 
 /**
  * Печать Командных заклинаний на экране: три знака с клавишами (Z, X, C по умолчанию, переназначаются).
@@ -19,8 +22,6 @@ public class SealHud {
     /** Сколько тиков держать клавишу. Поставьте 0, чтобы приказы применялись мгновенно. */
     public static final int HOLD_TICKS = 8;
 
-    private static final int RED = 0xFFD92E3A;
-    private static final int RED_DARK = 0xFF5B1C24;
     private static final int GOLD = 0xFFE6C25A;
 
     private static final KeyMapping[] KEYS = {ClientKeys.SEAL_TELEPORT, ClientKeys.SEAL_BUFF, ClientKeys.SEAL_PHANTASM};
@@ -84,69 +85,91 @@ public class SealHud {
         }
     }
 
+    private static final ResourceLocation EMBLEM = new ResourceLocation(FateApocrypha.MODID, "textures/gui/seal_emblem.png");
+    private static final ResourceLocation[] ICONS = {
+            new ResourceLocation(FateApocrypha.MODID, "textures/gui/seal_teleport.png"),
+            new ResourceLocation(FateApocrypha.MODID, "textures/gui/seal_buff.png"),
+            new ResourceLocation(FateApocrypha.MODID, "textures/gui/seal_phantasm.png")};
+    private static final int EMBLEM_SIZE = 96;
+    private static final int ICON_SIZE = 32;
+    private static final int RING_RADIUS = 66;
+
+    /** Эмблема печати в правом нижнем углу и три приказа дугой вокруг неё (Z слева, X по диагонали, C сверху). */
     public static void render(GuiGraphics g, int w, int h) {
         Minecraft mc = Minecraft.getInstance();
         if (!active(mc) || mc.options.hideGui || ClientStoryState.isCinematic()) {
             return;
         }
-        int size = 28;
-        int gap = 8;
-        int total = size * 3 + gap * 2;
-        int x0 = w - total - 12;
-        int y = h - 64;
-        for (int i = 0; i < 3; i++) {
-            int x = x0 + i * (size + gap);
-            boolean ready = servantFound && remaining[i] <= 0;
-            int color = ready ? RED : RED_DARK;
+        int ex = w - 12 - EMBLEM_SIZE;
+        int ey = h - 12 - EMBLEM_SIZE;
+        int cx = ex + EMBLEM_SIZE / 2;
+        int cy = ey + EMBLEM_SIZE / 2;
 
-            g.fill(x - 1, y - 1, x + size + 1, y + size + 1, ready ? GOLD : 0xFF3A2A2E);
-            g.fill(x, y, x + size, y + size, 0xE0120C10);
-            glyph(g, i, x + size / 2, y + size / 2, color, ready);
+        boolean anyReady = false;
+        boolean holding = false;
+        for (int i = 0; i < 3; i++) {
+            anyReady |= servantFound && remaining[i] <= 0;
+            holding |= hold[i] > 0;
+        }
+        float time = (mc.level.getGameTime() + mc.getFrameTime()) * 0.12F;
+        float pulse = anyReady ? 0.82F + 0.18F * (float) Math.sin(time) : 0.45F;
+        if (holding) {
+            pulse = 1.0F;
+        }
+
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+
+        // тонкая дуга-направляющая для приказов
+        for (int a = 168; a <= 282; a += 3) {
+            double rad = Math.toRadians(a);
+            int dx = cx + (int) Math.round(RING_RADIUS * Math.cos(rad));
+            int dy = cy + (int) Math.round(RING_RADIUS * Math.sin(rad));
+            g.fill(dx, dy, dx + 1, dy + 1, 0x66D92E3A);
+        }
+
+        // эмблема печати
+        g.setColor(pulse, pulse * 0.92F, pulse * 0.92F, 1.0F);
+        g.blit(EMBLEM, ex, ey, 0.0F, 0.0F, EMBLEM_SIZE, EMBLEM_SIZE, EMBLEM_SIZE, EMBLEM_SIZE);
+        g.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+
+        for (int i = 0; i < 3; i++) {
+            double ang = Math.toRadians(180 + 45 * i);
+            int mx = cx + (int) Math.round(RING_RADIUS * Math.cos(ang)) - ICON_SIZE / 2;
+            int my = cy + (int) Math.round(RING_RADIUS * Math.sin(ang)) - ICON_SIZE / 2;
+            boolean ready = servantFound && remaining[i] <= 0;
+
+            float tint = ready ? 1.0F : 0.42F;
+            g.setColor(tint, tint, tint, 1.0F);
+            g.blit(ICONS[i], mx, my, 0.0F, 0.0F, ICON_SIZE, ICON_SIZE, ICON_SIZE, ICON_SIZE);
+            g.setColor(1.0F, 1.0F, 1.0F, 1.0F);
 
             if (servantFound && remaining[i] > 0) {
-                // перезарядка: тёмная заливка сверху вниз и секунды
-                int cover = (int) Math.ceil((double) size * remaining[i] / COOLDOWNS[i]);
-                g.fill(x, y, x + size, y + cover, 0xA0000000);
-                String sec = String.valueOf((remaining[i] + 19) / 20);
-                g.drawCenteredString(mc.font, sec, x + size / 2, y + size / 2 - 4, 0xFFFFFFFF);
+                // перезарядка: тёмная заливка сверху вниз в границах круглого медальона
+                int cover = (int) Math.ceil((double) ICON_SIZE * remaining[i] / COOLDOWNS[i]);
+                for (int row = 0; row < Math.min(cover, ICON_SIZE); row++) {
+                    double dyr = row + 0.5D - ICON_SIZE / 2.0D;
+                    double half = Math.sqrt(Math.max(0.0D, 15.5D * 15.5D - dyr * dyr));
+                    int hw = (int) half;
+                    if (hw > 0) {
+                        g.fill(mx + ICON_SIZE / 2 - hw, my + row, mx + ICON_SIZE / 2 + hw, my + row + 1, 0xB0000000);
+                    }
+                }
+                g.drawCenteredString(mc.font, String.valueOf((remaining[i] + 19) / 20),
+                        mx + ICON_SIZE / 2, my + ICON_SIZE / 2 - 4, 0xFFFFFFFF);
             }
 
+            // клавиша под медальоном
             Component key = KEYS[i].getTranslatedKeyMessage();
-            g.drawCenteredString(mc.font, key, x + size / 2, y + size + 3, ready ? 0xFFFFFFFF : 0xFF8A7F83);
+            g.drawCenteredString(mc.font, key, mx + ICON_SIZE / 2, my + ICON_SIZE + 2, ready ? 0xFFFFFFFF : 0xFF8A7F83);
 
-            // удержание: полоска под знаком и название приказа над ним
+            // удержание: полоска под медальоном и название приказа над ним
             if (hold[i] > 0 && HOLD_TICKS > 0) {
-                int fill = size * hold[i] / HOLD_TICKS;
-                g.fill(x, y + size - 2, x + fill, y + size, GOLD);
-                g.drawCenteredString(mc.font, Component.translatable(NAMES[i]), x + size / 2, y - 12, GOLD);
+                int fill = ICON_SIZE * hold[i] / HOLD_TICKS;
+                g.fill(mx, my + ICON_SIZE - 1, mx + fill, my + ICON_SIZE + 1, GOLD);
+                g.drawCenteredString(mc.font, Component.translatable(NAMES[i]), mx + ICON_SIZE / 2, my - 12, GOLD);
             }
         }
-    }
-
-    /** Знак приказа из заливок: телепорт (портал), усиление (крест), Фантазм (звезда). */
-    private static void glyph(GuiGraphics g, int kind, int cx, int cy, int color, boolean ready) {
-        int core = ready ? GOLD : 0xFF7A5A5E;
-        g.pose().pushPose();
-        g.pose().translate(cx, cy, 0.0F);
-        if (kind == 0) {
-            g.pose().mulPose(com.mojang.math.Axis.ZP.rotationDegrees(45.0F));
-            g.fill(-8, -8, 8, 8, color);
-            g.fill(-6, -6, 6, 6, 0xFF120C10);
-            g.fill(-4, -4, 4, 4, color);
-            g.fill(-2, -2, 2, 2, core);
-        } else if (kind == 1) {
-            g.fill(-2, -9, 2, 9, color);
-            g.fill(-9, -2, 9, 2, color);
-            g.fill(-1, -5, 1, 5, core);
-            g.fill(-5, -1, 5, 1, core);
-        } else {
-            g.fill(-2, -10, 2, 10, color);
-            g.fill(-10, -2, 10, 2, color);
-            g.pose().mulPose(com.mojang.math.Axis.ZP.rotationDegrees(45.0F));
-            g.fill(-2, -8, 2, 8, color);
-            g.fill(-8, -2, 8, 2, color);
-            g.fill(-3, -3, 3, 3, core);
-        }
-        g.pose().popPose();
+        RenderSystem.disableBlend();
     }
 }
