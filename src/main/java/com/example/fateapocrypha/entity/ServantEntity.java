@@ -39,10 +39,13 @@ import net.minecraft.world.level.Level;
 public abstract class ServantEntity extends TamableAnimal {
     public static final int BUFF_COOLDOWN_TICKS = 120 * 20;
     public static final int PHANTASM_COOLDOWN_TICKS = 600 * 20;
+    public static final int TELEPORT_COOLDOWN_TICKS = 15 * 20;
 
     private static final EntityDataAccessor<Integer> BUFF_READY =
             SynchedEntityData.defineId(ServantEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Integer> PHANTASM_READY =
+            SynchedEntityData.defineId(ServantEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> TELEPORT_READY =
             SynchedEntityData.defineId(ServantEntity.class, EntityDataSerializers.INT);
 
     protected ServantEntity(EntityType<? extends ServantEntity> type, Level level) {
@@ -102,6 +105,7 @@ public abstract class ServantEntity extends TamableAnimal {
         super.defineSynchedData();
         this.entityData.define(BUFF_READY, 0);
         this.entityData.define(PHANTASM_READY, 0);
+        this.entityData.define(TELEPORT_READY, 0);
     }
 
     @Override
@@ -109,6 +113,7 @@ public abstract class ServantEntity extends TamableAnimal {
         super.addAdditionalSaveData(tag);
         tag.putInt("BuffReady", this.entityData.get(BUFF_READY));
         tag.putInt("PhantasmReady", this.entityData.get(PHANTASM_READY));
+        tag.putInt("TeleportReady", this.entityData.get(TELEPORT_READY));
     }
 
     @Override
@@ -116,6 +121,7 @@ public abstract class ServantEntity extends TamableAnimal {
         super.readAdditionalSaveData(tag);
         this.entityData.set(BUFF_READY, tag.getInt("BuffReady"));
         this.entityData.set(PHANTASM_READY, tag.getInt("PhantasmReady"));
+        this.entityData.set(TELEPORT_READY, tag.getInt("TeleportReady"));
     }
 
     /** Оставшиеся тики перезарядки усиления (работает и на клиенте). */
@@ -126,6 +132,19 @@ public abstract class ServantEntity extends TamableAnimal {
     /** Оставшиеся тики перезарядки Фантазма (работает и на клиенте). */
     public int getPhantasmRemaining() {
         return Math.max(0, this.entityData.get(PHANTASM_READY) - (int) this.level().getGameTime());
+    }
+
+    /** Оставшиеся тики перезарядки телепорта Слуги к Мастеру (работает и на клиенте). */
+    public int getTeleportRemaining() {
+        return Math.max(0, this.entityData.get(TELEPORT_READY) - (int) this.level().getGameTime());
+    }
+
+    public void startTeleportCooldown() {
+        this.entityData.set(TELEPORT_READY, (int) this.level().getGameTime() + TELEPORT_COOLDOWN_TICKS);
+    }
+
+    public void sendCooldownMessage(ServerPlayer master, int remainingTicks) {
+        sendCooldown(master, remainingTicks);
     }
 
     private void sendCooldown(ServerPlayer master, int remainingTicks) {

@@ -48,6 +48,11 @@ public class StoryDirector {
 
     /** Вход в мир или возрождение: продолжаем сюжет. */
     public static void resume(ServerPlayer player) {
+        // старые сохранения: печати проявляются у всех, кто уже прошёл сцену с Селеникой
+        if (!StoryManager.hasSeals(player)
+                && StoryManager.getChapter(player).ordinal() > StoryChapter.CELENIKE.ordinal()) {
+            StoryManager.setSeals(player, true);
+        }
         QuestSync.send(player);
         StoryChapter chapter = StoryManager.getChapter(player);
         if (chapter.ordinal() >= StoryChapter.TO_BE_CONTINUED.ordinal()) {

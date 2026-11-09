@@ -51,9 +51,7 @@ public class FateCommands {
             source.sendFailure(Component.translatable("command.fateapocrypha.locked").withStyle(ChatFormatting.RED));
             return 0;
         }
-        if (!ServantActions.hasItem(player, ModItems.COMMAND_SEAL.get())) {
-            ServantActions.give(player, new ItemStack(ModItems.COMMAND_SEAL.get()));
-        }
+        StoryManager.setSeals(player, true);
         if (source.hasPermission(2) && !ServantActions.hasItem(player, ModItems.SUMMON_CATALYST.get())) {
             ServantActions.give(player, new ItemStack(ModItems.SUMMON_CATALYST.get()));
         }

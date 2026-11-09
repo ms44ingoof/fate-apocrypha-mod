@@ -79,7 +79,8 @@ public class ServantActions {
 
     // ---------- Меню Командного заклинания ----------
     public static void handleSeal(ServerPlayer player, int action) {
-        if (!hasItem(player, ModItems.COMMAND_SEAL.get())) {
+        if (!StoryManager.hasSeals(player) && !player.getAbilities().instabuild
+                && !hasItem(player, ModItems.COMMAND_SEAL.get())) {
             message(player, "message.fateapocrypha.no_seal");
             return;
         }
@@ -101,6 +102,12 @@ public class ServantActions {
             message(player, "message.fateapocrypha.other_dimension");
             return;
         }
+        int remaining = servant.getTeleportRemaining();
+        if (remaining > 0) {
+            servant.sendCooldownMessage(player, remaining);
+            return;
+        }
+        servant.startTeleportCooldown();
         servant.moveTo(player.getX(), player.getY(), player.getZ(), player.getYRot(), 0.0F);
         servant.getNavigation().stop();
         servant.setDeltaMovement(Vec3.ZERO);

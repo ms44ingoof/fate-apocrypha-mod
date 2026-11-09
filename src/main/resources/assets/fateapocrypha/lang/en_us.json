@@ -18,7 +18,7 @@
   "screen.fateapocrypha.summon.title": "Choose a Servant to summon",
   "message.fateapocrypha.kit": "You received the Command Seal and a Summoning Catalyst.",
   "message.fateapocrypha.summoned": "%s has answered your summons!",
-  "message.fateapocrypha.no_seal": "You need the Command Seal in your inventory.",
+  "message.fateapocrypha.no_seal": "The Command Seals have not yet appeared on your hand.",
   "message.fateapocrypha.no_catalyst": "You need a Summoning Catalyst.",
   "message.fateapocrypha.no_servant": "You have no Servant.",
   "message.fateapocrypha.has_servant": "You already have a Servant.",
@@ -582,5 +582,12 @@
   "hud.fateapocrypha.quest": "Main Quest",
   "hud.fateapocrypha.meters": "%s m",
   "story.fateapocrypha.reward": "Reward for “%s”: %s",
-  "story.fateapocrypha.reward_levels": "%s XP levels"
+  "story.fateapocrypha.reward_levels": "%s XP levels",
+  "key.fateapocrypha.seal_teleport": "Command: Servant to me",
+  "key.fateapocrypha.seal_buff": "Command: empower Servant",
+  "key.fateapocrypha.seal_phantasm": "Command: Noble Phantasm",
+  "hud.fateapocrypha.seal.teleport": "Servant to me",
+  "hud.fateapocrypha.seal.buff": "Empower",
+  "hud.fateapocrypha.seal.phantasm": "Phantasm",
+  "message.fateapocrypha.seals_awakened": "Command Seals have appeared on your hand. Hold Z, X or C to give your Servant an order (keys can be changed in settings)."
 }

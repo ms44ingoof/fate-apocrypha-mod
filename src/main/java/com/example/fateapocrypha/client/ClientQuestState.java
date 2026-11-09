@@ -6,10 +6,17 @@ import com.example.fateapocrypha.story.StoryChapter;
 public class ClientQuestState {
     private static int chapter = 0;
     private static boolean started = false;
+    private static boolean seals = false;
 
-    public static void update(int newChapter, boolean newStarted) {
+    public static void update(int newChapter, boolean newStarted, boolean newSeals) {
         chapter = newChapter;
         started = newStarted;
+        seals = newSeals;
+    }
+
+    /** Печати Командных заклинаний проявились (показывать их на экране и принимать клавиши). */
+    public static boolean hasSeals() {
+        return seals;
     }
 
     public static StoryChapter chapter() {

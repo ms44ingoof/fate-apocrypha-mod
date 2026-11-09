@@ -36,12 +36,17 @@ public class ClientEvents {
     public static void onRegisterKeys(RegisterKeyMappingsEvent event) {
         event.register(ClientKeys.SKIP_DIALOGUE);
         event.register(ClientKeys.JOURNAL);
+        event.register(ClientKeys.SEAL_TELEPORT);
+        event.register(ClientKeys.SEAL_BUFF);
+        event.register(ClientKeys.SEAL_PHANTASM);
     }
 
     @SubscribeEvent
     public static void onRegisterOverlays(RegisterGuiOverlaysEvent event) {
         event.registerAboveAll("story_overlay",
                 (gui, graphics, partialTick, width, height) -> ClientStoryState.render(graphics, width, height));
+        event.registerAboveAll("seal_hud",
+                (gui, graphics, partialTick, width, height) -> SealHud.render(graphics, width, height));
         event.registerAboveAll("quest_hud",
                 (gui, graphics, partialTick, width, height) -> QuestHud.render(graphics, width, height, partialTick));
     }

@@ -17,6 +17,7 @@ public class StoryManager {
     private static final String SERVANT = "fateapocrypha_servant";
     private static final String STARTED = "fateapocrypha_started";
     private static final String RETURN = "fateapocrypha_return";
+    private static final String SEALS = "fateapocrypha_seals";
 
     private static CompoundTag persisted(Player player) {
         CompoundTag data = player.getPersistentData();
@@ -66,6 +67,16 @@ public class StoryManager {
         CompoundTag pos = data.getCompound(RETURN);
         data.remove(RETURN);
         return pos;
+    }
+
+    /** Печати Командных заклинаний проявились на руке Мастера (Z, X, C). */
+    public static boolean hasSeals(Player player) {
+        return persisted(player).getBoolean(SEALS);
+    }
+
+    public static void setSeals(Player player, boolean value) {
+        persisted(player).putBoolean(SEALS, value);
+        sync(player);
     }
 
     /** Сцена текущей главы уже запускалась (игрок пришёл в нужную локацию). */

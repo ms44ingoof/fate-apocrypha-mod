@@ -24,6 +24,7 @@ public class ClientStoryEvents {
     public static void onClientTick(TickEvent.ClientTickEvent event) {
         if (event.phase == TickEvent.Phase.END) {
             ClientStoryState.clientTick();
+            SealHud.tick();
             while (ClientKeys.JOURNAL.consumeClick()) {
                 Minecraft mc = Minecraft.getInstance();
                 if (mc.player != null && mc.screen == null && !ClientStoryState.isCinematic()) {

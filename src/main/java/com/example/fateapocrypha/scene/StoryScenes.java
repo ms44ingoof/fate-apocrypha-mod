@@ -609,7 +609,11 @@ public class StoryScenes {
         // Зиг становится Мастером Астольфо: Командное заклинание и Слуга рядом
         s.add(Steps.despawnAllNpcs());
         s.add(Steps.bindServant(ServantType.ASTOLFO));
-        s.add(Steps.give(() -> new ItemStack(ModItems.COMMAND_SEAL.get())));
+        s.add(Steps.run(c -> {
+            com.example.fateapocrypha.story.StoryManager.setSeals(c.player, true);
+            c.player.sendSystemMessage(net.minecraft.network.chat.Component.translatable("message.fateapocrypha.seals_awakened")
+                    .withStyle(net.minecraft.ChatFormatting.RED));
+        }));
         s.add(Steps.sound(SoundEvents.BEACON_ACTIVATE));
         s.add(say(ASTOLFO, "celenike.17"));
         s.add(Steps.wait(60));

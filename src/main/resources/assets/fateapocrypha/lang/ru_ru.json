@@ -18,7 +18,7 @@
   "screen.fateapocrypha.summon.title": "Выбери Слугу для призыва",
   "message.fateapocrypha.kit": "Ты получил Командное заклинание и Катализатор призыва.",
   "message.fateapocrypha.summoned": "%s откликается на твой зов!",
-  "message.fateapocrypha.no_seal": "Командное заклинание должно быть в инвентаре.",
+  "message.fateapocrypha.no_seal": "Командные заклинания ещё не проявились на твоей руке.",
   "message.fateapocrypha.no_catalyst": "Нужен Катализатор призыва.",
   "message.fateapocrypha.no_servant": "У тебя нет Слуги.",
   "message.fateapocrypha.has_servant": "У тебя уже есть Слуга.",
@@ -582,5 +582,12 @@
   "hud.fateapocrypha.quest": "Основное задание",
   "hud.fateapocrypha.meters": "%s м",
   "story.fateapocrypha.reward": "Награда за «%s»: %s",
-  "story.fateapocrypha.reward_levels": "%s ур. опыта"
+  "story.fateapocrypha.reward_levels": "%s ур. опыта",
+  "key.fateapocrypha.seal_teleport": "Приказ: Слуга ко мне",
+  "key.fateapocrypha.seal_buff": "Приказ: усилить Слугу",
+  "key.fateapocrypha.seal_phantasm": "Приказ: Благородный Фантазм",
+  "hud.fateapocrypha.seal.teleport": "Слуга ко мне",
+  "hud.fateapocrypha.seal.buff": "Усиление",
+  "hud.fateapocrypha.seal.phantasm": "Фантазм",
+  "message.fateapocrypha.seals_awakened": "На руке проявились Командные заклинания. Держи Z, X или C, чтобы отдать приказ Слуге (клавиши можно сменить в настройках)."
 }
