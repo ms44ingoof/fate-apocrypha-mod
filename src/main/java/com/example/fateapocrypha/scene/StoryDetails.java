@@ -36,6 +36,7 @@ public final class StoryDetails {
         if (l == null) {
             return;
         }
+        run(l, 100, 100, 6);   // замок: лаборатория и коридор
         run(l, StoryWorld.FOREST_CX, StoryWorld.FOREST_CZ, 1);
         run(l, StoryWorld.STAGE_RED_X, StoryWorld.STAGE_RED_Z, 2);
         run(l, StoryWorld.STAGE_STREET_X, StoryWorld.STAGE_STREET_Z, 3);
@@ -80,6 +81,7 @@ public final class StoryDetails {
             case 2 -> stagesA(l);
             case 3 -> stagesB(l);
             case 4 -> farm(l);
+            case 6 -> StoryInteriors.build(l);
             default -> gardens(l);
         }
         l.setBlock(done, s(Blocks.MOSS_BLOCK), 2);
