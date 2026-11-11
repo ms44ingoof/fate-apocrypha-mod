@@ -1,0 +1,15 @@
+{
+ "loader": "forge:separate_transforms",
+ "gui_light": "front",
+ "base": {
+  "parent": "fateapocrypha:item/argalia_lance_3d"
+ },
+ "perspectives": {
+  "gui": {
+   "parent": "minecraft:item/generated",
+   "textures": {
+    "layer0": "fateapocrypha:item/argalia_lance"
+   }
+  }
+ }
+}

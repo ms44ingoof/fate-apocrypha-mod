@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    " C ",
+    "CHC",
+    " T "
+  ],
+  "key": {
+    "C": {
+      "item": "fateapocrypha:holy_cloth"
+    },
+    "H": {
+      "item": "fateapocrypha:holy_steel"
+    },
+    "T": {
+      "item": "minecraft:stick"
+    }
+  },
+  "result": {
+    "item": "fateapocrypha:la_pucelle",
+    "count": 1
+  }
+}

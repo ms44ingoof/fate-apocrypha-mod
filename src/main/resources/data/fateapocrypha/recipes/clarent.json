@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    " C ",
+    "HCH",
+    " T "
+  ],
+  "key": {
+    "C": {
+      "item": "fateapocrypha:crimson_shard"
+    },
+    "H": {
+      "item": "fateapocrypha:holy_steel"
+    },
+    "T": {
+      "item": "minecraft:stick"
+    }
+  },
+  "result": {
+    "item": "fateapocrypha:clarent",
+    "count": 1
+  }
+}

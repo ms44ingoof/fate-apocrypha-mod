@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "LHL",
+    " G ",
+    " T "
+  ],
+  "key": {
+    "L": {
+      "item": "fateapocrypha:lightning_core"
+    },
+    "H": {
+      "item": "fateapocrypha:holy_steel"
+    },
+    "G": {
+      "item": "minecraft:gold_ingot"
+    },
+    "T": {
+      "item": "minecraft:stick"
+    }
+  },
+  "result": {
+    "item": "fateapocrypha:vasavi_shakti",
+    "count": 1
+  }
+}

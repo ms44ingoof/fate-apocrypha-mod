@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "SHS",
+    "HFH",
+    " T "
+  ],
+  "key": {
+    "S": {
+      "item": "fateapocrypha:dragon_scale"
+    },
+    "H": {
+      "item": "fateapocrypha:holy_steel"
+    },
+    "F": {
+      "item": "fateapocrypha:fafnir_blood"
+    },
+    "T": {
+      "item": "minecraft:stick"
+    }
+  },
+  "result": {
+    "item": "fateapocrypha:balmung",
+    "count": 1
+  }
+}
