@@ -14,7 +14,7 @@ import net.minecraft.world.phys.Vec3;
  * Вне кругов локаций координаты не меняются.
  */
 public final class Reloc {
-    /** x1, z1, x2, z2 (сюжетные), dx, dz. */
+    /** x1, z1, x2, z2 (сюжетные), dx, dz, dy. */
     private static final int[][] REGIONS;
 
     static {
@@ -22,9 +22,9 @@ public final class Reloc {
         REGIONS = new int[all.length][];
         for (int i = 0; i < all.length; i++) {
             StoryLocation l = all[i];
-            int r = l.radius();
+            int r = l.storyRadius();
             REGIONS[i] = new int[] {l.storyCx() - r, l.storyCz() - r, l.storyCx() + r, l.storyCz() + r,
-                    l.cx() - l.storyCx(), l.cz() - l.storyCz()};
+                    l.mapDx(), l.mapDz(), l.mapDy()};
         }
     }
 
@@ -50,31 +50,37 @@ public final class Reloc {
         return r == null ? z : z + r[5];
     }
 
+    /** Смещение по высоте для точки (x, z). */
+    public static double y(double x, double z, double y) {
+        int[] r = region(x, z);
+        return r == null ? y : y + r[6];
+    }
+
     public static BlockPos pos(int x, int y, int z) {
         int[] r = region(x, z);
-        return r == null ? new BlockPos(x, y, z) : new BlockPos(x + r[4], y, z + r[5]);
+        return r == null ? new BlockPos(x, y, z) : new BlockPos(x + r[4], y + r[6], z + r[5]);
     }
 
     public static BlockPos.MutableBlockPos set(BlockPos.MutableBlockPos pos, int x, int y, int z) {
         int[] r = region(x, z);
-        return r == null ? pos.set(x, y, z) : pos.set(x + r[4], y, z + r[5]);
+        return r == null ? pos.set(x, y, z) : pos.set(x + r[4], y + r[6], z + r[5]);
     }
 
     public static Vec3 vec(Vec3 v) {
-        return new Vec3(x(v.x, v.z), v.y, z(v.x, v.z));
+        return new Vec3(x(v.x, v.z), y(v.x, v.z, v.y), z(v.x, v.z));
     }
 
     public static AABB box(AABB b) {
         double cx = (b.minX + b.maxX) / 2.0D;
         double cz = (b.minZ + b.maxZ) / 2.0D;
-        return b.move(x(cx, cz) - cx, 0.0D, z(cx, cz) - cz);
+        return b.move(x(cx, cz) - cx, y(cx, cz, 0.0D), z(cx, cz) - cz);
     }
 
     public static double[][] positions(double[][] positions) {
         double[][] out = new double[positions.length][];
         for (int i = 0; i < positions.length; i++) {
             double[] p = positions[i];
-            out[i] = new double[] {x(p[0], p[2]), p[1], z(p[0], p[2])};
+            out[i] = new double[] {x(p[0], p[2]), y(p[0], p[2], p[1]), z(p[0], p[2])};
         }
         return out;
     }

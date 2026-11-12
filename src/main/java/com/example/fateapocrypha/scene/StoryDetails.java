@@ -44,7 +44,6 @@ public final class StoryDetails {
         run(l, StoryWorld.GARDEN_X, StoryWorld.GARDEN_Z, 5);
 
         // ворота и проходы через кольцо деревьев
-        gates(l, 100, 100, StoryLocation.CASTLE_LAB, StoryLocation.CASTLE_CORRIDOR, StoryLocation.CASTLE_GATE);
         gates(l, StoryWorld.FOREST_CX, StoryWorld.FOREST_CZ, StoryLocation.FOREST);
         gates(l, StoryWorld.STAGE_RED_X, StoryWorld.STAGE_RED_Z, StoryLocation.RED_CAMP, StoryLocation.CHAPEL, StoryLocation.RUINS);
         gates(l, StoryWorld.STAGE_STREET_X, StoryWorld.STAGE_STREET_Z, StoryLocation.STREET, StoryLocation.SIEGE,

@@ -1,5 +1,6 @@
 package com.example.fateapocrypha.story;
 
+import com.example.fateapocrypha.world.CastleSite;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -9,10 +10,13 @@ import net.minecraft.world.level.levelgen.Heightmap;
  * игрока мягко выталкивает за границу. Вход в нужную локацию запускает сцену главы.
  */
 public enum StoryLocation {
-    // id, сюжетный центр (где построено/написано в коде), радиус, настоящий центр в мире
-    CASTLE_LAB("castle_lab", 145, 115, 60, 145, 115),
-    CASTLE_CORRIDOR("castle_corridor", 115, 302, 34, 115, 302),
-    CASTLE_GATE("castle_gate", 155, 407, 62, 260, 600),
+    // id, сюжетный центр, радиус, настоящий центр в мире (смещение у обычных локаций: настоящий минус сюжетный)
+    CASTLE_LAB("castle_lab", 145, 115, 60, CastleSite.LAB_DX, CastleSite.LAB_DZ, CastleSite.LAB_DY,
+            CastleSite.CX, CastleSite.CZ, 175, "castle"),
+    CASTLE_CORRIDOR("castle_corridor", 115, 302, 34, CastleSite.GALLERY_DX, CastleSite.GALLERY_DZ, CastleSite.GALLERY_DY,
+            CastleSite.CX, CastleSite.CZ, 175, "castle"),
+    CASTLE_GATE("castle_gate", 155, 407, 62, CastleSite.GATE_DX, CastleSite.GATE_DZ, CastleSite.GATE_DY,
+            CastleSite.CX, CastleSite.CZ, 175, "castle"),
     FOREST("forest", 580, 430, 118, 700, 700),
     RED_CAMP("red_camp", 800, 800, 42, 1150, 450),
     CHAPEL("chapel", 800, 905, 40, 1500, 250),
@@ -33,17 +37,34 @@ public enum StoryLocation {
     private final String id;
     private final int storyCx;
     private final int storyCz;
-    private final int radius;
+    private final int storyRadius;
+    private final int mapDx;
+    private final int mapDz;
+    private final int mapDy;
     private final int cx;
     private final int cz;
+    private final int radius;
+    private final String group;
 
+    /** Обычная локация: зона совпадает с областью сюжетных координат. */
     StoryLocation(String id, int storyCx, int storyCz, int radius, int cx, int cz) {
+        this(id, storyCx, storyCz, radius, cx - storyCx, cz - storyCz, 0, cx, cz, radius, id);
+    }
+
+    /** Область сюжетных координат (storyRadius) переезжает на (mapDx, mapDz, mapDy); игровая зона отдельная (cx, cz, radius). */
+    StoryLocation(String id, int storyCx, int storyCz, int storyRadius, int mapDx, int mapDz, int mapDy,
+                  int cx, int cz, int radius, String group) {
         this.id = id;
         this.storyCx = storyCx;
         this.storyCz = storyCz;
-        this.radius = radius;
+        this.storyRadius = storyRadius;
+        this.mapDx = mapDx;
+        this.mapDz = mapDz;
+        this.mapDy = mapDy;
         this.cx = cx;
         this.cz = cz;
+        this.radius = radius;
+        this.group = group;
     }
 
     public int storyCx() {
@@ -52,6 +73,37 @@ public enum StoryLocation {
 
     public int storyCz() {
         return storyCz;
+    }
+
+    public int storyRadius() {
+        return storyRadius;
+    }
+
+    public int mapDx() {
+        return mapDx;
+    }
+
+    public int mapDz() {
+        return mapDz;
+    }
+
+    public int mapDy() {
+        return mapDy;
+    }
+
+    /** Локации одной группы (комнаты замка) считаются одной игровой зоной. */
+    public boolean sameZone(StoryLocation other) {
+        return other != null && group.equals(other.group);
+    }
+
+    /** Первая локация группы: ей принадлежит граница зоны. */
+    public StoryLocation primary() {
+        for (StoryLocation l : values()) {
+            if (l.group.equals(group)) {
+                return l;
+            }
+        }
+        return this;
     }
 
     public String nameKey() {

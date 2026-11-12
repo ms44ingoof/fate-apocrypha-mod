@@ -17,7 +17,6 @@ public final class TrifasTerrain {
 
     /** Площадки сюжетных локаций: x1, z1, x2, z2 (границы построек вместе с кольцом деревьев). */
     private static final int[][] RAW_PADS = {
-            {100, 100, 190, 130}, {100, 298, 130, 306}, {100, 398, 208, 416},                       // замок
             {StoryWorld.FOREST_X0, StoryWorld.FOREST_Z0,
                     StoryWorld.FOREST_X0 + StoryWorld.FOREST_SIZE - 1, StoryWorld.FOREST_Z0 + StoryWorld.FOREST_SIZE - 1},
             {784, 784, 816, 816}, {790, 890, 810, 920}, {780, 980, 820, 1020},                      // лагерь, церковь, руины
@@ -28,19 +27,29 @@ public final class TrifasTerrain {
             {StoryWorld.REVERSE_X - 34, StoryWorld.REVERSE_Z - 34, StoryWorld.REVERSE_X + 34, StoryWorld.REVERSE_Z + 34},
             {StoryWorld.DREAM_X - 34, StoryWorld.DREAM_Z - 34, StoryWorld.DREAM_X + 34, StoryWorld.DREAM_Z + 34}
     };
-    /** Площадки в настоящих мировых координатах (сюжетные координаты пересчитаны по смещению локаций). */
-    private static final int[][] PADS = remap(RAW_PADS);
+    /** Площадки в мировых координатах: сюжетные пересчитаны по смещениям локаций, последняя это холм замка. */
+    private static final int[][] PADS;
+    private static final int[] PAD_Y;
+    private static final int[] PAD_BLEND;
+    private static final int CASTLE_PAD;
 
-    private static int[][] remap(int[][] raw) {
-        int[][] out = new int[raw.length][];
-        for (int i = 0; i < raw.length; i++) {
-            out[i] = Reloc.rect(raw[i][0], raw[i][1], raw[i][2], raw[i][3]);
+    static {
+        int n = RAW_PADS.length + 1;
+        PADS = new int[n][];
+        PAD_Y = new int[n];
+        PAD_BLEND = new int[n];
+        for (int i = 0; i < RAW_PADS.length; i++) {
+            PADS[i] = Reloc.rect(RAW_PADS[i][0], RAW_PADS[i][1], RAW_PADS[i][2], RAW_PADS[i][3]);
+            PAD_Y[i] = FLOOR;
+            PAD_BLEND[i] = 46;
         }
-        return out;
+        CASTLE_PAD = n - 1;
+        PADS[CASTLE_PAD] = CastleSite.moundRect();
+        PAD_Y[CASTLE_PAD] = CastleSite.Y;
+        PAD_BLEND[CASTLE_PAD] = 30;
     }
 
     private static final double PAD_MARGIN = 16.0D;   // внутри этого расстояния пол строго на уровне FLOOR
-    private static final double PAD_BLEND = 46.0D;    // дальше площадка плавно переходит в естественный рельеф
 
     // ---------- шум ----------
     private static final class Noise {
@@ -146,22 +155,37 @@ public final class TrifasTerrain {
     }
 
     // ---------- площадки ----------
-    public static double padDist(double x, double z) {
+    /** {расстояние до ближайшей площадки, её номер}. */
+    private static double[] padInfo(double x, double z) {
         double best = Double.MAX_VALUE;
-        for (int[] p : PADS) {
+        int idx = 0;
+        for (int i = 0; i < PADS.length; i++) {
+            int[] p = PADS[i];
             double dx = Math.max(Math.max(p[0] - x, 0.0D), x - p[2]);
             double dz = Math.max(Math.max(p[1] - z, 0.0D), z - p[3]);
             double d = Math.sqrt(dx * dx + dz * dz);
             if (d < best) {
                 best = d;
+                idx = i;
             }
         }
-        return best;
+        return new double[] {best, idx};
     }
 
-    /** 1 на площадке локации, плавно падает до 0 за PAD_BLEND блоков от неё. */
+    public static double padDist(double x, double z) {
+        return padInfo(x, z)[0];
+    }
+
+    /** 1 на площадке локации, плавно падает до 0 за ширину перехода площадки от неё. */
     public static double padWeight(double x, double z) {
-        return 1.0D - smooth(PAD_MARGIN, PAD_MARGIN + PAD_BLEND, padDist(x, z));
+        double[] info = padInfo(x, z);
+        return 1.0D - smooth(PAD_MARGIN, PAD_MARGIN + PAD_BLEND[(int) info[1]], info[0]);
+    }
+
+    /** Склон холма замка (скалы вокруг замка). */
+    public static boolean isCastleSlope(double x, double z, int h) {
+        double[] info = padInfo(x, z);
+        return (int) info[1] == CASTLE_PAD && info[0] > PAD_MARGIN && info[0] < PAD_MARGIN + 30 && h > FLOOR + 3;
     }
 
     // ---------- континент ----------
@@ -218,8 +242,10 @@ public final class TrifasTerrain {
 
     /** Высота верхнего твёрдого блока в колонке (x, z). */
     public static int height(int x, int z) {
-        double w = padWeight(x, z);
-        double h = w >= 1.0D ? FLOOR : lerp(natural(x, z), FLOOR, w);
+        double[] info = padInfo(x, z);
+        int idx = (int) info[1];
+        double w = 1.0D - smooth(PAD_MARGIN, PAD_MARGIN + PAD_BLEND[idx], info[0]);
+        double h = w >= 1.0D ? PAD_Y[idx] : lerp(natural(x, z), PAD_Y[idx], w);
         return (int) Math.round(Math.max(4.0D, Math.min(300.0D, h)));
     }
 
@@ -262,6 +288,9 @@ public final class TrifasTerrain {
             if (rd <= 2.7D) {
                 return KIND_ROAD_EDGE;
             }
+        }
+        if (isCastleSlope(x, z, h)) {
+            return KIND_STONE;
         }
         if (padWeight(x, z) > 0.5D) {
             return KIND_GRASS;

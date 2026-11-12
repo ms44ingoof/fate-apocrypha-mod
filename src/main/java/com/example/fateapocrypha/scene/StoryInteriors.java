@@ -45,8 +45,7 @@ public final class StoryInteriors {
     }
 
     public static void build(ServerLevel l) {
-        lab(l);
-        corridor(l);
+        lab(l);   // коридор падения теперь галерея замка (её строит CastleBuilder)
     }
 
     // ================= Локация 1: лаборатория =================

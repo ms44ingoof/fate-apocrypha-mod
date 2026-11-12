@@ -19,9 +19,6 @@ public final class TrifasRoads {
     private static final Map<StoryLocation, int[]> RECTS = new EnumMap<>(StoryLocation.class);
 
     static {
-        RECTS.put(StoryLocation.CASTLE_LAB, new int[] {100, 100, 190, 130});
-        RECTS.put(StoryLocation.CASTLE_CORRIDOR, new int[] {100, 298, 130, 306});
-        RECTS.put(StoryLocation.CASTLE_GATE, new int[] {100, 398, 208, 416});
         RECTS.put(StoryLocation.FOREST, new int[] {StoryWorld.FOREST_X0, StoryWorld.FOREST_Z0,
                 StoryWorld.FOREST_X0 + StoryWorld.FOREST_SIZE - 1, StoryWorld.FOREST_Z0 + StoryWorld.FOREST_SIZE - 1});
         RECTS.put(StoryLocation.RED_CAMP, new int[] {784, 784, 816, 816});
@@ -41,12 +38,11 @@ public final class TrifasRoads {
             int[] r = e.getValue();
             e.setValue(Reloc.rect(r[0], r[1], r[2], r[3]));
         }
+        RECTS.put(StoryLocation.CASTLE_GATE, CastleSite.moundRect());   // замок: уже в мировых координатах
     }
 
     /** Связи между локациями: по ним проложены дороги и построены ворота. */
     private static final StoryLocation[][] EDGES = {
-            {StoryLocation.CASTLE_LAB, StoryLocation.CASTLE_CORRIDOR},
-            {StoryLocation.CASTLE_CORRIDOR, StoryLocation.CASTLE_GATE},
             {StoryLocation.CASTLE_GATE, StoryLocation.FOREST},
             {StoryLocation.CASTLE_GATE, StoryLocation.FARM},
             {StoryLocation.FOREST, StoryLocation.RED_CAMP},
@@ -137,6 +133,10 @@ public final class TrifasRoads {
 
     /** ex, ez: край площадки; gx, gz: граница локации (ворота); ux, uz: направление. */
     private static double[] openingPoints(StoryLocation from, StoryLocation to) {
+        if (from == StoryLocation.CASTLE_GATE) {
+            // дорога замка начинается у конца пандуса перед воротами
+            return new double[] {CastleSite.GATE_X, CastleSite.RAMP_Z, CastleSite.GATE_X, CastleSite.RAMP_Z, 0.0D, 1.0D};
+        }
         int[] r = RECTS.get(from);
         double cx = (r[0] + r[2]) / 2.0D;
         double cz = (r[1] + r[3]) / 2.0D;

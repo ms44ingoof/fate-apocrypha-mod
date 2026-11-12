@@ -132,7 +132,7 @@ public class Steps {
     }
 
     public static Step teleport(double x, double y, double z, float yaw) {
-        return teleportRaw(Reloc.x(x, z), y, Reloc.z(x, z), yaw);
+        return teleportRaw(Reloc.x(x, z), Reloc.y(x, z, y), Reloc.z(x, z), yaw);
     }
 
     private static Step teleportRaw(double x, double y, double z, float yaw) {
@@ -187,7 +187,7 @@ public class Steps {
 
     // ---------- NPC ----------
     public static Step spawnNpc(String key, NpcType type, double x, double y, double z, float yaw) {
-        return spawnNpcRaw(key, type, Reloc.x(x, z), y, Reloc.z(x, z), yaw);
+        return spawnNpcRaw(key, type, Reloc.x(x, z), Reloc.y(x, z, y), Reloc.z(x, z), yaw);
     }
 
     private static Step spawnNpcRaw(String key, NpcType type, double x, double y, double z, float yaw) {
@@ -237,7 +237,7 @@ public class Steps {
      */
     public static Step npcWalk(String key, double x, double y, double z, double speed,
                                int timeoutTicks, boolean waitForPlayer) {
-        return npcWalkRaw(key, Reloc.x(x, z), y, Reloc.z(x, z), speed, timeoutTicks, waitForPlayer);
+        return npcWalkRaw(key, Reloc.x(x, z), Reloc.y(x, z, y), Reloc.z(x, z), speed, timeoutTicks, waitForPlayer);
     }
 
     private static Step npcWalkRaw(String key, double x, double y, double z, double speed,
@@ -519,7 +519,7 @@ public class Steps {
     }
 
     public static Step lightning(double x, double y, double z) {
-        return lightningRaw(Reloc.x(x, z), y, Reloc.z(x, z));
+        return lightningRaw(Reloc.x(x, z), Reloc.y(x, z, y), Reloc.z(x, z));
     }
 
     private static Step lightningRaw(double x, double y, double z) {
@@ -538,7 +538,7 @@ public class Steps {
     }
 
     public static Step particles(ParticleOptions particle, double x, double y, double z, int count, double spread) {
-        return particlesRaw(particle, Reloc.x(x, z), y, Reloc.z(x, z), count, spread);
+        return particlesRaw(particle, Reloc.x(x, z), Reloc.y(x, z, y), Reloc.z(x, z), count, spread);
     }
 
     private static Step particlesRaw(ParticleOptions particle, double x, double y, double z, int count, double spread) {
@@ -672,7 +672,7 @@ public class Steps {
     }
 
     public static Step npcTeleport(String key, double x, double y, double z, float yaw) {
-        return npcTeleportRaw(key, Reloc.x(x, z), y, Reloc.z(x, z), yaw);
+        return npcTeleportRaw(key, Reloc.x(x, z), Reloc.y(x, z, y), Reloc.z(x, z), yaw);
     }
 
     private static Step npcTeleportRaw(String key, double x, double y, double z, float yaw) {
@@ -980,7 +980,7 @@ public class Steps {
 
     /** burning=true: огненный дракон сна (горит, но не страдает от огня). */
     public static Step spawnDragon(double x, double y, double z, float yaw, boolean burning) {
-        return spawnDragonRaw(Reloc.x(x, z), y, Reloc.z(x, z), yaw, burning);
+        return spawnDragonRaw(Reloc.x(x, z), Reloc.y(x, z, y), Reloc.z(x, z), yaw, burning);
     }
 
     private static Step spawnDragonRaw(double x, double y, double z, float yaw, boolean burning) {
@@ -1079,7 +1079,7 @@ public class Steps {
 
     /** Возвращает игрока на запомненное место, а если его нет, ставит в (fx, fy, fz) сюжетных координат. */
     public static Step returnToPosition(double fx, double fy, double fz) {
-        return returnToPositionRaw(true, Reloc.x(fx, fz), fy, Reloc.z(fx, fz));
+        return returnToPositionRaw(true, Reloc.x(fx, fz), Reloc.y(fx, fz, fy), Reloc.z(fx, fz));
     }
 
     private static Step returnToPositionRaw(boolean fallback, double fx, double fy, double fz) {

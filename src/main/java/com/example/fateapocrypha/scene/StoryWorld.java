@@ -83,55 +83,19 @@ public class StoryWorld {
     }
 
     private static void buildCastle(ServerLevel l) {
+        // сам замок на холме: стены, башни, главный корпус, зал, галерея, двор
+        com.example.fateapocrypha.world.CastleBuilder.build(l);
+        // сюжетные комнаты внутри замка: подвал-лаборатория, комнаты и путь побега на дворе (коридор падения = галерея замка)
         buildLab(l);
-        buildFallCorridor(l);
         buildChironRoom(l);
         buildEscapeRoute(l);
         decorateLab(l);
-        decorateFallCorridor(l);
         decorateChironRoom(l);
         decorateEscapeRoute(l);
         beautifyCastle(l);
-        // локации стоят на лесных полянах: кольцо леса скрывает плоский горизонт
-        woodlandRing(l, 100, 100, 190, 130, 6, 2, 1001L);
-        woodlandRing(l, 100, 298, 130, 306, 6, 2, 1002L);
-        woodlandRing(l, 100, 398, 208, 416, 6, 2, 1003L);
         set(l, 100, Y0 - 1, 100, s(Blocks.ROOTED_DIRT));   // метка "построено"
     }
 
-    // ================= Помощники =================
-    private static void set(ServerLevel l, int x, int y, int z, BlockState state) {
-        l.setBlock(Reloc.pos(x, y, z), state, 2);
-    }
-
-    private static void setSoft(ServerLevel l, int x, int y, int z, BlockState state) {
-        l.setBlock(Reloc.pos(x, y, z), state, 3);   // с обновлением соседей (решётки, панели)
-    }
-
-    private static void fill(ServerLevel l, int x1, int y1, int z1, int x2, int y2, int z2, BlockState state) {
-        BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
-        for (int x = Math.min(x1, x2); x <= Math.max(x1, x2); x++) {
-            for (int y = Math.min(y1, y2); y <= Math.max(y1, y2); y++) {
-                for (int z = Math.min(z1, z2); z <= Math.max(z1, z2); z++) {
-                    l.setBlock(Reloc.set(pos, x, y, z), state, 2);
-                }
-            }
-        }
-    }
-
-    private static void fillMixed(ServerLevel l, int x1, int y1, int z1, int x2, int y2, int z2,
-                                  BlockState a, BlockState b, double chanceB, Random rnd) {
-        BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
-        for (int x = Math.min(x1, x2); x <= Math.max(x1, x2); x++) {
-            for (int y = Math.min(y1, y2); y <= Math.max(y1, y2); y++) {
-                for (int z = Math.min(z1, z2); z <= Math.max(z1, z2); z++) {
-                    l.setBlock(Reloc.set(pos, x, y, z), rnd.nextDouble() < chanceB ? b : a, 2);
-                }
-            }
-        }
-    }
-
-    /** Закрытая комната: потрескавшиеся стены, шахматный пол, потолок; внутри h блоков высоты. */
     private static void room(ServerLevel l, int x1, int z1, int x2, int z2, int h, Theme t) {
         Random rnd = new Random(x1 * 31L + z1 * 17L);
         fillMixed(l, x1, Y0, z1, x2, Y0 + h + 1, z2, t.wall(), t.wallAlt(), 0.08D, rnd);

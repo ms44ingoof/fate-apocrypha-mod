@@ -57,14 +57,14 @@ public class LocationGuard {
         }
 
         // вход в нужную локацию запускает сцену главы
-        if (open != null && in == open && !StoryManager.isStarted(player)) {
+        if (open != null && in != null && in.sameZone(open) && !StoryManager.isStarted(player)) {
             INSIDE.put(id, false);
             StoryDirector.startScene(player, true);
             return;
         }
 
         // закрытая локация: нельзя заходить, но можно выйти, если игрок уже внутри
-        if (in != null && in != open) {
+        if (in != null && !in.sameZone(open)) {
             if (!INSIDE.getOrDefault(id, true)) {
                 pushOut(player, in);
                 return;
@@ -123,7 +123,7 @@ public class LocationGuard {
     private static void drawBorder(ServerPlayer player, StoryLocation open) {
         ServerLevel level = player.serverLevel();
         for (StoryLocation zone : StoryLocation.values()) {
-            if (zone == open) {
+            if (zone.sameZone(open) || zone.primary() != zone) {
                 continue;
             }
             double d = zone.distanceTo(player.getX(), player.getZ()) - zone.radius();
