@@ -1781,23 +1781,3 @@ public class StoryWorld {
         l.setBlock(Reloc.pos(x, y, z), state, 3);
     }
 
-    private static void fill(ServerLevel l,
-                             int x1, int y1, int z1,
-                             int x2, int y2, int z2,
-                             BlockState state) {
-        int minX = Math.min(x1, x2);
-        int maxX = Math.max(x1, x2);
-        int minY = Math.min(y1, y2);
-        int maxY = Math.max(y1, y2);
-        int minZ = Math.min(z1, z2);
-        int maxZ = Math.max(z1, z2);
-
-        for (int x = minX; x <= maxX; x++) {
-            for (int y = minY; y <= maxY; y++) {
-                for (int z = minZ; z <= maxZ; z++) {
-                    set(l, x, y, z, state);
-                }
-            }
-        }
-    }
-}
