@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
@@ -128,6 +129,17 @@ public final class WorldDecor {
         }
     }
 
+    /** Ставит сундук и сразу кладёт в него ресурсы. */
+    private static void lootChest(BuildKit kit, Random rnd, int x, int y, int z, Direction dir, LootFiller.Kind kind) {
+        kit.set(x, y, z, BuildKit.s(Blocks.CHEST).setValue(ChestBlock.FACING, dir));
+        LootFiller.fill(kit.level, new BlockPos(x, y, z), rnd, kind);
+    }
+
+    private static void lootBarrel(BuildKit kit, Random rnd, int x, int y, int z, LootFiller.Kind kind) {
+        kit.set(x, y, z, BuildKit.s(Blocks.BARREL));
+        LootFiller.fill(kit.level, new BlockPos(x, y, z), rnd, kind);
+    }
+
     // ---------- выбор и подготовка места ----------
     private static void place(ServerLevel level, Random rnd, int ax, int az) {
         if (TrifasTerrain.padDist(ax, az) < 75.0D || TrifasRoads.roadDist(ax, az) < 9.0D) {
@@ -165,9 +177,9 @@ public final class WorldDecor {
             case 0 -> cabin(kit, rnd, ax, az, y0);
             case 1 -> well(kit, ax, az, y0);
             case 2 -> camp(kit, rnd, ax, az, y0);
-            case 3 -> shrine(kit, ax, az, y0);
+            case 3 -> shrine(kit, rnd, ax, az, y0);
             case 4 -> ruin(kit, rnd, ax, az, y0);
-            default -> tower(kit, ax, az, y0);
+            default -> tower(kit, rnd, ax, az, y0);
         }
     }
 
@@ -275,8 +287,8 @@ public final class WorldDecor {
         // обстановка
         kit.set(x1 + 1, y0 + 1, z1 + 1, BuildKit.s(Blocks.CRAFTING_TABLE));
         kit.set(x1 + 2, y0 + 1, z1 + 1, BuildKit.s(Blocks.FURNACE));
-        kit.set(x2 - 1, y0 + 1, z1 + 1, BuildKit.s(Blocks.CHEST).setValue(ChestBlock.FACING, Direction.SOUTH));
-        kit.set(x2 - 1, y0 + 1, z2 - 1, BuildKit.s(Blocks.BARREL));
+        lootChest(kit, rnd, x2 - 1, y0 + 1, z1 + 1, Direction.SOUTH, LootFiller.Kind.HOUSE);
+        lootBarrel(kit, rnd, x2 - 1, y0 + 1, z2 - 1, LootFiller.Kind.HOUSE);
         BlockState foot = Blocks.RED_BED.defaultBlockState()
                 .setValue(net.minecraft.world.level.block.BedBlock.FACING, Direction.WEST)
                 .setValue(net.minecraft.world.level.block.BedBlock.PART, net.minecraft.world.level.block.state.properties.BedPart.FOOT);
@@ -288,7 +300,7 @@ public final class WorldDecor {
         kit.set(cx, y0 + 4, cz, BuildKit.s(Blocks.CHAIN));
         // крыльцо
         kit.set(cx, y0, z2 + 1, BuildKit.s(Blocks.COBBLESTONE_SLAB));
-        kit.set(cx - 2, y0 + 1, z2 + 1, BuildKit.s(Blocks.BARREL));
+        lootBarrel(kit, rnd, cx - 2, y0 + 1, z2 + 1, LootFiller.Kind.HOUSE);
         kit.set(cx + 2, y0 + 1, z2 + 1, BuildKit.s(Blocks.OAK_FENCE));
         kit.set(cx + 2, y0 + 2, z2 + 1, BuildKit.s(Blocks.LANTERN));
     }
@@ -310,14 +322,14 @@ public final class WorldDecor {
                 }
             }
         }
-        kit.set(cx - 3, y0 + 1, cz + 3, BuildKit.s(Blocks.BARREL));
+        lootBarrel(kit, rnd, cx - 3, y0 + 1, cz + 3, LootFiller.Kind.CAMP);
         kit.set(cx - 3, y0 + 1, cz + 2, BuildKit.s(Blocks.HAY_BLOCK));
-        kit.set(cx - 4, y0 + 1, cz + 3, BuildKit.s(Blocks.CHEST).setValue(ChestBlock.FACING, Direction.EAST));
+        lootChest(kit, rnd, cx - 4, y0 + 1, cz + 3, Direction.EAST, LootFiller.Kind.CAMP);
         kit.fill(cx - 4, y0 + 1, cz - 3, cx - 4, y0 + 3, cz - 3, BuildKit.s(Blocks.OAK_FENCE));
         kit.set(cx - 4, y0 + 4, cz - 3, BuildKit.s(Blocks.LANTERN));
     }
 
-    private static void shrine(BuildKit kit, int cx, int cz, int y0) {
+    private static void shrine(BuildKit kit, Random rnd, int cx, int cz, int y0) {
         for (int dx = -3; dx <= 3; dx++) {
             for (int dz = -3; dz <= 3; dz++) {
                 kit.set(cx + dx, y0, cz + dz, ((dx + dz) & 1) == 0 ? BuildKit.s(Blocks.STONE_BRICKS) : BuildKit.s(Blocks.MOSSY_STONE_BRICKS));
@@ -334,9 +346,10 @@ public final class WorldDecor {
             kit.fill(cx + p[0], y0 + 1, cz + p[1], cx + p[0], y0 + 2, cz + p[1], BuildKit.s(Blocks.STONE_BRICK_WALL));
             kit.set(cx + p[0], y0 + 3, cz + p[1], BuildKit.s(Blocks.SOUL_LANTERN));
         }
-        for (int[] p : new int[][] {{-2, 0}, {2, 0}, {0, -2}, {0, 2}}) {
+        for (int[] p : new int[][] {{-2, 0}, {2, 0}, {0, -2}}) {
             kit.set(cx + p[0], y0 + 1, cz + p[1], BuildKit.s(Blocks.CANDLE).setValue(net.minecraft.world.level.block.CandleBlock.LIT, true));
         }
+        lootChest(kit, rnd, cx, y0 + 1, cz + 2, Direction.NORTH, LootFiller.Kind.SHRINE);   // ящик с подношениями
     }
 
     private static void ruin(BuildKit kit, Random rnd, int cx, int cz, int y0) {
@@ -351,11 +364,11 @@ public final class WorldDecor {
         for (int i = 0; i < 10; i++) {
             kit.set(cx - 2 + rnd.nextInt(5), y0 + 1, cz - 2 + rnd.nextInt(5), BuildKit.s(Blocks.COBBLESTONE));
         }
-        kit.set(cx, y0 + 1, cz, BuildKit.s(Blocks.CHEST).setValue(ChestBlock.FACING, Direction.SOUTH));
+        lootChest(kit, rnd, cx, y0 + 1, cz, Direction.SOUTH, LootFiller.Kind.RUIN);
         kit.set(cx + 1, y0 + 1, cz, BuildKit.s(Blocks.COBWEB));
     }
 
-    private static void tower(BuildKit kit, int cx, int cz, int y0) {
+    private static void tower(BuildKit kit, Random rnd, int cx, int cz, int y0) {
         for (int[] c : new int[][] {{-2, -2}, {2, -2}, {-2, 2}, {2, 2}}) {
             kit.fill(cx + c[0], y0 + 1, cz + c[1], cx + c[0], y0 + 10, cz + c[1], BuildKit.s(Blocks.SPRUCE_LOG));
         }
@@ -389,6 +402,6 @@ public final class WorldDecor {
         for (int[] c : new int[][] {{-2, -2}, {2, -2}, {-2, 2}, {2, 2}}) {
             kit.set(cx + c[0], y0 + 11, cz + c[1], BuildKit.s(Blocks.SPRUCE_FENCE));
         }
-        kit.set(cx, y0 + 1, cz + 2, BuildKit.s(Blocks.CHEST).setValue(ChestBlock.FACING, Direction.NORTH));
+        lootChest(kit, rnd, cx, y0 + 1, cz + 2, Direction.NORTH, LootFiller.Kind.TOWER);
     }
 }

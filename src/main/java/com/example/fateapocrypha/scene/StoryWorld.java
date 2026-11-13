@@ -987,6 +987,7 @@ public class StoryWorld {
             }
         }
         fill(l, doorX, Y0 + 1, doorZ, doorX, Y0 + 2, doorZ, AIR);
+        furnishHouse(l, x1, z1, x2, z2, doorZ);
         set(l, x1 + 1, Y0 + h + 2, z1 + 1, s(Blocks.BRICK_WALL));   // труба
         set(l, x1 + 1, Y0 + h + 3, z1 + 1, s(Blocks.BRICK_WALL));
     }
@@ -1002,6 +1003,25 @@ public class StoryWorld {
             set(l, STAGE_SIEGE_X, Y0 - 1, STAGE_SIEGE_Z, s(Blocks.ROOTED_DIRT));   // метка "построено"
         }
         StoryDetails.ensure(l);   // лагерь осады ставится после стены
+    }
+
+    /** Обстановка городского дома: стол, сундук и бочка с ресурсами в дальнем от двери углу (не во всех домах). */
+    private static void furnishHouse(ServerLevel l, int x1, int z1, int x2, int z2, int doorZ) {
+        Random rnd = new Random(x1 * 7919L + z1 * 104729L);
+        boolean doorNorth = doorZ == z1;
+        int farZ = doorNorth ? z2 - 1 : z1 + 1;
+        Direction toRoom = doorNorth ? Direction.NORTH : Direction.SOUTH;
+        set(l, x1 + 1, Y0 + 1, farZ, s(Blocks.CRAFTING_TABLE));
+        if (rnd.nextInt(10) < 7) {
+            set(l, x2 - 1, Y0 + 1, farZ, s(Blocks.CHEST).setValue(net.minecraft.world.level.block.ChestBlock.FACING, toRoom));
+            com.example.fateapocrypha.world.LootFiller.fill(l, Reloc.pos(x2 - 1, Y0 + 1, farZ), rnd,
+                    com.example.fateapocrypha.world.LootFiller.Kind.HOUSE);
+        }
+        if (rnd.nextInt(10) < 4) {
+            set(l, x2 - 3, Y0 + 1, farZ, s(Blocks.BARREL));
+            com.example.fateapocrypha.world.LootFiller.fill(l, Reloc.pos(x2 - 3, Y0 + 1, farZ), rnd,
+                    com.example.fateapocrypha.world.LootFiller.Kind.HOUSE);
+        }
     }
 
     private static void buildSiege(ServerLevel l) {
@@ -1772,7 +1792,6 @@ public class StoryWorld {
             }
         }
         set(l, GRAIL_X, Y0 - 1, GRAIL_Z, s(Blocks.ROOTED_DIRT));   // метка "построено"
- 
     }
 
     // ================= Вспомогательные методы установки блоков =================
@@ -1835,8 +1854,4 @@ public class StoryWorld {
             l.setBlock(pos, state, 3);
         }
     }
-<<<<<<< HEAD
-=======
-
->>>>>>> 5cec88c3a8bc9f61c000a3d12522f10ae90316c5
 }

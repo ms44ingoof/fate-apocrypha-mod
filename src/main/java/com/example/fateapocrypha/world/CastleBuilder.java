@@ -52,6 +52,7 @@ public final class CastleBuilder {
         palace();
         towers();
         courtyard();
+        CastleInterior.build(level);   // обстановка: тронный зал, мастерские двора, ресурсы в крыльях
     }
 
     // ================= материалы =================
