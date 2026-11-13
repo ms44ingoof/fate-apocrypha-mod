@@ -1835,8 +1835,4 @@ public class StoryWorld {
             l.setBlock(pos, state, 3);
         }
     }
-<<<<<<< HEAD
-=======
 
->>>>>>> 5cec88c3a8bc9f61c000a3d12522f10ae90316c5
-}
