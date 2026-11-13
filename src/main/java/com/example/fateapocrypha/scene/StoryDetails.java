@@ -39,14 +39,14 @@ public final class StoryDetails {
         run(l, 100, 100, 6);   // замок: лаборатория и коридор
         run(l, StoryWorld.FOREST_CX, StoryWorld.FOREST_CZ, 1);
         run(l, StoryWorld.STAGE_RED_X, StoryWorld.STAGE_RED_Z, 2);
-        run(l, StoryWorld.STAGE_STREET_X, StoryWorld.STAGE_STREET_Z, 3);
+        run(l, StoryWorld.STAGE_SIEGE_X, StoryWorld.STAGE_SIEGE_Z, 3);   // лагерь осады во дворе замка
         run(l, StoryWorld.FARM_X, StoryWorld.FARM_Z, 4);
         run(l, StoryWorld.GARDEN_X, StoryWorld.GARDEN_Z, 5);
 
         // ворота и проходы через кольцо деревьев
         gates(l, StoryWorld.FOREST_CX, StoryWorld.FOREST_CZ, StoryLocation.FOREST);
         gates(l, StoryWorld.STAGE_RED_X, StoryWorld.STAGE_RED_Z, StoryLocation.RED_CAMP, StoryLocation.CHAPEL, StoryLocation.RUINS);
-        gates(l, StoryWorld.STAGE_STREET_X, StoryWorld.STAGE_STREET_Z, StoryLocation.STREET, StoryLocation.SIEGE,
+        gates(l, StoryWorld.STAGE_STREET_X, StoryWorld.STAGE_STREET_Z, StoryLocation.STREET,
                 StoryLocation.LONDON, StoryLocation.PLAIN);
         gates(l, StoryWorld.FARM_X, StoryWorld.FARM_Z, StoryLocation.FARM);
         gates(l, StoryWorld.GARDEN_X, StoryWorld.GARDEN_Z, StoryLocation.GARDENS);
@@ -262,7 +262,7 @@ public final class StoryDetails {
         }
     }
 
-    // ---------- Штурм замка, улицы ----------
+    // ---------- Осада: лагерь перед внутренней стеной замка ----------
     private static void stagesB(ServerLevel l) {
         int cx = StoryWorld.STAGE_SIEGE_X;
         int y = Y0 + 1;

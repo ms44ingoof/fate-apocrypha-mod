@@ -28,6 +28,7 @@ public final class StoryGates {
             case CASTLE_LAB:
             case CASTLE_CORRIDOR:
             case CASTLE_GATE:
+            case SIEGE:
                 return new Style(s(Blocks.STONE_BRICKS), s(Blocks.CRACKED_STONE_BRICKS), s(Blocks.DEEPSLATE_BRICKS),
                         s(Blocks.DEEPSLATE_BRICK_SLAB), s(Blocks.COBBLESTONE), s(Blocks.BLACK_BANNER), true, false, true);
             case FOREST:
@@ -46,9 +47,6 @@ public final class StoryGates {
             case LONDON:
                 return new Style(s(Blocks.BRICKS), s(Blocks.POLISHED_ANDESITE), s(Blocks.STONE_BRICKS),
                         s(Blocks.BRICK_SLAB), s(Blocks.STONE_BRICKS), s(Blocks.WHITE_BANNER), true, false, false);
-            case SIEGE:
-                return new Style(s(Blocks.OAK_LOG), s(Blocks.STRIPPED_OAK_LOG), s(Blocks.OAK_PLANKS),
-                        s(Blocks.OAK_SLAB), s(Blocks.GRAVEL), s(Blocks.WHITE_BANNER), true, false, false);
             case PLAIN:
                 return new Style(s(Blocks.MOSSY_STONE_BRICKS), s(Blocks.STONE_BRICKS), s(Blocks.STONE_BRICKS),
                         s(Blocks.STONE_BRICK_SLAB), s(Blocks.GRAVEL), s(Blocks.GREEN_BANNER), false, false, false);

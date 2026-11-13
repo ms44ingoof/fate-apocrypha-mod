@@ -90,7 +90,8 @@ public class LocationGuard {
                 case CASTLE_LAB, CASTLE_CORRIDOR, CASTLE_GATE -> StoryWorld.ensureBuilt(level);
                 case FOREST -> StoryWorld.ensureForest(level);
                 case RED_CAMP, CHAPEL, RUINS -> StoryWorld.ensureStages(level);
-                case STREET, SIEGE, LONDON, PLAIN -> StoryWorld.ensureStagesB(level);
+                case SIEGE -> StoryWorld.ensureSiege(level);
+                case STREET, LONDON, PLAIN -> StoryWorld.ensureStagesB(level);
                 case FARM -> StoryWorld.ensureFarm(level);
                 case GARDENS -> StoryWorld.ensureGardens(level);
                 default -> {

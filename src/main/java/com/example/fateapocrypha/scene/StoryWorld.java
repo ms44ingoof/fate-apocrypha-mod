@@ -923,7 +923,7 @@ public class StoryWorld {
     // ================= Сцены 2: улица Трифаса, штурм замка, Лондон Джека, равнина Голема =================
     public static final int STAGE_STREET_X = 1200;    // улица: x1180-1220, z786-814
     public static final int STAGE_STREET_Z = 800;
-    public static final int STAGE_SIEGE_X = 1200;     // стена замка z900-902, поле z880-899
+    public static final int STAGE_SIEGE_X = 1200;     // внутренняя стена замка z900-902, площадка z880-899 (сюжетные; в мире сдвиг CastleSite.SIEGE_*)
     public static final int STAGE_SIEGE_Z = 890;
     public static final int STAGE_LONDON_X = 1200;    // иллюзия викторианского Лондона
     public static final int STAGE_LONDON_Z = 1000;
@@ -939,12 +939,10 @@ public class StoryWorld {
 
     private static void buildStagesB(ServerLevel l) {
         buildTown(l, 800, s(Blocks.STONE_BRICKS), 7);                // улица Трифаса
-        buildSiege(l);
         buildTown(l, 1000, s(Blocks.BRICKS), 9);                     // викторианский Лондон
         buildPlain(l);
         beautifyStagesB(l);
         woodlandRing(l, 1180, 786, 1220, 814, 6, 2, 4001L);
-        woodlandRing(l, 1175, 870, 1225, 920, 6, 2, 4002L);
         woodlandRing(l, 1180, 986, 1220, 1014, 6, 2, 4003L);
         woodlandRing(l, 1172, 1072, 1228, 1128, 6, 3, 4004L);
         set(l, STAGE_STREET_X, Y0 - 1, STAGE_STREET_Z, s(Blocks.ROOTED_DIRT));   // метка "построено"
@@ -993,6 +991,19 @@ public class StoryWorld {
         set(l, x1 + 1, Y0 + h + 3, z1 + 1, s(Blocks.BRICK_WALL));
     }
 
+    /** Осада: внутренняя стена замка в западном дворе. Строится вместе с замком (см. CastleSite.SIEGE_*). */
+    public static void ensureSiege(ServerLevel l) {
+        if (l == null) {
+            return;
+        }
+        ensureBuilt(l);   // сначала замок: двор и мощёные дорожки, потом стена поверх
+        if (!l.getBlockState(Reloc.pos(STAGE_SIEGE_X, Y0 - 1, STAGE_SIEGE_Z)).is(Blocks.ROOTED_DIRT)) {
+            buildSiege(l);
+            set(l, STAGE_SIEGE_X, Y0 - 1, STAGE_SIEGE_Z, s(Blocks.ROOTED_DIRT));   // метка "построено"
+        }
+        StoryDetails.ensure(l);   // лагерь осады ставится после стены
+    }
+
     private static void buildSiege(ServerLevel l) {
         Random rnd = new Random(55L);
         for (int x = 1180; x <= 1220; x++) {
@@ -1015,6 +1026,11 @@ public class StoryWorld {
         fill(l, 1215, Y0 + 1, 897, 1220, Y0 + 14, 904, s(Blocks.CRACKED_STONE_BRICKS));
         for (int x : new int[] {1182, 1217, 1197, 1203}) {
             set(l, x, Y0 + 15, 900, s(Blocks.LANTERN));
+        }
+        BlockState banner = Blocks.RED_WALL_BANNER.defaultBlockState()
+                .setValue(net.minecraft.world.level.block.HorizontalDirectionalBlock.FACING, Direction.NORTH);
+        for (int x : new int[] {1186, 1190, 1210, 1214}) {
+            set(l, x, Y0 + 6, 899, banner);
         }
         siegeGate(l, false);
     }
@@ -1280,11 +1296,6 @@ public class StoryWorld {
                 set(l, hx + 5, Y0 + 1, zc - 5, s(Blocks.POTTED_BLUE_ORCHID));
                 set(l, hx + 5, Y0 + 1, zc + 5, s(Blocks.POTTED_ALLIUM));
             }
-        }
-        BlockState banner = Blocks.RED_WALL_BANNER.defaultBlockState()
-                .setValue(net.minecraft.world.level.block.HorizontalDirectionalBlock.FACING, Direction.NORTH);
-        for (int x : new int[] {1186, 1190, 1210, 1214}) {
-            set(l, x, Y0 + 6, 899, banner);
         }
         int cx = STAGE_PLAIN_X;
         int cz = STAGE_PLAIN_Z;
@@ -1761,5 +1772,66 @@ public class StoryWorld {
             }
         }
         set(l, GRAIL_X, Y0 - 1, GRAIL_Z, s(Blocks.ROOTED_DIRT));   // метка "построено"
+    }
+
+    // ================= Вспомогательные методы установки блоков =================
+
+    private static void set(ServerLevel l, int x, int y, int z, BlockState state) {
+        l.setBlock(Reloc.pos(x, y, z), state, 3);
+    }
+
+    private static void fill(ServerLevel l,
+                             int x1, int y1, int z1,
+                             int x2, int y2, int z2,
+                             BlockState state) {
+        int minX = Math.min(x1, x2);
+        int maxX = Math.max(x1, x2);
+        int minY = Math.min(y1, y2);
+        int maxY = Math.max(y1, y2);
+        int minZ = Math.min(z1, z2);
+        int maxZ = Math.max(z1, z2);
+
+        for (int x = minX; x <= maxX; x++) {
+            for (int y = minY; y <= maxY; y++) {
+                for (int z = minZ; z <= maxZ; z++) {
+                    set(l, x, y, z, state);
+                }
+            }
+        }
+    }
+
+    private static void fillMixed(ServerLevel l,
+                                  int x1, int y1, int z1,
+                                  int x2, int y2, int z2,
+                                  BlockState state1,
+                                  BlockState state2,
+                                  double chance,
+                                  Random rnd) {
+        int minX = Math.min(x1, x2);
+        int maxX = Math.max(x1, x2);
+        int minY = Math.min(y1, y2);
+        int maxY = Math.max(y1, y2);
+        int minZ = Math.min(z1, z2);
+        int maxZ = Math.max(z1, z2);
+
+        for (int x = minX; x <= maxX; x++) {
+            for (int y = minY; y <= maxY; y++) {
+                for (int z = minZ; z <= maxZ; z++) {
+                    set(l, x, y, z,
+                            rnd.nextDouble() < chance ? state2 : state1);
+                }
+            }
+        }
+    }
+
+    private static void setSoft(ServerLevel l,
+                                int x, int y, int z,
+                                BlockState state) {
+        BlockPos pos = Reloc.pos(x, y, z);
+        BlockState current = l.getBlockState(pos);
+
+        if (current.isAir() || current.canBeReplaced()) {
+            l.setBlock(pos, state, 3);
+        }
     }
 }

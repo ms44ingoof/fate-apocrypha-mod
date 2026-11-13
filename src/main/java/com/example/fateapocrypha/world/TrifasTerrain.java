@@ -20,7 +20,7 @@ public final class TrifasTerrain {
             {StoryWorld.FOREST_X0, StoryWorld.FOREST_Z0,
                     StoryWorld.FOREST_X0 + StoryWorld.FOREST_SIZE - 1, StoryWorld.FOREST_Z0 + StoryWorld.FOREST_SIZE - 1},
             {784, 784, 816, 816}, {790, 890, 810, 920}, {780, 980, 820, 1020},                      // лагерь, церковь, руины
-            {1180, 786, 1220, 814}, {1175, 870, 1225, 920}, {1180, 986, 1220, 1014}, {1172, 1072, 1228, 1128},
+            {1180, 786, 1220, 814}, {1180, 986, 1220, 1014}, {1172, 1072, 1228, 1128},
             {1165, 1170, 1217, 1220},                                                                // ферма
             {StoryWorld.GARDEN_X - 30, StoryWorld.GARDEN_Z - 30, StoryWorld.GARDEN_X + 30, StoryWorld.GARDEN_Z + 30},
             {StoryWorld.GRAIL_X - 34, StoryWorld.GRAIL_Z - 34, StoryWorld.GRAIL_X + 34, StoryWorld.GRAIL_Z + 34},

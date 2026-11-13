@@ -25,7 +25,6 @@ public final class TrifasRoads {
         RECTS.put(StoryLocation.CHAPEL, new int[] {790, 890, 810, 920});
         RECTS.put(StoryLocation.RUINS, new int[] {780, 980, 820, 1020});
         RECTS.put(StoryLocation.STREET, new int[] {1180, 786, 1220, 814});
-        RECTS.put(StoryLocation.SIEGE, new int[] {1175, 870, 1225, 920});
         RECTS.put(StoryLocation.LONDON, new int[] {1180, 986, 1220, 1014});
         RECTS.put(StoryLocation.PLAIN, new int[] {1172, 1072, 1228, 1128});
         RECTS.put(StoryLocation.FARM, new int[] {1165, 1170, 1217, 1220});
@@ -48,12 +47,11 @@ public final class TrifasRoads {
             {StoryLocation.FOREST, StoryLocation.RED_CAMP},
             {StoryLocation.RED_CAMP, StoryLocation.CHAPEL},
             {StoryLocation.RED_CAMP, StoryLocation.STREET},
-            {StoryLocation.STREET, StoryLocation.SIEGE},
-            {StoryLocation.SIEGE, StoryLocation.LONDON},
+            {StoryLocation.STREET, StoryLocation.LONDON},
             {StoryLocation.LONDON, StoryLocation.PLAIN},
             {StoryLocation.PLAIN, StoryLocation.RUINS},
             {StoryLocation.RUINS, StoryLocation.LONDON},
-            {StoryLocation.SIEGE, StoryLocation.GARDENS}
+            {StoryLocation.LONDON, StoryLocation.GARDENS}
     };
 
     /** Проход через кольцо деревьев и ворота: направление, край площадки (e) и граница локации (g). */

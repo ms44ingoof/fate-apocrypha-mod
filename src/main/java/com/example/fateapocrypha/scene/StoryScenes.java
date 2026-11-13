@@ -387,6 +387,9 @@ public class StoryScenes {
         s.add(Steps.fade(0, 10, 50, true));
         s.add(Steps.run(c -> StoryWorld.ensureStages(c.trifas())));
         s.add(Steps.run(c -> StoryWorld.ensureStagesB(c.trifas())));
+        if (Math.abs(playerX - StoryWorld.STAGE_SIEGE_X) < 50 && Math.abs(playerZ - StoryWorld.STAGE_SIEGE_Z) < 50) {
+            s.add(Steps.run(c -> StoryWorld.ensureSiege(c.trifas())));   // осада стоит внутри замка
+        }
         s.add(Steps.teleport(playerX, Y, playerZ, 0.0F));
         s.add(Steps.cinematicStart(camPos, camLook));
         s.add(Steps.title("story.fateapocrypha." + key + ".title", "story.fateapocrypha." + key + ".subtitle"));
@@ -971,7 +974,7 @@ public class StoryScenes {
         List<Step> s = new ArrayList<>();
         s.add(Steps.fade(0, 20, 40, false));
         s.add(Steps.dismissServant());
-        s.add(Steps.run(c -> StoryWorld.ensureStagesB(c.trifas())));
+        s.add(Steps.run(c -> StoryWorld.ensureSiege(c.trifas())));
         s.add(Steps.teleport(cx, Y, 882.5, 0.0F));
         s.add(Steps.spawnNpc("jeanne", NpcType.JEANNE, cx - 2.5, Y, 892.5, 0.0F));
         s.add(Steps.spawnNpc("astolfo", NpcType.ASTOLFO, cx + 2.5, Y, 892.5, 0.0F));
@@ -1082,7 +1085,7 @@ public class StoryScenes {
         List<Step> s = new ArrayList<>();
         s.add(Steps.fade(0, 20, 40, false));
         s.add(Steps.dismissServant());
-        s.add(Steps.run(c -> StoryWorld.ensureStagesB(c.trifas())));
+        s.add(Steps.run(c -> StoryWorld.ensureSiege(c.trifas())));
         s.add(Steps.run(c -> {
             if (c.trifas() != null) {
                 c.trifas().setBlock(Reloc.pos((int) Math.floor(cx), (int) Y, 886),

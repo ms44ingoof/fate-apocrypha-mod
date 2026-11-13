@@ -34,6 +34,11 @@ public final class CastleSite {
     public static final int GATE_DX = 36;
     public static final int GATE_DZ = -98;
     public static final int GATE_DY = Y - StoryWorld.Y0;
+    // Осада: внутренняя стена с воротами и площадка перед ней стоят в западной части двора
+    // (сюжетные x1180-1220, z880-904 -> мир x160-200, z258-282; между корпусом, хозяйственными постройками и фонтаном)
+    public static final int SIEGE_DX = -1020;
+    public static final int SIEGE_DZ = -622;
+    public static final int SIEGE_DY = Y - StoryWorld.Y0;
 
     private CastleSite() {
     }
