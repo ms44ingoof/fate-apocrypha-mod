@@ -1794,7 +1794,7 @@ public class StoryWorld {
         set(l, GRAIL_X, Y0 - 1, GRAIL_Z, s(Blocks.ROOTED_DIRT));   // метка "построено"
     }
 
-    // ================= Вспомогательные методы установки блоков =================
+   // ================= Вспомогательные методы установки блоков =================
 
     private static void set(ServerLevel l, int x, int y, int z, BlockState state) {
         l.setBlock(Reloc.pos(x, y, z), state, 3);
