@@ -1772,6 +1772,7 @@ public class StoryWorld {
             }
         }
         set(l, GRAIL_X, Y0 - 1, GRAIL_Z, s(Blocks.ROOTED_DIRT));   // метка "построено"
+ 
     }
 
     // ================= Вспомогательные методы установки блоков =================
@@ -1834,4 +1835,8 @@ public class StoryWorld {
             l.setBlock(pos, state, 3);
         }
     }
+<<<<<<< HEAD
+=======
+
+>>>>>>> 5cec88c3a8bc9f61c000a3d12522f10ae90316c5
 }
