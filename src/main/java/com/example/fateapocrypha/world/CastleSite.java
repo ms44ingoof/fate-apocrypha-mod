@@ -5,7 +5,7 @@ import com.example.fateapocrypha.scene.StoryWorld;
 /**
  * Замок Иггдмилления: место, высота и сдвиги сюжетных комнат, которые находятся внутри него.
  * Замок стоит на холме (высота Y), лаборатория скрыта в подвале под главным корпусом, коридор падения стал
- * галереей корпуса, покои Хирона и путь побега построены на внутреннем дворе.
+ * галереей корпуса, покои Хирона и путь побега в подземелье под двором, осада у главных ворот.
  */
 public final class CastleSite {
     public static final int X0 = 130;          // северо-западный угол внешней стены
@@ -31,14 +31,19 @@ public final class CastleSite {
     public static final int GALLERY_DX = 100;
     public static final int GALLERY_DZ = -127;
     public static final int GALLERY_DY = Y - StoryWorld.Y0;
-    public static final int GATE_DX = 36;
-    public static final int GATE_DZ = -98;
-    public static final int GATE_DY = Y - StoryWorld.Y0;
-    // Осада: внутренняя стена с воротами и площадка перед ней стоят в западной части двора
-    // (сюжетные x1180-1220, z880-904 -> мир x160-200, z258-282; между корпусом, хозяйственными постройками и фонтаном)
-    public static final int SIEGE_DX = -1020;
-    public static final int SIEGE_DZ = -622;
+    // Покои Хирона и путь побега: подземелье под южной частью двора (пол на 13 блоков ниже двора, как у лаборатории)
+    public static final int GATE_DX = 45;
+    public static final int GATE_DZ = -136;
+    public static final int GATE_DY = Y - 13 - StoryWorld.Y0;
+    // Осада: у главных ворот. Стена с воротами это привратная башня замка (сюжетные z899-909 = мировые z342-352),
+    // площадка перед ней южный двор (сюжетные x1180-1220, z880-899 = мир x195-235, z323-342)
+    public static final int SIEGE_DX = -985;
+    public static final int SIEGE_DZ = -557;
     public static final int SIEGE_DY = Y - StoryWorld.Y0;
+
+    // Крылья корпуса: второй этаж и комнаты (границы по z; перегородки на 195, 207, 219, 231)
+    public static final int F2 = Y + 16;               // пол второго этажа (совпадает с балконом большого зала)
+    public static final int[][] ROOMS = {{184, 194}, {196, 206}, {208, 218}, {220, 230}, {232, 243}};
 
     private CastleSite() {
     }

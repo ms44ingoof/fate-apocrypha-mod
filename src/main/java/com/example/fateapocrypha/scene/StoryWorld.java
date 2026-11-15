@@ -174,8 +174,8 @@ public class StoryWorld {
             set(l, x, Y0 + 3, 117, GREEN_LAMP);
         }
         for (int x = 136; x <= 164; x += 6) {
-            setSoft(l, x, Y0 + 2, 113, s(Blocks.LIME_STAINED_GLASS_PANE));
-            setSoft(l, x, Y0 + 2, 117, s(Blocks.LIME_STAINED_GLASS_PANE));
+            setSoft(l, x, Y0 + 2, 113, s(Blocks.GLASS));
+            setSoft(l, x, Y0 + 2, 117, s(Blocks.GLASS));
         }
 
         // зал выхода (x171-189, z106-124)
@@ -267,8 +267,8 @@ public class StoryWorld {
         set(l, 108, Y0 + 1, 413, s(Blocks.LECTERN));
         set(l, 110, Y0 + 1, 413, s(Blocks.CARTOGRAPHY_TABLE));
         for (int x = 103; x <= 107; x++) {
-            setSoft(l, x, Y0 + 2, 414, s(Blocks.GLASS_PANE));
-            setSoft(l, x, Y0 + 3, 414, s(Blocks.GLASS_PANE));
+            setSoft(l, x, Y0 + 2, 414, s(Blocks.GLASS));
+            setSoft(l, x, Y0 + 3, 414, s(Blocks.GLASS));
         }
         set(l, 113, Y0 + 1, 401, s(Blocks.POTTED_FERN));
         set(l, 113, Y0 + 1, 413, s(Blocks.POTTED_FERN));
@@ -331,17 +331,30 @@ public class StoryWorld {
         doorX(l, 160, 406, 408, 4);
         doorX(l, 178, 406, 408, 4);
 
-        // рама ворот и двор снаружи
+        // рама ворот и подземный двор: широкая лестница поднимается на 13 блоков во двор замка
         fill(l, 191, Y0 + 1, 405, 191, Y0 + 4, 409, s(Blocks.CHISELED_STONE_BRICKS));
         closeGate(l);
-        fill(l, 192, Y0, 404, 208, Y0, 410, s(Blocks.STONE_BRICKS));
-        for (int x : new int[] {195, 203}) {
-            for (int z : new int[] {404, 410}) {
-                set(l, x, Y0 + 1, z, s(Blocks.COBBLESTONE_WALL));
-                set(l, x, Y0 + 2, z, s(Blocks.COBBLESTONE_WALL));
-                set(l, x, Y0 + 3, z, s(Blocks.LANTERN));
+        fill(l, 192, Y0, 404, 209, Y0 + 13, 410, s(Blocks.STONE_BRICKS));          // каменная оболочка шахты
+        fill(l, 192, Y0 + 1, 405, 208, Y0 + 16, 409, AIR);                          // проход, над ним открытое небо двора
+        for (int i = 1; i <= 13; i++) {
+            int x = 192 + i;
+            fill(l, x, Y0 + 1, 405, x, Y0 + i - 1, 409, s(Blocks.STONE_BRICKS));
+            for (int z = 405; z <= 409; z++) {
+                set(l, x, Y0 + i, z, Blocks.STONE_BRICK_STAIRS.defaultBlockState()
+                        .setValue(net.minecraft.world.level.block.StairBlock.FACING, Direction.EAST));
             }
         }
+        fill(l, 206, Y0 + 1, 405, 208, Y0 + 12, 409, s(Blocks.STONE_BRICKS));
+        fill(l, 206, Y0 + 13, 405, 208, Y0 + 13, 409, s(Blocks.POLISHED_ANDESITE));   // площадка у выхода
+        for (int x : new int[] {197, 201, 205}) {
+            int y = Y0 + (x - 192) + 1;
+            set(l, x, y, 405, s(Blocks.STONE_BRICK_WALL));
+            set(l, x, y + 1, 405, s(Blocks.LANTERN));
+            set(l, x, y, 409, s(Blocks.STONE_BRICK_WALL));
+            set(l, x, y + 1, 409, s(Blocks.LANTERN));
+        }
+        fill(l, 192, Y0 + 14, 404, 209, Y0 + 14, 404, s(Blocks.STONE_BRICK_WALL));  // ограждение шахты у поверхности
+        fill(l, 192, Y0 + 14, 410, 209, Y0 + 14, 410, s(Blocks.STONE_BRICK_WALL));
     }
 
     public static void closeGate(ServerLevel l) {
@@ -841,16 +854,6 @@ public class StoryWorld {
             set(l, x, Y0 + 1, 401, s(Blocks.DARK_OAK_SLAB));
             set(l, x, Y0 + 1, 413, s(Blocks.DARK_OAK_SLAB));
         }
-        // двор у ворот: колодец, бочки, ящики
-        for (int x = 204; x <= 206; x++) {
-            for (int z = 406; z <= 408; z++) {
-                set(l, x, Y0 + 1, z, s(Blocks.STONE_BRICKS));
-            }
-        }
-        set(l, 205, Y0 + 1, 407, s(Blocks.WATER));
-        set(l, 207, Y0 + 1, 404, s(Blocks.BARREL));
-        set(l, 207, Y0 + 1, 410, s(Blocks.BARREL));
-        set(l, 207, Y0 + 2, 410, s(Blocks.BARREL));
     }
 
     private static void decorateCamp(ServerLevel l) {
@@ -1024,53 +1027,50 @@ public class StoryWorld {
         }
     }
 
+    /**
+     * Осада у главных ворот замка: площадка перед воротами это двор, а сама стена с воротами это настоящая
+     * привратная башня замка (сюжетные x1197-1203, z899-909 = проезд CastleBuilder.gatehouse). Здесь добавляются
+     * только створки ворот и знамёна на башнях; створки выламываются в сцене Спартака.
+     */
     private static void buildSiege(ServerLevel l) {
-        Random rnd = new Random(55L);
-        for (int x = 1180; x <= 1220; x++) {
-            for (int z = 880; z <= 899; z++) {
-                int r = rnd.nextInt(12);
-                if (r == 0) {
-                    set(l, x, Y0, z, s(Blocks.COBBLESTONE));
-                } else if (r == 1) {
-                    set(l, x, Y0, z, s(Blocks.COARSE_DIRT));
-                }
-            }
-        }
-        fill(l, 1198, Y0, 880, 1202, Y0, 899, s(Blocks.STONE_BRICKS));          // дорога к воротам
-        fill(l, 1180, Y0 + 1, 900, 1220, Y0 + 9, 902, s(Blocks.STONE_BRICKS));    // стена
-        for (int x = 1180; x <= 1220; x += 2) {
-            fill(l, x, Y0 + 10, 900, x, Y0 + 10, 902, s(Blocks.STONE_BRICKS));    // зубцы
-        }
-        fill(l, 1195, Y0 + 1, 899, 1205, Y0 + 13, 903, s(Blocks.STONE_BRICKS));   // привратная башня
-        fill(l, 1180, Y0 + 1, 897, 1185, Y0 + 14, 904, s(Blocks.CRACKED_STONE_BRICKS));
-        fill(l, 1215, Y0 + 1, 897, 1220, Y0 + 14, 904, s(Blocks.CRACKED_STONE_BRICKS));
-        for (int x : new int[] {1182, 1217, 1197, 1203}) {
-            set(l, x, Y0 + 15, 900, s(Blocks.LANTERN));
-        }
         BlockState banner = Blocks.RED_WALL_BANNER.defaultBlockState()
                 .setValue(net.minecraft.world.level.block.HorizontalDirectionalBlock.FACING, Direction.NORTH);
-        for (int x : new int[] {1186, 1190, 1210, 1214}) {
-            set(l, x, Y0 + 6, 899, banner);
+        for (int x : new int[] {1188, 1192, 1208, 1212}) {
+            set(l, x, Y0 + 7, 898, banner);
+        }
+        for (int x : new int[] {1195, 1205}) {
+            set(l, x, Y0 + 4, 898, s(Blocks.LANTERN));
         }
         siegeGate(l, false);
     }
 
-    /** Ворота замка: целые (решётка в проёме) или выломанные. */
+    /** Створки ворот в проезде привратной башни: целые (дубовые, окованные железом) или выломанные. */
     private static void siegeGate(ServerLevel l, boolean smashed) {
-        fill(l, 1197, Y0 + 1, 899, 1203, Y0 + 9, 903, smashed ? AIR : s(Blocks.STONE_BRICKS));
         if (!smashed) {
-            fill(l, 1198, Y0 + 1, 899, 1202, Y0 + 6, 903, AIR);
-            for (int x = 1198; x <= 1202; x++) {
-                for (int y = Y0 + 1; y <= Y0 + 6; y++) {
-                    setSoft(l, x, y, 901, BARS);
+            fill(l, 1198, Y0 + 1, 899, 1202, Y0 + 9, 900, s(Blocks.DARK_OAK_PLANKS));
+            fill(l, 1197, Y0 + 1, 899, 1197, Y0 + 8, 900, s(Blocks.STRIPPED_DARK_OAK_LOG));
+            fill(l, 1203, Y0 + 1, 899, 1203, Y0 + 8, 900, s(Blocks.STRIPPED_DARK_OAK_LOG));
+            fill(l, 1198, Y0 + 5, 899, 1202, Y0 + 5, 899, s(Blocks.DARK_OAK_LOG));          // поперечная балка
+            fill(l, 1200, Y0 + 1, 899, 1200, Y0 + 9, 899, s(Blocks.DARK_OAK_LOG));          // стык створок
+            for (int x : new int[] {1198, 1202}) {
+                for (int y : new int[] {Y0 + 3, Y0 + 7}) {
+                    set(l, x, y, 899, s(Blocks.IRON_BLOCK));                                // оковка
                 }
             }
-        } else {
-            Random rnd = new Random(9L);
-            for (int i = 0; i < 25; i++) {
-                set(l, 1195 + rnd.nextInt(11), Y0 + 1, 893 + rnd.nextInt(7),
-                        rnd.nextBoolean() ? s(Blocks.COBBLESTONE) : s(Blocks.STONE_BRICKS));
+            for (int x : new int[] {1199, 1201}) {
+                set(l, x, Y0 + 8, 899, s(Blocks.IRON_BARS));                                // смотровые щели
             }
+        } else {
+            fill(l, 1197, Y0 + 1, 899, 1203, Y0 + 8, 901, AIR);
+            fill(l, 1198, Y0 + 9, 899, 1202, Y0 + 9, 901, AIR);
+            Random rnd = new Random(9L);
+            for (int i = 0; i < 26; i++) {
+                set(l, 1195 + rnd.nextInt(11), Y0 + 1, 893 + rnd.nextInt(7),
+                        rnd.nextInt(3) == 0 ? s(Blocks.DARK_OAK_PLANKS)
+                                : rnd.nextBoolean() ? s(Blocks.COBBLESTONE) : s(Blocks.STONE_BRICKS));
+            }
+            set(l, 1199, Y0 + 1, 898, s(Blocks.DARK_OAK_FENCE));
+            set(l, 1202, Y0 + 1, 897, s(Blocks.DARK_OAK_FENCE));
         }
     }
 

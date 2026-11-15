@@ -368,23 +368,23 @@ public final class CastleBuilder {
     private void keepOpenings() {
         // окна первого этажа (стёкла в толще стены) и аркада второго этажа
         for (int z = 186; z <= 240; z += 6) {
-            box(KX1, Y + 3, z, KX1 + 2, Y + 5, z, s(Blocks.GLASS_PANE));
-            box(KX2 - 2, Y + 3, z, KX2, Y + 5, z, s(Blocks.GLASS_PANE));
+            box(KX1, Y + 3, z, KX1 + 2, Y + 5, z, s(Blocks.GLASS));
+            box(KX2 - 2, Y + 3, z, KX2, Y + 5, z, s(Blocks.GLASS));
         }
         for (int z = 184; z <= 240; z += 5) {
-            box(KX1, Y + 15, z, KX1 + 2, Y + 18, z + 1, s(Blocks.GLASS_PANE));
-            box(KX2 - 2, Y + 15, z, KX2, Y + 18, z + 1, s(Blocks.GLASS_PANE));
+            box(KX1, Y + 15, z, KX1 + 2, Y + 18, z + 1, s(Blocks.GLASS));
+            box(KX2 - 2, Y + 15, z, KX2, Y + 18, z + 1, s(Blocks.GLASS));
         }
         for (int x = 166; x <= 266; x += 6) {
             if (Math.abs(x - CX) > 8) {
-                box(x, Y + 3, KZ2 - 3, x, Y + 5, KZ2, s(Blocks.GLASS_PANE));
+                box(x, Y + 3, KZ2 - 3, x, Y + 5, KZ2, s(Blocks.GLASS));
             }
         }
         for (int x = 166; x <= 266; x += 5) {
             if (Math.abs(x - CX) > 8) {
-                box(x, Y + 15, KZ2 - 3, x + 1, Y + 18, KZ2, s(Blocks.GLASS_PANE));
+                box(x, Y + 15, KZ2 - 3, x + 1, Y + 18, KZ2, s(Blocks.GLASS));
             }
-            box(x, Y + 15, KZ1, x + 1, Y + 18, KZ1 + 3, s(Blocks.GLASS_PANE));
+            box(x, Y + 15, KZ1, x + 1, Y + 18, KZ1 + 3, s(Blocks.GLASS));
         }
         // главный вход: высокая арка в южной стене корпуса
         clear(CX - 3, Y + 1, KZ2 - 3, CX + 3, Y + 9, KZ2);
@@ -414,7 +414,7 @@ public final class CastleBuilder {
         // пол: тёмный мрамор
         for (int x = hx1; x <= hx2; x++) {
             for (int z = hz1; z <= hz2; z++) {
-                set(x, Y, z, ((x + z) & 1) == 0 ? s(Blocks.POLISHED_DEEPSLATE) : s(Blocks.DEEPSLATE_TILES));
+                set(x, Y, z, ((x + z) & 1) == 0 ? s(Blocks.POLISHED_ANDESITE) : s(Blocks.POLISHED_DIORITE));
             }
         }
         // красная дорожка от входа
@@ -435,13 +435,13 @@ public final class CastleBuilder {
                 box(185, Y + 1, z + dz, 185, Y + 3, z + dz, s(Blocks.LAPIS_BLOCK));
                 box(245, Y + 1, z + dz, 245, Y + 3, z + dz, s(Blocks.LAPIS_BLOCK));
                 // высокие синие окна-панели с подсветкой за стеклом
-                box(185, Y + 7, z + dz, 185, Y + 12, z + dz, s(Blocks.BLUE_STAINED_GLASS_PANE));
+                box(185, Y + 7, z + dz, 185, Y + 12, z + dz, s(Blocks.GLASS));
                 box(184, Y + 7, z + dz, 184, Y + 12, z + dz, s(Blocks.SEA_LANTERN));
-                box(245, Y + 7, z + dz, 245, Y + 12, z + dz, s(Blocks.BLUE_STAINED_GLASS_PANE));
+                box(245, Y + 7, z + dz, 245, Y + 12, z + dz, s(Blocks.GLASS));
                 box(246, Y + 7, z + dz, 246, Y + 12, z + dz, s(Blocks.SEA_LANTERN));
-                box(185, Y + 15, z + dz, 185, Y + 19, z + dz, s(Blocks.BLUE_STAINED_GLASS_PANE));
+                box(185, Y + 15, z + dz, 185, Y + 19, z + dz, s(Blocks.GLASS));
                 box(184, Y + 15, z + dz, 184, Y + 19, z + dz, s(Blocks.SEA_LANTERN));
-                box(245, Y + 15, z + dz, 245, Y + 19, z + dz, s(Blocks.BLUE_STAINED_GLASS_PANE));
+                box(245, Y + 15, z + dz, 245, Y + 19, z + dz, s(Blocks.GLASS));
                 box(246, Y + 15, z + dz, 246, Y + 19, z + dz, s(Blocks.SEA_LANTERN));
             }
         }
@@ -453,7 +453,7 @@ public final class CastleBuilder {
             box(CX - 6 + dy, Y + 10 + dy, 180, CX + 6 - dy, Y + 10 + dy, 180, s(Blocks.WHITE_CONCRETE));
         }
         for (int x : new int[] {192, 238}) {
-            box(x - 1, Y + 9, 179, x + 1, Y + 18, 180, s(Blocks.BLUE_STAINED_GLASS_PANE));
+            box(x - 1, Y + 9, 179, x + 1, Y + 18, 180, s(Blocks.GLASS));
         }
 
         // потолочные балки
@@ -554,6 +554,28 @@ public final class CastleBuilder {
         for (int x : new int[] {195, 231}) {
             clear(x, Y + 1, 179, x + 4, Y + 8, 180);
         }
+        // торшеры у пилястр: зал был слишком тёмным
+        for (int z = 186; z <= 238; z += 8) {
+            for (int x : new int[] {189, 241}) {
+                box(x, Y + 1, z + 4, x, Y + 2, z + 4, s(Blocks.STONE_BRICK_WALL));
+                set(x, Y + 3, z + 4, s(Blocks.LANTERN));
+            }
+        }
+        // двери с балкона на вторые этажи крыльев: мостики и проёмы в стене зала
+        for (int side = 0; side < 2; side++) {
+            int xa = side == 0 ? 184 : 240;
+            int xb = side == 0 ? 190 : 246;
+            for (int x = xa; x <= xb; x++) {
+                clear(x, Y + 17, 197, x, Y + 21, 199);
+                for (int z = 197; z <= 199; z++) {
+                    set(x, Y + 16, z, s(Blocks.SMOOTH_QUARTZ));
+                }
+                if (x >= 186 && x <= 190 || x >= 240 && x <= 244) {
+                    set(x, Y + 17, 196, s(Blocks.IRON_BARS));
+                    set(x, Y + 17, 200, s(Blocks.IRON_BARS));
+                }
+            }
+        }
     }
 
     // ================= галерея (бывший коридор падения) =================
@@ -576,10 +598,10 @@ public final class CastleBuilder {
         for (int cx = 171; cx <= 263; cx += 8) {
             for (int dx = -1; dx <= 1; dx++) {
                 clear(cx + dx, Y + 2, 169, cx + dx, Y + 8, 171);
-                box(cx + dx, Y + 2, 168, cx + dx, Y + 8, 168, s(Blocks.GLASS_PANE));
+                box(cx + dx, Y + 2, 168, cx + dx, Y + 8, 168, s(Blocks.GLASS));
             }
             clear(cx, Y + 9, 169, cx, Y + 9, 171);
-            set(cx, Y + 9, 168, s(Blocks.GLASS_PANE));
+            set(cx, Y + 9, 168, s(Blocks.GLASS));
             // пилястры между окнами, золотые капители
             int px = cx + 4;
             if (px <= gx2) {
@@ -627,33 +649,69 @@ public final class CastleBuilder {
     }
 
     // ================= крылья корпуса =================
+    private static Block roomFloor(int z) {
+        int idx = 0;
+        for (int i = 0; i < CastleSite.ROOMS.length; i++) {
+            if (z <= CastleSite.ROOMS[i][1] + 1) {
+                idx = i;
+                break;
+            }
+            idx = i;
+        }
+        return idx % 2 == 0 ? Blocks.SPRUCE_PLANKS : Blocks.DARK_OAK_PLANKS;
+    }
+
+    /** Окно в наружной стене корпуса: проём толщиной 3 и обычное стекло посередине. */
+    private void window(boolean west, int zc, int y1, int y2) {
+        int xa = west ? KX1 : KX2 - 2;
+        clear(xa, y1, zc - 1, xa + 2, y2, zc + 1);
+        box(xa + 1, y1, zc - 1, xa + 1, y2, zc + 1, s(Blocks.GLASS));
+    }
+
     private void wings() {
+        int f2 = CastleSite.F2;
         for (int side = 0; side < 2; side++) {
-            int x1 = side == 0 ? KX1 + 3 : 247;
-            int x2 = side == 0 ? 183 : KX2 - 3;
-            // перегородка у галереи уже есть (z=179..180), пол первого этажа
+            boolean west = side == 0;
+            int x1 = west ? KX1 + 3 : 247;
+            int x2 = west ? 183 : KX2 - 3;
+            int hx = west ? x2 : x1;                 // стена к залу
+            int cxw = (x1 + x2) / 2;
+            // полы: первый этаж и второй (разный по комнатам)
             for (int x = x1; x <= x2; x++) {
                 for (int z = 181; z <= 244; z++) {
-                    set(x, Y, z, s(Blocks.DARK_OAK_PLANKS));
-                    set(x, Y + 12, z, s(Blocks.DARK_OAK_PLANKS));
+                    BlockState ground = west
+                            ? s(((x + z) & 1) == 0 ? Blocks.DARK_OAK_PLANKS : Blocks.SPRUCE_PLANKS)
+                            : s((((x >> 1) + (z >> 1)) & 1) == 0 ? Blocks.POLISHED_ANDESITE : Blocks.STONE_BRICKS);
+                    set(x, Y, z, ground);
+                    set(x, f2, z, s(roomFloor(z)));
                 }
             }
-            // первый этаж: ковёр, люстры
-            box(x1 + 5, Y + 1, 183, x2 - 5, Y + 1, 242, s(side == 0 ? Blocks.BLUE_CARPET : Blocks.RED_CARPET));
+            // деревянная обшивка стены к залу (за ней светильники зала): низ тёмный, верх светлый, лесины-пилястры
+            box(hx, Y + 1, 181, hx, Y + 4, 244, s(Blocks.DARK_OAK_PLANKS));
+            box(hx, Y + 5, 181, hx, Y + 22, 244, s(Blocks.SPRUCE_PLANKS));
+            for (int z = 183; z <= 243; z += 6) {
+                box(hx, Y + 1, z, hx, Y + 22, z, s(Blocks.STRIPPED_SPRUCE_LOG));
+            }
+            // проёмы из зала в крылья (первый этаж) и с балкона (второй этаж)
+            for (int z : new int[] {200, 226}) {
+                clear(hx, Y + 1, z, hx, Y + 7, z + 4);
+            }
+            clear(hx, f2 + 1, 197, hx, f2 + 5, 199);
+
+            // первый этаж: ковёр и люстры
+            box(x1 + 5, Y + 1, 183, x2 - 5, Y + 1, 242, s(west ? Blocks.BLUE_CARPET : Blocks.RED_CARPET));
             for (int z = 190; z <= 238; z += 12) {
-                int cx = (x1 + x2) / 2;
-                for (int y = Y + 11; y >= Y + 9; y--) {
-                    set(cx, y, z, s(Blocks.CHAIN));
+                for (int y = Y + 15; y >= Y + 11; y--) {
+                    set(cxw, y, z, s(Blocks.CHAIN));
                 }
-                set(cx, Y + 8, z, BuildKit.HANGING_LANTERN);
+                set(cxw, Y + 10, z, BuildKit.HANGING_LANTERN);
             }
-            if (side == 0) {
-                // библиотека
-                for (int z = 184; z <= 240; z += 2) {
+            if (west) {
+                // библиотека: стеллажи вдоль наружной стены, столы с кафедрами
+                for (int z = 184; z <= 223; z++) {
                     box(x1, Y + 1, z, x1, Y + 4, z, s(Blocks.BOOKSHELF));
-                    box(x1, Y + 1, z + 1, x1, Y + 4, z + 1, s(Blocks.BOOKSHELF));
                 }
-                for (int z = 190; z <= 236; z += 8) {
+                for (int z = 190; z <= 222; z += 8) {
                     box(x1 + 3, Y + 1, z, x1 + 8, Y + 1, z, s(Blocks.SPRUCE_PLANKS));
                     set(x1 + 3, Y + 2, z, s(Blocks.LECTERN));
                 }
@@ -666,27 +724,49 @@ public final class CastleBuilder {
                     box(x1 + 6, Y + 1, z + 1, x2 - 6, Y + 1, z + 1, s(Blocks.SPRUCE_SLAB));
                 }
             }
-            // второй этаж: комнаты с кроватями и фонарями
-            for (int z = 184; z <= 240; z += 8) {
-                int bx = side == 0 ? x1 + 1 : x2 - 2;
-                set(bx, Y + 13, z, s(Blocks.RED_BED).setValue(net.minecraft.world.level.block.BedBlock.FACING, Direction.NORTH)
-                        .setValue(net.minecraft.world.level.block.BedBlock.PART, net.minecraft.world.level.block.state.properties.BedPart.FOOT));
-                set(bx, Y + 13, z - 1, s(Blocks.RED_BED).setValue(net.minecraft.world.level.block.BedBlock.FACING, Direction.NORTH)
-                        .setValue(net.minecraft.world.level.block.BedBlock.PART, net.minecraft.world.level.block.state.properties.BedPart.HEAD));
-                set(side == 0 ? x1 + 4 : x2 - 4, Y + 13, z, s(Blocks.BARREL));
-                set((x1 + x2) / 2, Y + 22, z, BuildKit.HANGING_LANTERN);
+            // высокие окна первого этажа (над стеллажами) и окна комнат второго этажа
+            for (int zc : new int[] {188, 196, 204, 212, 220}) {
+                window(west, zc, Y + 6, Y + 10);
             }
-            box(x1 + 4, Y + 13, 183, x2 - 4, Y + 13, 242, s(Blocks.GRAY_CARPET));
-            // лестница на второй этаж вдоль южной части крыла
-            int sx = side == 0 ? x1 : x2 - 2;
-            for (int i = 1; i <= 12; i++) {
+            // второй этаж: перегородки с проёмами, окна, потолочные фонари
+            for (int zp : new int[] {195, 207, 219, 231}) {
+                brickBox(x1, f2 + 1, zp, x2, Y + 22, zp);
+                clear(cxw - 1, f2 + 1, zp, cxw + 1, f2 + 4, zp);
+            }
+            for (int[] room : CastleSite.ROOMS) {
+                int zc = (room[0] + room[1]) / 2;
+                window(west, zc, f2 + 2, f2 + 4);
+                for (int dx : new int[] {-5, 0, 5}) {
+                    set(cxw + dx, Y + 22, zc, BuildKit.HANGING_LANTERN);
+                }
+            }
+
+            // лестница на второй этаж: 16 ступеней вдоль южной части наружной стены
+            int sx = west ? x1 : x2 - 2;
+            for (int i = 1; i <= 16; i++) {
+                int z = 242 - i;
                 for (int dx = 0; dx <= 2; dx++) {
-                    box(sx + dx, Y + 1, 242 - i, sx + dx, Y + i - 1, 242 - i, s(Blocks.STONE_BRICKS));
-                    set(sx + dx, Y + i, 242 - i, BuildKit.stairs(Blocks.STONE_BRICK_STAIRS, Direction.NORTH, false));
+                    box(sx + dx, Y + 1, z, sx + dx, Y + i - 1, z, s(Blocks.STONE_BRICKS));
+                    set(sx + dx, Y + i, z, BuildKit.stairs(Blocks.STONE_BRICK_STAIRS, Direction.NORTH, false));
                 }
             }
             for (int dx = 0; dx <= 2; dx++) {
-                clear(sx + dx, Y + 12, 229, sx + dx, Y + 12, 241);
+                clear(sx + dx, f2, 227, sx + dx, f2, 228);       // проём над верхними ступенями
+                set(sx + dx, f2 + 1, 229, s(Blocks.IRON_BARS));    // перила со стороны комнаты
+            }
+            for (int z = 227; z <= 229; z++) {
+                set(west ? sx + 3 : sx - 1, f2 + 1, z, s(Blocks.IRON_BARS));
+            }
+            // лестница с второго этажа на крышу: 7 ступеней у северной комнаты
+            for (int j = 1; j <= 7; j++) {
+                int z = 194 - j;
+                for (int dx = 0; dx <= 2; dx++) {
+                    box(sx + dx, f2 + 1, z, sx + dx, f2 + j - 1, z, s(Blocks.STONE_BRICKS));
+                    set(sx + dx, f2 + j, z, BuildKit.stairs(Blocks.STONE_BRICK_STAIRS, Direction.NORTH, false));
+                }
+            }
+            for (int dx = 0; dx <= 2; dx++) {
+                clear(sx + dx, Y + 23, 188, sx + dx, Y + 23, 189);   // проём в плите крыши
             }
         }
     }
@@ -709,14 +789,14 @@ public final class CastleBuilder {
             set(x, base + 5, pz2, s(Blocks.POLISHED_DIORITE));
         }
         for (int x = px1 + 3; x < px2 - 2; x += 4) {
-            box(x, base + 2, pz1, x, base + 4, pz1 + 1, s(Blocks.GLASS_PANE));
-            box(x, base + 2, pz2 - 1, x, base + 4, pz2, s(Blocks.GLASS_PANE));
-            box(x, base + 7, pz1, x, base + 9, pz1 + 1, s(Blocks.GLASS_PANE));
-            box(x, base + 7, pz2 - 1, x, base + 9, pz2, s(Blocks.GLASS_PANE));
+            box(x, base + 2, pz1, x, base + 4, pz1 + 1, s(Blocks.GLASS));
+            box(x, base + 2, pz2 - 1, x, base + 4, pz2, s(Blocks.GLASS));
+            box(x, base + 7, pz1, x, base + 9, pz1 + 1, s(Blocks.GLASS));
+            box(x, base + 7, pz2 - 1, x, base + 9, pz2, s(Blocks.GLASS));
         }
         for (int z = pz1 + 3; z < pz2 - 2; z += 4) {
-            box(px1, base + 2, z, px1 + 1, base + 4, z, s(Blocks.GLASS_PANE));
-            box(px2 - 1, base + 2, z, px2, base + 4, z, s(Blocks.GLASS_PANE));
+            box(px1, base + 2, z, px1 + 1, base + 4, z, s(Blocks.GLASS));
+            box(px2 - 1, base + 2, z, px2, base + 4, z, s(Blocks.GLASS));
         }
         // дверь с террасы
         clear(CX - 2, base, pz2 - 1, CX + 2, base + 5, pz2);
@@ -746,7 +826,7 @@ public final class CastleBuilder {
         // слуховые окна на южном скате
         for (int x = px1 + 8; x <= px2 - 8; x += 10) {
             clear(x - 1, base + 12, pz2 - 3, x + 1, base + 13, pz2 - 1);
-            box(x - 1, base + 12, pz2 - 3, x + 1, base + 12, pz2 - 3, s(Blocks.GLASS_PANE));
+            box(x - 1, base + 12, pz2 - 3, x + 1, base + 12, pz2 - 3, s(Blocks.GLASS));
             for (int dx = -2; dx <= 2; dx++) {
                 set(x + dx, base + 14, pz2 - 3, BuildKit.stairs(Blocks.DEEPSLATE_TILE_STAIRS, Direction.SOUTH, false));
             }
@@ -785,23 +865,31 @@ public final class CastleBuilder {
                     continue;
                 }
                 int h = Math.floorMod(hash(x, 0, z), 100);
+                double fd = Math.hypot(x - CX, z - 272);
+                boolean road = Math.abs(x - CX) <= 4 && z > KZ2;
+                boolean apron = x >= KX1 - 4 && x <= KX2 + 4 && z >= KZ1 - 4 && z <= KZ2 + 4;
+                boolean plaza = fd <= 13.0D;
+                boolean cross = z >= 297 && z <= 299 && x >= X0 + 6 && x <= X1 - 6;
                 BlockState st;
-                if (Math.abs(x - CX) <= 4 && z > KZ2) {
+                boolean lawn = false;
+                if (road) {
                     st = Math.abs(x - CX) == 4 ? s(Blocks.POLISHED_ANDESITE) : s(Blocks.STONE_BRICKS);
-                } else if (h < 28) {
-                    st = s(Blocks.GRAVEL);
-                } else if (h < 52) {
-                    st = s(Blocks.COBBLESTONE);
-                } else if (h < 66) {
-                    st = s(Blocks.COARSE_DIRT);
-                } else if (h < 72) {
-                    st = s(Blocks.STONE);
+                } else if (plaza) {
+                    st = ((x + z) & 1) == 0 ? s(Blocks.STONE_BRICKS) : s(Blocks.POLISHED_ANDESITE);
+                } else if (apron || cross) {
+                    st = h < 10 ? s(Blocks.CRACKED_STONE_BRICKS) : h < 22 ? s(Blocks.ANDESITE) : s(Blocks.STONE_BRICKS);
                 } else {
-                    continue;
+                    lawn = true;
+                    st = h < 6 ? s(Blocks.COARSE_DIRT) : s(Blocks.GRASS_BLOCK);
                 }
                 set(x, Y, z, st);
                 for (int y = Y + 1; y <= Y + 4; y++) {
                     k.clearVegetation(x, y, z);
+                }
+                if (lawn && h >= 88) {
+                    Block[] flowers = {Blocks.POPPY, Blocks.DANDELION, Blocks.CORNFLOWER, Blocks.AZURE_BLUET,
+                            Blocks.OXEYE_DAISY, Blocks.FERN};
+                    set(x, Y + 1, z, s(flowers[h % flowers.length]));
                 }
             }
         }
@@ -859,7 +947,7 @@ public final class CastleBuilder {
         int mid = (x1 + x2) / 2;
         k.door(Blocks.SPRUCE_DOOR, mid, Y + 1, z2, Direction.SOUTH);
         for (int x = x1 + 2; x < x2 - 1; x += 3) {
-            box(x, Y + 2, z1, x, Y + 3, z1, s(Blocks.GLASS_PANE));
+            box(x, Y + 2, z1, x, Y + 3, z1, s(Blocks.GLASS));
         }
         set(x1 + 1, Y + 1, z1 + 1, s(Blocks.FURNACE));
         set(x1 + 2, Y + 1, z1 + 1, s(Blocks.ANVIL));
