@@ -235,7 +235,7 @@ final class CastleInterior {
 
     private void pot(int x, int y, int z) {
         Block[] pots = {Blocks.POTTED_FERN, Blocks.POTTED_RED_TULIP, Blocks.POTTED_BLUE_ORCHID,
-                Blocks.POTTED_DANDELION, Blocks.POTTED_CORNFLOWER, Blocks.POTTED_AZALEA_BUSH};
+                Blocks.POTTED_DANDELION, Blocks.POTTED_CORNFLOWER, Blocks.POTTED_ALLIUM};
         k.set(x, y, z, s(pots[rnd.nextInt(pots.length)]));
     }
 
