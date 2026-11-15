@@ -619,5 +619,19 @@
   "ability.fateapocrypha.banner": "Благословение знамени",
   "ability.fateapocrypha.banner.desc": "Лечит и защищает союзников в радиусе 12 блоков.",
   "tooltip.fateapocrypha.ability": "ПКМ: %s (перезарядка %s с)",
-  "message.fateapocrypha.no_target": "Нет цели в прицеле."
+  "message.fateapocrypha.no_target": "Нет цели в прицеле.",
+  "key.fateapocrypha.map": "Карта мира",
+  "gui.fateapocrypha.map.title": "Карта мира",
+  "gui.fateapocrypha.map.loading": "Рисую карту...",
+  "gui.fateapocrypha.map.hint": "Колесо: масштаб · Перетаскивание: двигать · %s: закрыть",
+  "gui.fateapocrypha.map.castle": "Замок Иггдмилления",
+  "gui.fateapocrypha.map.distance": "%s м до места",
+  "gui.fateapocrypha.map.scale": "%s м",
+  "gui.fateapocrypha.map.coords": "X %s  Z %s",
+  "gui.fateapocrypha.map.outline": "Цвет контура",
+  "gui.fateapocrypha.map.frame": "Цвет рамки",
+  "gui.fateapocrypha.map.contours": "Горизонтали",
+  "gui.fateapocrypha.map.labels": "Названия мест",
+  "gui.fateapocrypha.map.roads": "Дорожки",
+  "gui.fateapocrypha.map.grid": "Сетка"
 }

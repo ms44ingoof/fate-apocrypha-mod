@@ -126,6 +126,11 @@ public final class TrifasRoads {
         }
     }
 
+    /** Отрезки дорог (x1, z1, x2, z2) для карты мира. */
+    public static List<double[]> segments() {
+        return java.util.Collections.unmodifiableList(SEGMENTS);
+    }
+
     private TrifasRoads() {
     }
 

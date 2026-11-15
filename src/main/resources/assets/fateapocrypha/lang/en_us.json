@@ -619,5 +619,19 @@
   "ability.fateapocrypha.banner": "Banner's Blessing",
   "ability.fateapocrypha.banner.desc": "Heals and protects allies within 12 blocks.",
   "tooltip.fateapocrypha.ability": "Right click: %s (cooldown %s s)",
-  "message.fateapocrypha.no_target": "No target in sight."
+  "message.fateapocrypha.no_target": "No target in sight.",
+  "key.fateapocrypha.map": "World Map",
+  "gui.fateapocrypha.map.title": "World Map",
+  "gui.fateapocrypha.map.loading": "Drawing the map...",
+  "gui.fateapocrypha.map.hint": "Scroll to zoom · Drag to move · %s to close",
+  "gui.fateapocrypha.map.castle": "Yggdmillennia Castle",
+  "gui.fateapocrypha.map.distance": "%s m away",
+  "gui.fateapocrypha.map.scale": "%s m",
+  "gui.fateapocrypha.map.coords": "X %s  Z %s",
+  "gui.fateapocrypha.map.outline": "Outline color",
+  "gui.fateapocrypha.map.frame": "Frame color",
+  "gui.fateapocrypha.map.contours": "Contour lines",
+  "gui.fateapocrypha.map.labels": "Place names",
+  "gui.fateapocrypha.map.roads": "Paths",
+  "gui.fateapocrypha.map.grid": "Grid"
 }

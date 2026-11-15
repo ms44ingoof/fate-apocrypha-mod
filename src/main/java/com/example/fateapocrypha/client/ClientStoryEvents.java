@@ -31,6 +31,17 @@ public class ClientStoryEvents {
                     mc.setScreen(new com.example.fateapocrypha.client.screen.QuestJournalScreen());
                 }
             }
+            while (ClientKeys.MAP.consumeClick()) {
+                Minecraft mc = Minecraft.getInstance();
+                if (mc.player != null && mc.screen == null && !ClientStoryState.isCinematic()) {
+                    mc.setScreen(new com.example.fateapocrypha.client.map.MapScreen());
+                }
+            }
+            Minecraft tickMc = Minecraft.getInstance();
+            if (tickMc.player != null && tickMc.player.tickCount % 20 == 0
+                    && tickMc.level != null && tickMc.level.dimension().equals(com.example.fateapocrypha.ModDimensions.TRIFAS)) {
+                com.example.fateapocrypha.client.map.MapSettings.tickDiscovery(tickMc);
+            }
             while (ClientKeys.SKIP_DIALOGUE.consumeClick()) {
                 if (Minecraft.getInstance().player != null && ClientStoryState.hasDialogue()) {
                     ModNetwork.CHANNEL.sendToServer(new SkipDialoguePacket());

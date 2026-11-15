@@ -36,6 +36,7 @@ public class ClientEvents {
     public static void onRegisterKeys(RegisterKeyMappingsEvent event) {
         event.register(ClientKeys.SKIP_DIALOGUE);
         event.register(ClientKeys.JOURNAL);
+        event.register(ClientKeys.MAP);
         event.register(ClientKeys.SEAL_TELEPORT);
         event.register(ClientKeys.SEAL_BUFF);
         event.register(ClientKeys.SEAL_PHANTASM);

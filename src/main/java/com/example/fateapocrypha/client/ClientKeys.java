@@ -16,6 +16,10 @@ public class ClientKeys {
     public static final KeyMapping SEAL_PHANTASM = new KeyMapping(
             "key.fateapocrypha.seal_phantasm", GLFW.GLFW_KEY_C, "key.categories.fateapocrypha");
 
+    /** Карта мира: по умолчанию M. */
+    public static final KeyMapping MAP = new KeyMapping(
+            "key.fateapocrypha.map", GLFW.GLFW_KEY_M, "key.categories.fateapocrypha");
+
     /** Журнал заданий: по умолчанию J. */
     public static final KeyMapping JOURNAL = new KeyMapping(
             "key.fateapocrypha.journal", GLFW.GLFW_KEY_J, "key.categories.fateapocrypha");
