@@ -7,6 +7,7 @@ import com.example.fateapocrypha.client.UiDraw;
 import com.example.fateapocrypha.story.StoryChapter;
 import com.example.fateapocrypha.story.StoryLocation;
 import com.example.fateapocrypha.world.TrifasRoads;
+import com.example.fateapocrypha.world.TrifasTerrain;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.math.Axis;
 import java.util.ArrayList;
@@ -65,6 +66,7 @@ public class MapScreen extends Screen {
     private boolean popup = false;
     private long lastFrame = 0L;
     private long lastChange = 0L;
+    private long openTime = 0L;
     private final List<Marker> markers = new ArrayList<>();
 
     public MapScreen() {
@@ -109,6 +111,14 @@ public class MapScreen extends Screen {
         zoomTarget = Math.max(minZoom(), zoomTarget);
         lastFrame = Util.getMillis();
         lastChange = lastFrame;
+        openTime = lastFrame;
+        zoom = Math.max(minZoom(), zoomTarget * 0.78F);   // карта плавно «подлетает» при открытии
+    }
+
+    /** Появление панели: 0 в начале, 1 через 0.45 с, с мягким замедлением. */
+    private float appear() {
+        float t = Math.min(1.0F, (Util.getMillis() - openTime) / 450.0F);
+        return 1.0F - (1.0F - t) * (1.0F - t) * (1.0F - t);
     }
 
     @Override
@@ -224,6 +234,8 @@ public class MapScreen extends Screen {
         g.fill(vx1, vy1, vx2, vy2, SEA_COLOR);
         if (MapTextures.baseReady()) {
             drawTerrain(g);
+            drawSparkles(g);
+            drawClouds(g);
             if (MapSettings.grid) {
                 drawGrid(g);
             }
@@ -246,6 +258,11 @@ public class MapScreen extends Screen {
         }
         if (MapTextures.baseReady() && !popupContains(mouseX, mouseY)) {
             drawHover(g, mouseX, mouseY);
+        }
+        float a = appear();
+        if (a < 1.0F) {
+            int alpha = (int) ((1.0F - a) * 255.0F);
+            UiDraw.rounded(g, px, py, px + pw, py + ph, 12, (alpha << 24) | 0xFFF8F2);   // панель проявляется из тумана
         }
     }
 
@@ -396,7 +413,7 @@ public class MapScreen extends Screen {
 
     private void drawRoads(GuiGraphics g) {
         int dot = zoom >= 0.25F ? 2 : 1;
-        double spacing = 5.0D;
+        double off = (Util.getMillis() / 70.0D) % 10.0D;   // точки медленно «бегут» по дорожке
         for (double[] seg : TrifasRoads.segments()) {
             double ax = toScreenX(seg[0]);
             double ay = toScreenY(seg[1]);
@@ -406,17 +423,72 @@ public class MapScreen extends Screen {
                 continue;
             }
             double len = Math.hypot(bx - ax, by - ay);
-            int n = Math.max(1, (int) (len / spacing));
-            for (int i = 0; i <= n; i += 1) {
-                if ((i & 1) == 1) {
-                    continue;   // пунктир
-                }
-                double t = i / (double) n;
+            if (len < 1.0D) {
+                continue;
+            }
+            for (double d = off; d <= len; d += 10.0D) {
+                double t = d / len;
                 int x = (int) (ax + (bx - ax) * t);
                 int y = (int) (ay + (by - ay) * t);
                 g.fill(x, y + 1, x + dot, y + 1 + dot, 0x55A07C80);
                 g.fill(x, y, x + dot, y + dot, 0xF2FFF6E4);
             }
+        }
+    }
+
+    // ================= анимации карты =================
+    private static int cellHash(long a, long b) {
+        long h = a * 73856093L ^ b * 19349663L;
+        h = (h ^ (h >>> 13)) * 1274126177L;
+        return (int) (h ^ (h >>> 16));
+    }
+
+    /** Мерцающие блики на воде: сетка в мировых координатах, поэтому блики остаются на месте при движении карты. */
+    private void drawSparkles(GuiGraphics g) {
+        double cell = 80.0D / zoom;
+        long time = Util.getMillis();
+        long i0 = (long) Math.floor(toWorldX(vx1) / cell);
+        long i1 = (long) Math.floor(toWorldX(vx2) / cell);
+        long j0 = (long) Math.floor(toWorldZ(vy1) / cell);
+        long j1 = (long) Math.floor(toWorldZ(vy2) / cell);
+        for (long i = i0; i <= i1; i++) {
+            for (long j = j0; j <= j1; j++) {
+                int h = cellHash(i, j);
+                double phase = ((h >> 16) & 1023) / 1023.0D * Math.PI * 2.0D;
+                double tw = Math.sin(time / 520.0D + phase);
+                if (tw < 0.55D) {
+                    continue;
+                }
+                double wx = (i + (h & 255) / 255.0D) * cell;
+                double wz = (j + ((h >> 8) & 255) / 255.0D) * cell;
+                if (TrifasTerrain.height((int) wx, (int) wz) >= TrifasTerrain.SEA) {
+                    continue;   // блики только на море
+                }
+                int sx = (int) toScreenX(wx);
+                int sy = (int) toScreenY(wz);
+                int alpha = (int) (200.0D * (tw - 0.55D) / 0.45D);
+                int color = (alpha << 24) | 0xFFFFFF;
+                g.fill(sx, sy - 2, sx + 1, sy + 3, color);
+                g.fill(sx - 2, sy, sx + 3, sy + 1, color);
+            }
+        }
+    }
+
+    /** Мягкие облачка плывут над картой (со слабым параллаксом при движении). */
+    private void drawClouds(GuiGraphics g) {
+        long time = Util.getMillis();
+        int w = vx2 - vx1 + 260;
+        int alpha = zoom > 1.6F ? 0x14 : 0x2E;
+        int color = (alpha << 24) | 0xFFFFFF;
+        for (int i = 0; i < 6; i++) {
+            double speed = 5.0D + i * 2.2D;
+            double shift = i * 211.0D + time / 1000.0D * speed - cx * zoom * 0.18D;
+            double x = vx1 - 130 + (((shift % w) + w) % w);
+            double y = vy1 + 28 + (i * 97) % Math.max(60, vy2 - vy1 - 70);
+            int r = 9 + (i % 3) * 3;
+            UiDraw.circle(g, (int) x - r, (int) y + 3, r - 2, color);
+            UiDraw.circle(g, (int) x, (int) y - 2, r + 3, color);
+            UiDraw.circle(g, (int) x + r + 2, (int) y + 2, r, color);
         }
     }
 
@@ -444,8 +516,15 @@ public class MapScreen extends Screen {
                 UiDraw.circle(g, x, y, 1, 0xFFFFFFFF);
             }
             if (isQuest) {
-                UiDraw.diamond(g, x, y - 12, 3, 0xFFF5C95A);
-                UiDraw.diamond(g, x, y - 12, 1, 0xFFFFFFFF);
+                int bob = (int) Math.round(Math.sin(time / 240.0D) * 2.5D);
+                UiDraw.diamond(g, x, y - 12 + bob, 3, 0xFFF5C95A);
+                UiDraw.diamond(g, x, y - 12 + bob, 1, 0xFFFFFFFF);
+                for (int n = 0; n < 3; n++) {
+                    double ang = time / 600.0D + n * 2.094D;
+                    int sx = x + (int) Math.round(Math.cos(ang) * 9.0D);
+                    int sy = y - 12 + bob + (int) Math.round(Math.sin(ang) * 9.0D);
+                    g.fill(sx, sy, sx + 1, sy + 1, 0xFFFFF0B0);
+                }
             }
             if (MapSettings.labels) {
                 int tw = font.width(m.name());
@@ -479,6 +558,15 @@ public class MapScreen extends Screen {
             return;
         }
         UiDraw.circle(g, x, y, 7, 0x33FFFFFF);
+        double ph = (Util.getMillis() % 1800L) / 1800.0D;   // расходящиеся круги вокруг игрока
+        int rr = 6 + (int) (ph * 14.0D);
+        int ra = (int) ((1.0D - ph) * 150.0D);
+        for (int n = 0; n < 20; n++) {
+            double ang = n * Math.PI / 10.0D;
+            int rx = x + (int) Math.round(Math.cos(ang) * rr);
+            int ry = y + (int) Math.round(Math.sin(ang) * rr);
+            g.fill(rx, ry, rx + 1, ry + 1, (ra << 24) | 0xF08AB0);
+        }
         g.pose().pushPose();
         g.pose().translate(x, y, 0.0F);
         g.pose().mulPose(Axis.ZP.rotationDegrees(player.getYRot() + 180.0F));

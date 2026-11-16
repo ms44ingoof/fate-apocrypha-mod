@@ -52,6 +52,7 @@ public final class CastleBuilder {
         palace();
         towers();
         courtyard();
+        CastleBasement.build(level);   // подвал: тюрьма, погреб, кухня, склад, тайная комната
         CastleInterior.build(level);   // обстановка: тронный зал, мастерские двора, ресурсы в крыльях
     }
 

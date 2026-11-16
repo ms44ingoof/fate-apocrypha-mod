@@ -6,6 +6,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;
@@ -22,9 +23,15 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
 /** Сюжетный NPC (Астольфо, Хирон...). Бессмертен, не бродит сам - им управляют сцены. */
-public class StoryNpcEntity extends PathfinderMob {
+public class StoryNpcEntity extends PathfinderMob implements AnimatedActor {
     private static final EntityDataAccessor<String> NPC_ID =
             SynchedEntityData.defineId(StoryNpcEntity.class, EntityDataSerializers.STRING);
+
+    private static final EntityDataAccessor<String> ANIM =
+            SynchedEntityData.defineId(StoryNpcEntity.class, EntityDataSerializers.STRING);
+
+    private int animStartAge = 0;
+    private int animEnd = 0;
 
     public StoryNpcEntity(EntityType<? extends StoryNpcEntity> type, Level level) {
         super(type, level);
@@ -56,6 +63,42 @@ public class StoryNpcEntity extends PathfinderMob {
     protected void defineSynchedData() {
         super.defineSynchedData();
         this.entityData.define(NPC_ID, NpcType.ASTOLFO.id());
+        this.entityData.define(ANIM, "");
+    }
+
+    // ---------- Анимации действий (cast, bow, kneel, wave...): рисует FateModel ----------
+    @Override
+    public String getAnim() {
+        return this.entityData.get(ANIM);
+    }
+
+    @Override
+    public int getAnimStartAge() {
+        return this.animStartAge;
+    }
+
+    /** Запускает действие; ticks = 0 значит держать, пока его не сменят или не вызовут с пустым именем. */
+    public void playAnim(String name, int ticks) {
+        this.animStartAge = this.tickCount;
+        this.animEnd = ticks > 0 ? this.tickCount + ticks : 0;
+        this.entityData.set(ANIM, name);
+    }
+
+    @Override
+    public void onSyncedDataUpdated(EntityDataAccessor<?> key) {
+        super.onSyncedDataUpdated(key);
+        if (ANIM.equals(key)) {
+            this.animStartAge = this.tickCount;
+        }
+    }
+
+    /** Каждый удар запускает плавную трёхфазную анимацию (замах, удар, возврат). */
+    @Override
+    public void swing(InteractionHand hand, boolean updateSelf) {
+        super.swing(hand, updateSelf);
+        if (!this.level().isClientSide) {
+            playAnim("attack", 12);
+        }
     }
 
     public NpcType getNpcType() {
@@ -84,6 +127,10 @@ public class StoryNpcEntity extends PathfinderMob {
         super.tick();
         if (!this.level().isClientSide && this.tickCount > 40 && !SceneManager.isManaged(this.getUUID())) {
             this.discard();
+        }
+        if (!this.level().isClientSide && this.animEnd > 0 && this.tickCount >= this.animEnd) {
+            this.animEnd = 0;
+            this.entityData.set(ANIM, "");
         }
     }
 }

@@ -21,13 +21,13 @@ public class ClientEvents {
     public static void onRegisterRenderers(EntityRenderersEvent.RegisterRenderers event) {
         // третий параметр: true = тонкие руки (Alex), false = обычные (Steve)
         event.registerEntityRenderer(ModEntities.ASTOLFO.get(),
-                ctx -> new ServantRenderer<>(ctx, skin("astolfo"), true));
+                ctx -> new ServantRenderer<>(ctx, skin("astolfo"), true, "astolfo"));
         event.registerEntityRenderer(ModEntities.MORDRED.get(),
-                ctx -> new ServantRenderer<>(ctx, skin("mordred"), false));
+                ctx -> new ServantRenderer<>(ctx, skin("mordred"), false, "mordred"));
         event.registerEntityRenderer(ModEntities.JEANNE.get(),
-                ctx -> new ServantRenderer<>(ctx, skin("jeanne"), true));
+                ctx -> new ServantRenderer<>(ctx, skin("jeanne"), true, "jeanne"));
         event.registerEntityRenderer(ModEntities.SEMIRAMIS.get(),
-                ctx -> new ServantRenderer<>(ctx, skin("semiramis"), false));
+                ctx -> new ServantRenderer<>(ctx, skin("semiramis"), false, "semiramis"));
         event.registerEntityRenderer(ModEntities.STORY_NPC.get(), StoryNpcRenderer::new);
         event.registerEntityRenderer(ModEntities.STORY_CAMERA.get(), NoopRenderer::new);
     }

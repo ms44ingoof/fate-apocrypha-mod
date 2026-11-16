@@ -478,6 +478,19 @@ public class Steps {
         });
     }
 
+    /**
+     * Анимация действия NPC: cast, bow, kneel, sit, salute, wave, pray, think, cry, point, dance, charge.
+     * ticks = 0: держится, пока не будет заменена (пустое имя возвращает обычную позу).
+     */
+    public static Step npcAnim(String key, String anim, int ticks) {
+        return run(c -> {
+            StoryNpcEntity npc = c.npc(key);
+            if (npc != null) {
+                npc.playAnim(anim, ticks);
+            }
+        });
+    }
+
     public static Step npcSwing(String key) {
         return run(c -> {
             StoryNpcEntity npc = c.npc(key);
@@ -645,6 +658,9 @@ public class Steps {
             if (npc != null && level != null) {
                 level.sendParticles(particle, npc.getX(), npc.getY(0.6D), npc.getZ(),
                         count, 0.4D, 0.7D, 0.4D, 0.08D);
+                if (count >= 10) {
+                    npc.playAnim("cast", 36);   // сильные эффекты сопровождаются позой колдовства
+                }
             }
         });
     }

@@ -9,6 +9,7 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.AgeableMob;
@@ -36,7 +37,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
 /** Общая основа всех Слуг: ИИ, усиление (120 с) и Благородный Фантазм (600 с). */
-public abstract class ServantEntity extends TamableAnimal {
+public abstract class ServantEntity extends TamableAnimal implements AnimatedActor {
     public static final int BUFF_COOLDOWN_TICKS = 120 * 20;
     public static final int PHANTASM_COOLDOWN_TICKS = 600 * 20;
     public static final int TELEPORT_COOLDOWN_TICKS = 15 * 20;
@@ -48,8 +49,56 @@ public abstract class ServantEntity extends TamableAnimal {
     private static final EntityDataAccessor<Integer> TELEPORT_READY =
             SynchedEntityData.defineId(ServantEntity.class, EntityDataSerializers.INT);
 
+    private static final EntityDataAccessor<String> ANIM =
+            SynchedEntityData.defineId(ServantEntity.class, EntityDataSerializers.STRING);
+
+    private int animStartAge = 0;
+    private int animEnd = 0;
+
     protected ServantEntity(EntityType<? extends ServantEntity> type, Level level) {
         super(type, level);
+    }
+
+    // ---------- Анимации действий: рисует FateModel ----------
+    @Override
+    public String getAnim() {
+        return this.entityData.get(ANIM);
+    }
+
+    @Override
+    public int getAnimStartAge() {
+        return this.animStartAge;
+    }
+
+    public void playAnim(String name, int ticks) {
+        this.animStartAge = this.tickCount;
+        this.animEnd = ticks > 0 ? this.tickCount + ticks : 0;
+        this.entityData.set(ANIM, name);
+    }
+
+    @Override
+    public void onSyncedDataUpdated(EntityDataAccessor<?> key) {
+        super.onSyncedDataUpdated(key);
+        if (ANIM.equals(key)) {
+            this.animStartAge = this.tickCount;
+        }
+    }
+
+    @Override
+    public void swing(InteractionHand hand, boolean updateSelf) {
+        super.swing(hand, updateSelf);
+        if (!this.level().isClientSide) {
+            playAnim("attack", 12);
+        }
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        if (!this.level().isClientSide && this.animEnd > 0 && this.tickCount >= this.animEnd) {
+            this.animEnd = 0;
+            this.entityData.set(ANIM, "");
+        }
     }
 
     public static AttributeSupplier.Builder createServantAttributes(double health, double speed, double damage) {
@@ -106,6 +155,7 @@ public abstract class ServantEntity extends TamableAnimal {
         this.entityData.define(BUFF_READY, 0);
         this.entityData.define(PHANTASM_READY, 0);
         this.entityData.define(TELEPORT_READY, 0);
+        this.entityData.define(ANIM, "");
     }
 
     @Override
@@ -161,6 +211,7 @@ public abstract class ServantEntity extends TamableAnimal {
         }
         this.entityData.set(BUFF_READY, (int) this.level().getGameTime() + BUFF_COOLDOWN_TICKS);
 
+        playAnim("cast", 40);
         this.heal(this.getMaxHealth());
         this.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 600, 1));
         this.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 600, 0));
@@ -183,6 +234,7 @@ public abstract class ServantEntity extends TamableAnimal {
             return false;
         }
         this.entityData.set(PHANTASM_READY, (int) this.level().getGameTime() + PHANTASM_COOLDOWN_TICKS);
+        playAnim("cast", 50);
         castPhantasm(serverLevel);
         master.displayClientMessage(Component.translatable("message.fateapocrypha.phantasm_used",
                 Component.translatable(phantasmNameKey())), true);

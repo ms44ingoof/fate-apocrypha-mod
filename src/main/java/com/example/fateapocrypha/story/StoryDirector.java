@@ -6,6 +6,7 @@ import com.example.fateapocrypha.scene.Step;
 import com.example.fateapocrypha.scene.StoryDetails;
 import com.example.fateapocrypha.scene.StoryScenes;
 import com.example.fateapocrypha.scene.StoryWorld;
+import com.example.fateapocrypha.world.CastleLife;
 import java.util.List;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -43,6 +44,9 @@ public class StoryDirector {
         StoryWorld.ensureBuilt(trifas);
         StoryDetails.ensure(trifas);
         StoryManager.setStarted(player, true);
+        if (location != null && location.sameZone(StoryLocation.CASTLE_LAB)) {
+            CastleLife.ringBell(trifas, 3);   // колокол замка звонит в начале сцены
+        }
         SceneManager.start(player, steps);
     }
 

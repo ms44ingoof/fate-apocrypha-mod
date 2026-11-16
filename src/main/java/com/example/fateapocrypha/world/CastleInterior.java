@@ -4,10 +4,15 @@ import java.util.Random;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.npc.VillagerProfession;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.BedBlock;
+import net.minecraft.world.level.block.BellBlock;
+import net.minecraft.world.level.block.CampfireBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CandleBlock;
@@ -18,6 +23,7 @@ import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.WallBannerBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BedPart;
+import net.minecraft.world.level.block.state.properties.BellAttachType;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.SlabType;
 
@@ -51,6 +57,7 @@ final class CastleInterior {
         in.firstFloor();
         in.upperRooms();
         in.grounds();
+        in.landmarks();
         in.life();
     }
 
@@ -601,8 +608,71 @@ final class CastleInterior {
         spawn(EntityType.SHEEP, 278, Y + 1, 276);
         spawn(EntityType.SHEEP, 276, Y + 1, 290);
         spawn(EntityType.SHEEP, 283, Y + 1, 279);
-        // стража у главных ворот
-        spawn(EntityType.IRON_GOLEM, CX - 6, Y + 1, 338);
-        spawn(EntityType.IRON_GOLEM, CX + 6, Y + 1, 338);
+        // стража на стенах ходит по маршрутам, слуги гуляют по двору, двое стоят у ворот
+        int x1 = X0 + CastleSite.W;
+        ambient(VillagerProfession.WEAPONSMITH, "fa_patrol:wall_w", X0 + 2, Y + 14, 200, true, 0.0F);
+        ambient(VillagerProfession.WEAPONSMITH, "fa_patrol:wall_w", X0 + 2, Y + 14, 300, true, 0.0F);
+        ambient(VillagerProfession.WEAPONSMITH, "fa_patrol:wall_n", 180, Y + 14, Z0() + 2, true, 0.0F);
+        ambient(VillagerProfession.WEAPONSMITH, "fa_patrol:wall_n", 250, Y + 14, Z0() + 2, true, 0.0F);
+        ambient(VillagerProfession.WEAPONSMITH, "fa_patrol:wall_e", x1 - 1, Y + 14, 200, true, 0.0F);
+        ambient(VillagerProfession.WEAPONSMITH, "fa_patrol:wall_e", x1 - 1, Y + 14, 290, true, 0.0F);
+        ambient(VillagerProfession.SHEPHERD, "fa_patrol:plaza", CX + 17, Y + 1, 272, false, 0.0F);
+        ambient(VillagerProfession.FARMER, "fa_patrol:plaza", CX - 17, Y + 1, 272, false, 0.0F);
+        ambient(VillagerProfession.LIBRARIAN, "fa_patrol:plaza", CX, Y + 1, 255, false, 0.0F);
+        ambient(VillagerProfession.CLERIC, "fa_patrol:road", X0 + 20, Y + 1, 298, false, 0.0F);
+        ambient(VillagerProfession.FLETCHER, "fa_patrol:road", x1 - 20, Y + 1, 298, false, 0.0F);
+        ambient(VillagerProfession.WEAPONSMITH, null, CX - 6, Y + 1, 339, true, 0.0F);
+        ambient(VillagerProfession.WEAPONSMITH, null, CX + 5, Y + 1, 339, true, 0.0F);
+    }
+
+    private static int Z0() {
+        return CastleSite.Z0;
+    }
+
+    /** Житель без собственного ИИ: стоит на посту или ходит по маршруту (тег), не получает урона и не торгует. */
+    private void ambient(VillagerProfession job, String tag, double x, double y, double z, boolean armed, float yaw) {
+        Villager v = spawn(EntityType.VILLAGER, x, y, z);
+        if (v == null) {
+            return;
+        }
+        v.setVillagerData(v.getVillagerData().setProfession(job).setLevel(3));
+        v.getOffers().clear();
+        v.setNoAi(true);
+        v.setInvulnerable(true);
+        v.setYRot(yaw);
+        v.yBodyRot = yaw;
+        v.setYHeadRot(yaw);
+        if (tag != null) {
+            v.addTag(tag);
+        }
+        if (armed) {
+            v.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(Items.IRON_SWORD));
+        }
+    }
+
+    // ================= колокольня, трубы, жаровни =================
+    private void landmarks() {
+        // колокольня на крыше западного крыла: два столба, балка и колокол под ней
+        int bx = CastleLife.BELL.getX();
+        int bz = CastleLife.BELL.getZ();
+        for (int dx : new int[] {-2, 2}) {
+            k.fill(bx + dx, Y + 24, bz, bx + dx, Y + 27, bz, s(Blocks.STONE_BRICK_WALL));
+            k.set(bx + dx, Y + 28, bz, s(Blocks.STONE_BRICKS));
+            k.set(bx + dx, Y + 29, bz, s(Blocks.LANTERN));
+        }
+        k.fill(bx - 1, Y + 28, bz, bx + 1, Y + 28, bz, s(Blocks.STONE_BRICKS));
+        k.set(bx, Y + 27, bz, s(Blocks.BELL).setValue(BellBlock.FACING, Direction.NORTH)
+                .setValue(BellBlock.ATTACHMENT, BellAttachType.CEILING));
+        // трубы над каминами первого этажа: дым поднимается с крыши
+        for (int cx : new int[] {173, 257}) {
+            k.fill(cx - 1, Y + 24, 242, cx + 1, Y + 28, 244, s(Blocks.STONE_BRICKS));
+            k.set(cx, Y + 27, 243, s(Blocks.HAY_BLOCK));
+            k.set(cx, Y + 28, 243, s(Blocks.CAMPFIRE).setValue(CampfireBlock.SIGNAL_FIRE, true));
+        }
+        // жаровни: основание и костёр (ночью зажигаются, утром гаснут: CastleLife)
+        for (int[] b : CastleLife.BRAZIERS) {
+            k.set(b[0], Y + 1, b[1], s(Blocks.STONE_BRICKS));
+            k.set(b[0], Y + 2, b[1], s(Blocks.CAMPFIRE));
+        }
     }
 }
