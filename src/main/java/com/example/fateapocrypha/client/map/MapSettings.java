@@ -27,6 +27,8 @@ public final class MapSettings {
     public static boolean labels = true;
     public static boolean roads = true;
     public static boolean grid = false;
+    public static boolean minimap = true;
+    public static int minimapCorner = 1;   // 0 лево-верх, 1 право-верх, 2 лево-низ, 3 право-низ
 
     private static final Properties PROPS = new Properties();
     private static boolean loaded = false;
@@ -57,6 +59,8 @@ public final class MapSettings {
             labels = Boolean.parseBoolean(PROPS.getProperty("labels", "true"));
             roads = Boolean.parseBoolean(PROPS.getProperty("roads", "true"));
             grid = Boolean.parseBoolean(PROPS.getProperty("grid", "false"));
+            minimap = Boolean.parseBoolean(PROPS.getProperty("minimap", "true"));
+            minimapCorner = Math.floorMod(Integer.parseInt(PROPS.getProperty("minimapCorner", "1")), 4);
         } catch (IOException | RuntimeException ignored) {
             // повреждённый файл: остаются значения по умолчанию
         }
@@ -80,6 +84,8 @@ public final class MapSettings {
         PROPS.setProperty("labels", Boolean.toString(labels));
         PROPS.setProperty("roads", Boolean.toString(roads));
         PROPS.setProperty("grid", Boolean.toString(grid));
+        PROPS.setProperty("minimap", Boolean.toString(minimap));
+        PROPS.setProperty("minimapCorner", Integer.toString(minimapCorner));
         try (OutputStream out = Files.newOutputStream(file())) {
             PROPS.store(out, "Fate/Apocrypha world map");
         } catch (IOException ignored) {
@@ -88,7 +94,16 @@ public final class MapSettings {
     }
 
     // ---------- открытые места ----------
-    private static String worldKey(Minecraft mc) {
+    public static String prop(String key, String fallback) {
+        load();
+        return PROPS.getProperty(key, fallback);
+    }
+
+    public static void putProp(String key, String value) {
+        PROPS.setProperty(key, value);
+    }
+
+    public static String worldKey(Minecraft mc) {
         if (mc.getSingleplayerServer() != null) {
             return "sp:" + mc.getSingleplayerServer().getWorldData().getLevelName();
         }

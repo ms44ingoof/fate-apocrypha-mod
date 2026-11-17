@@ -37,6 +37,7 @@ public class ClientEvents {
         event.register(ClientKeys.SKIP_DIALOGUE);
         event.register(ClientKeys.JOURNAL);
         event.register(ClientKeys.MAP);
+        event.register(ClientKeys.MINIMAP);
         event.register(ClientKeys.SEAL_TELEPORT);
         event.register(ClientKeys.SEAL_BUFF);
         event.register(ClientKeys.SEAL_PHANTASM);
@@ -48,6 +49,8 @@ public class ClientEvents {
                 (gui, graphics, partialTick, width, height) -> ClientStoryState.render(graphics, width, height));
         event.registerAboveAll("seal_hud",
                 (gui, graphics, partialTick, width, height) -> SealHud.render(graphics, width, height));
+        event.registerAboveAll("mini_map",
+                (gui, graphics, partialTick, width, height) -> com.example.fateapocrypha.client.map.MiniMap.render(graphics, width, height, partialTick));
         event.registerAboveAll("quest_hud",
                 (gui, graphics, partialTick, width, height) -> QuestHud.render(graphics, width, height, partialTick));
     }

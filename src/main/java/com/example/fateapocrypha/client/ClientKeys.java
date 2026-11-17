@@ -20,6 +20,10 @@ public class ClientKeys {
     public static final KeyMapping MAP = new KeyMapping(
             "key.fateapocrypha.map", GLFW.GLFW_KEY_M, "key.categories.fateapocrypha");
 
+    /** Мини-карта: показать или скрыть, по умолчанию N. */
+    public static final KeyMapping MINIMAP = new KeyMapping(
+            "key.fateapocrypha.minimap", GLFW.GLFW_KEY_N, "key.categories.fateapocrypha");
+
     /** Журнал заданий: по умолчанию J. */
     public static final KeyMapping JOURNAL = new KeyMapping(
             "key.fateapocrypha.journal", GLFW.GLFW_KEY_J, "key.categories.fateapocrypha");

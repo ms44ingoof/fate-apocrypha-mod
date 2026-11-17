@@ -31,6 +31,11 @@ public class ClientStoryEvents {
                     mc.setScreen(new com.example.fateapocrypha.client.screen.QuestJournalScreen());
                 }
             }
+            while (ClientKeys.MINIMAP.consumeClick()) {
+                com.example.fateapocrypha.client.map.MapSettings.load();
+                com.example.fateapocrypha.client.map.MapSettings.minimap = !com.example.fateapocrypha.client.map.MapSettings.minimap;
+                com.example.fateapocrypha.client.map.MapSettings.save();
+            }
             while (ClientKeys.MAP.consumeClick()) {
                 Minecraft mc = Minecraft.getInstance();
                 if (mc.player != null && mc.screen == null && !ClientStoryState.isCinematic()) {
