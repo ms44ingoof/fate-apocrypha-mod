@@ -978,21 +978,157 @@ public class StoryWorld {
         }
     }
 
+    private static BlockState timber(Direction.Axis axis) {
+        return Blocks.DARK_OAK_LOG.defaultBlockState()
+                .setValue(net.minecraft.world.level.block.RotatedPillarBlock.AXIS, axis);
+    }
+
+    private static BlockState roofStair(int pick, int x, int row, Direction facing) {
+        net.minecraft.world.level.block.Block b = switch (pick) {
+            case 1 -> (x + row * 2) % 5 == 0 ? Blocks.WEATHERED_CUT_COPPER_STAIRS : Blocks.OXIDIZED_CUT_COPPER_STAIRS;
+            case 2 -> Blocks.CHERRY_STAIRS;
+            case 3 -> Blocks.BRICK_STAIRS;
+            default -> Blocks.DEEPSLATE_TILE_STAIRS;
+        };
+        return b.defaultBlockState().setValue(net.minecraft.world.level.block.StairBlock.FACING, facing);
+    }
+
+    private static BlockState roofSlab(int pick) {
+        return switch (pick) {
+            case 1 -> s(Blocks.OXIDIZED_CUT_COPPER_SLAB);
+            case 2 -> s(Blocks.CHERRY_SLAB);
+            case 3 -> s(Blocks.BRICK_SLAB);
+            default -> s(Blocks.DEEPSLATE_TILE_SLAB);
+        };
+    }
+
+    /**
+     * Городской дом: на улице Трифаса фахверк (кальцитовая штукатурка, тёмные балки, каменный цоколь), на лондонской
+     * кирпичный дом с угловым рустом и поясами. Крутая двускатная кровля четырёх видов (сланец, зелёная медь, розовая
+     * вишня, кирпич), козырёк над дверью, окна с фонарями внутри, дымящая труба, плющ на стенах.
+     */
     private static void house(ServerLevel l, int x1, int z1, int x2, int z2, int h, BlockState wall,
                               int doorX, int doorZ) {
-        fill(l, x1, Y0 + 1, z1, x2, Y0 + h, z2, wall);
-        fill(l, x1 + 1, Y0 + 1, z1 + 1, x2 - 1, Y0 + h - 1, z2 - 1, AIR);
-        fill(l, x1, Y0 + h + 1, z1, x2, Y0 + h + 1, z2, s(Blocks.DARK_OAK_PLANKS));
-        for (int x = x1 + 2; x <= x2 - 2; x += 3) {
-            for (int y = Y0 + 3; y <= Y0 + h - 2; y += 3) {
-                setSoft(l, x, y, z1, s(Blocks.GLASS_PANE));
-                setSoft(l, x, y, z2, s(Blocks.GLASS_PANE));
+        boolean victorian = wall.is(Blocks.BRICKS);
+        Random rnd = new Random(x1 * 31L + z1 * 17L + 5L);
+        boolean doorNorth = doorZ == z1;
+        int mid = (z1 + z2) / 2;
+        int beamY = Y0 + (h + 3) / 2;
+        // стены по периметру
+        for (int x = x1; x <= x2; x++) {
+            for (int z = z1; z <= z2; z++) {
+                if (x != x1 && x != x2 && z != z1 && z != z2) {
+                    continue;
+                }
+                boolean zFace = z == z1 || z == z2;
+                boolean corner = (x == x1 || x == x2) && (z == z1 || z == z2);
+                for (int y = Y0 + 1; y <= Y0 + h; y++) {
+                    BlockState st;
+                    if (y == Y0 + 1) {
+                        st = ((x + z) & 1) == 0 ? s(Blocks.STONE_BRICKS) : s(Blocks.COBBLESTONE);   // цоколь
+                        if (rnd.nextInt(5) == 0) {
+                            st = s(Blocks.MOSSY_COBBLESTONE);
+                        }
+                    } else if (victorian) {
+                        if (corner) {
+                            st = (y & 1) == 0 ? s(Blocks.POLISHED_ANDESITE) : s(Blocks.STONE_BRICKS);
+                        } else if (y == Y0 + h || y == beamY) {
+                            st = s(Blocks.STONE_BRICKS);
+                        } else {
+                            st = wall;
+                        }
+                    } else {
+                        boolean post = corner || (zFace ? (x - x1) % 4 == 0 : (z - z1) % 4 == 0);
+                        boolean beam = y == Y0 + 2 || y == beamY || y == Y0 + h;
+                        if (post) {
+                            st = timber(Direction.Axis.Y);
+                        } else if (beam) {
+                            st = timber(zFace ? Direction.Axis.X : Direction.Axis.Z);
+                        } else {
+                            st = rnd.nextInt(7) == 0 ? s(Blocks.DIORITE) : s(Blocks.CALCITE);
+                        }
+                    }
+                    set(l, x, y, z, st);
+                }
             }
         }
+        fill(l, x1 + 1, Y0 + 1, z1 + 1, x2 - 1, Y0 + h - 1, z2 - 1, AIR);
+        fill(l, x1 + 1, Y0, z1 + 1, x2 - 1, Y0, z2 - 1, s(Blocks.SPRUCE_PLANKS));
+        fill(l, x1 + 1, Y0 + h, z1 + 1, x2 - 1, Y0 + h, z2 - 1, s(Blocks.DARK_OAK_PLANKS));
+        // окна: по два на длинных стенах и по одному на торцах, внутри у каждого висит фонарь
+        BlockState hangLantern = Blocks.LANTERN.defaultBlockState()
+                .setValue(net.minecraft.world.level.block.LanternBlock.HANGING, true);
+        for (int wx : new int[] {x1 + 2, x2 - 2}) {
+            for (int wz : new int[] {z1, z2}) {
+                fill(l, wx, Y0 + 3, wz, wx, Y0 + 4, wz, s(Blocks.GLASS));
+                set(l, wx, Y0 + h - 1, wz == z1 ? z1 + 1 : z2 - 1, hangLantern);
+            }
+        }
+        for (int wx : new int[] {x1, x2}) {
+            fill(l, wx, Y0 + 3, mid, wx, Y0 + 4, mid, s(Blocks.GLASS));
+            set(l, wx == x1 ? x1 + 1 : x2 - 1, Y0 + h - 1, mid, hangLantern);
+        }
+        // дверь, наличники, козырёк с фонарём
         fill(l, doorX, Y0 + 1, doorZ, doorX, Y0 + 2, doorZ, AIR);
+        for (int dx : new int[] {-1, 1}) {
+            fill(l, doorX + dx, Y0 + 2, doorZ, doorX + dx, Y0 + 3, doorZ, timber(Direction.Axis.Y));
+        }
+        set(l, doorX, Y0 + 3, doorZ, timber(Direction.Axis.X));
+        int out = doorNorth ? doorZ - 1 : doorZ + 1;
+        for (int dx = -1; dx <= 1; dx++) {
+            set(l, doorX + dx, Y0 + 4, out, s(Blocks.DARK_OAK_SLAB));
+        }
+        for (int dx : new int[] {-1, 1}) {
+            fill(l, doorX + dx, Y0 + 1, out, doorX + dx, Y0 + 3, out, s(Blocks.DARK_OAK_FENCE));
+        }
+        set(l, doorX, Y0 + 3, out, hangLantern);
+        set(l, doorX - 2, Y0 + 1, out, s(Blocks.POTTED_RED_TULIP));
+        set(l, doorX + 2, Y0 + 1, out, s(Blocks.POTTED_CORNFLOWER));
+        // кровля: крутой двускат вдоль оси x
+        int pick = victorian ? 0 : rnd.nextInt(4);
+        for (int row = 0; row <= 5; row++) {
+            int y = Y0 + h + 1 + row;
+            for (int x = x1; x <= x2; x++) {
+                if (row < 5) {
+                    set(l, x, y, z1 - 1 + row, roofStair(pick, x, row, Direction.SOUTH));
+                    set(l, x, y, z2 + 1 - row, roofStair(pick, x, row, Direction.NORTH));
+                } else {
+                    set(l, x, y, mid, roofSlab(pick));
+                }
+            }
+            if (row < 5) {
+                for (int z = z1 + row; z <= z2 - row; z++) {
+                    boolean frame = z == z1 + row || z == z2 - row || z == mid;
+                    BlockState g = frame ? timber(Direction.Axis.Y) : (victorian ? wall : s(Blocks.CALCITE));
+                    set(l, x1, y, z, g);
+                    set(l, x2, y, z, g);
+                }
+            }
+        }
+        // труба с дымом: каменная колонна 2x2 и костёр наверху
+        int chX = victorian ? x2 - 3 : x1 + 2;
+        BlockState chimney = victorian ? s(Blocks.BRICKS) : s(Blocks.STONE_BRICKS);
+        fill(l, chX, Y0 + h + 1, mid - 1, chX + 1, Y0 + h + 8, mid, chimney);
+        set(l, chX, Y0 + h + 9, mid, s(Blocks.CAMPFIRE));
+        if (victorian) {
+            fill(l, x1 + 2, Y0 + h + 1, mid - 1, x1 + 3, Y0 + h + 8, mid, chimney);
+        }
+        // плющ на фахверке
+        if (!victorian) {
+            for (int x = x1 + 1; x < x2; x++) {
+                for (int y = Y0 + 2; y <= Y0 + h - 1; y++) {
+                    if (rnd.nextInt(14) == 0) {
+                        setSoft(l, x, y, z1 - 1, Blocks.VINE.defaultBlockState()
+                                .setValue(net.minecraft.world.level.block.VineBlock.SOUTH, true));
+                    }
+                    if (rnd.nextInt(14) == 0) {
+                        setSoft(l, x, y, z2 + 1, Blocks.VINE.defaultBlockState()
+                                .setValue(net.minecraft.world.level.block.VineBlock.NORTH, true));
+                    }
+                }
+            }
+        }
         furnishHouse(l, x1, z1, x2, z2, doorZ);
-        set(l, x1 + 1, Y0 + h + 2, z1 + 1, s(Blocks.BRICK_WALL));   // труба
-        set(l, x1 + 1, Y0 + h + 3, z1 + 1, s(Blocks.BRICK_WALL));
     }
 
     /** Осада: внутренняя стена замка в западном дворе. Строится вместе с замком (см. CastleSite.SIEGE_*). */

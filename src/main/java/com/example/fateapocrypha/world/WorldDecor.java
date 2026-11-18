@@ -284,6 +284,25 @@ public final class WorldDecor {
                 }
             }
         }
+        // труба с дымом, козырёк над дверью с фонарём, горшки с цветами и плющ на брёвнах
+        kit.fill(x2 - 1, y0 + 4, cz - 1, x2, y0 + 9, cz, BuildKit.s(Blocks.COBBLESTONE));
+        kit.set(x2 - 1, y0 + 10, cz, BuildKit.s(Blocks.CAMPFIRE));
+        for (int dx = -1; dx <= 1; dx++) {
+            kit.set(cx + dx, y0 + 3, z2 + 1, BuildKit.s(slab));
+        }
+        for (int dx : new int[] {-1, 1}) {
+            kit.fill(cx + dx, y0 + 1, z2 + 1, cx + dx, y0 + 2, z2 + 1, BuildKit.s(Blocks.SPRUCE_FENCE));
+        }
+        kit.set(cx, y0 + 2, z2 + 1, BuildKit.s(Blocks.LANTERN).setValue(net.minecraft.world.level.block.LanternBlock.HANGING, true));
+        kit.set(cx - 2, y0 + 1, z2 + 1, BuildKit.s(Blocks.POTTED_RED_TULIP));
+        kit.set(cx + 2, y0 + 1, z2 + 1, BuildKit.s(Blocks.POTTED_CORNFLOWER));
+        for (int x = x1 + 1; x < x2; x++) {
+            for (int y = y0 + 2; y <= y0 + 3; y++) {
+                if (rnd.nextInt(5) == 0 && kit.isAir(x, y, z1 - 1)) {
+                    kit.set(x, y, z1 - 1, BuildKit.s(Blocks.VINE).setValue(net.minecraft.world.level.block.VineBlock.SOUTH, true));
+                }
+            }
+        }
         // обстановка
         kit.set(x1 + 1, y0 + 1, z1 + 1, BuildKit.s(Blocks.CRAFTING_TABLE));
         kit.set(x1 + 2, y0 + 1, z1 + 1, BuildKit.s(Blocks.FURNACE));

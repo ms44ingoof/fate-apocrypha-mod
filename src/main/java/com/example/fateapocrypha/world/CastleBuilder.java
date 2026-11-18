@@ -52,6 +52,7 @@ public final class CastleBuilder {
         palace();
         towers();
         courtyard();
+        CastleFacade.build(level);     // отделка: карнизы, пинакли, портик, часовая башня, контрфорсы, сады
         CastleBasement.build(level);   // подвал: тюрьма, погреб, кухня, склад, тайная комната
         CastleInterior.build(level);   // обстановка: тронный зал, мастерские двора, ресурсы в крыльях
     }
@@ -200,17 +201,17 @@ public final class CastleBuilder {
                 box(x, y0 + h + 1, z, x, y0 + h + 2, z, s(Blocks.STONE_BRICKS));
             }
         }
-        // коническая крыша (синий сланец)
-        BlockState roof = s(Blocks.BLUE_TERRACOTTA);
+        // коническая крыша из патинированной меди: полосы окисленной и выветренной меди
+        BlockState roof = s(Blocks.OXIDIZED_COPPER);
         int yy = y0 + h + 2;
         for (int kk = 0; kk <= coneH; kk++) {
             double rr = (r + 1.2D) * (1.0D - (double) kk / coneH);
             if (rr < 0.7D) {
                 break;
             }
-            ring(cx, cz, rr, Math.max(-1.0D, rr - 2.0D), yy + kk, roof, false, false);
+            ring(cx, cz, rr, Math.max(-1.0D, rr - 2.0D), yy + kk, kk % 3 == 0 ? s(Blocks.WEATHERED_COPPER) : roof, false, false);
             if (kk % 4 == 3) {
-                ring(cx, cz, rr + 0.3D, rr - 0.3D, yy + kk, s(Blocks.LIGHT_BLUE_TERRACOTTA), false, false);
+                ring(cx, cz, rr + 0.3D, rr - 0.3D, yy + kk, s(Blocks.WAXED_COPPER_BLOCK), false, false);   // медный пояс
             }
         }
         for (int i = 0; i < 4; i++) {
@@ -773,6 +774,12 @@ public final class CastleBuilder {
     }
 
     // ================= дворец на крыше =================
+    /** Зелёная медная кровля с редкими выветренными рядами, как на дворцах. */
+    private BlockState copperStairs(int x, int row, Direction facing) {
+        Block b = (x + row * 2) % 5 == 0 ? Blocks.WEATHERED_CUT_COPPER_STAIRS : Blocks.OXIDIZED_CUT_COPPER_STAIRS;
+        return BuildKit.stairs(b, facing, false);
+    }
+
     private void palace() {
         int px1 = 190;
         int px2 = 240;
@@ -807,10 +814,10 @@ public final class CastleBuilder {
             int y = base + 12 + kk;
             for (int x = px1 - 1; x <= px2 + 1; x++) {
                 if (kk < rows) {
-                    set(x, y, pz1 + kk, BuildKit.stairs(Blocks.DEEPSLATE_TILE_STAIRS, Direction.SOUTH, false));
-                    set(x, y, pz2 - kk, BuildKit.stairs(Blocks.DEEPSLATE_TILE_STAIRS, Direction.NORTH, false));
+                    set(x, y, pz1 + kk, copperStairs(x, kk, Direction.SOUTH));
+                    set(x, y, pz2 - kk, copperStairs(x, kk, Direction.NORTH));
                 } else {
-                    set(x, y, pz1 + kk, s(Blocks.DEEPSLATE_TILE_SLAB));
+                    set(x, y, pz1 + kk, s(Blocks.OXIDIZED_CUT_COPPER_SLAB));
                 }
             }
             // фронтоны
@@ -829,7 +836,7 @@ public final class CastleBuilder {
             clear(x - 1, base + 12, pz2 - 3, x + 1, base + 13, pz2 - 1);
             box(x - 1, base + 12, pz2 - 3, x + 1, base + 12, pz2 - 3, s(Blocks.GLASS));
             for (int dx = -2; dx <= 2; dx++) {
-                set(x + dx, base + 14, pz2 - 3, BuildKit.stairs(Blocks.DEEPSLATE_TILE_STAIRS, Direction.SOUTH, false));
+                set(x + dx, base + 14, pz2 - 3, copperStairs(x + dx, 2, Direction.SOUTH));
             }
         }
     }
@@ -876,7 +883,9 @@ public final class CastleBuilder {
                 if (road) {
                     st = Math.abs(x - CX) == 4 ? s(Blocks.POLISHED_ANDESITE) : s(Blocks.STONE_BRICKS);
                 } else if (plaza) {
-                    st = ((x + z) & 1) == 0 ? s(Blocks.STONE_BRICKS) : s(Blocks.POLISHED_ANDESITE);
+                    int ringIdx = (int) fd;   // концентрические кольца мощения вокруг фонтана
+                    st = ringIdx % 3 == 0 ? s(Blocks.POLISHED_DIORITE)
+                            : ringIdx % 3 == 1 ? s(Blocks.POLISHED_ANDESITE) : s(Blocks.STONE_BRICKS);
                 } else if (apron || cross) {
                     st = h < 10 ? s(Blocks.CRACKED_STONE_BRICKS) : h < 22 ? s(Blocks.ANDESITE) : s(Blocks.STONE_BRICKS);
                 } else {
