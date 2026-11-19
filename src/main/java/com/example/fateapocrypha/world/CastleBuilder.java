@@ -273,11 +273,9 @@ public final class CastleBuilder {
         }
         set(CX, Y + 9, zA + 3, BuildKit.HANGING_LANTERN);
         set(CX, Y + 9, zA + 7, BuildKit.HANGING_LANTERN);
-        // зубцы и синие пирамидальные крыши башен ворот
-        merlons(CX - 15, zA, CX - 4, zB, Y + 28);
-        merlons(CX + 4, zA, CX + 15, zB, Y + 28);
-        pyramid(CX - 14, zA + 1, CX - 5, zB - 1, Y + 28);
-        pyramid(CX + 5, zA + 1, CX + 14, zB - 1, Y + 28);
+        // крыши башен ворот: прямо на стенах (без зубцов), с карнизом, в цвет медных конусов остальных башен
+        pyramid(CX - 15, zA, CX - 4, zB, Y + 27);
+        pyramid(CX + 4, zA, CX + 15, zB, Y + 27);
         // бойницы и знамёна
         for (int y : new int[] {Y + 8, Y + 16, Y + 23}) {
             for (int x : new int[] {CX - 10, CX + 10}) {
@@ -290,18 +288,47 @@ public final class CastleBuilder {
         }
     }
 
-    /** Ступенчатая пирамида из синего сланца над прямоугольной башней. */
+    /**
+     * Шатровая крыша из окисленной меди над прямоугольной башней. (x1, z1, x2, z2) это полный контур стен, y верхний
+     * уровень стен. Нижний слой выступает на блок за стены (карниз), каждый следующий уже на блок; край слоя ступени,
+     * обращённые вверх к центру, середина заполнена сплошным блоком, поэтому внутрь ничего не просвечивает.
+     */
     private void pyramid(int x1, int z1, int x2, int z2, int y) {
+        int ex1 = x1 - 1;
+        int ez1 = z1 - 1;
+        int ex2 = x2 + 1;
+        int ez2 = z2 + 1;
         int layer = 0;
-        while (x1 <= x2 && z1 <= z2 && layer < 12) {
-            box(x1, y + 1 + layer, z1, x2, y + 1 + layer, z2, s(layer % 4 == 3 ? Blocks.LIGHT_BLUE_TERRACOTTA : Blocks.BLUE_TERRACOTTA));
-            x1++;
-            z1++;
-            x2--;
-            z2--;
+        BlockState solid = s(Blocks.OXIDIZED_CUT_COPPER);
+        while (ex1 <= ex2 && ez1 <= ez2 && layer < 14) {
+            int yy = y + 1 + layer;
+            for (int x = ex1; x <= ex2; x++) {
+                for (int z = ez1; z <= ez2; z++) {
+                    boolean edge = x == ex1 || x == ex2 || z == ez1 || z == ez2;
+                    if (!edge) {
+                        set(x, yy, z, solid);
+                        continue;
+                    }
+                    Direction up;
+                    if (z == ez1) {
+                        up = Direction.SOUTH;
+                    } else if (z == ez2) {
+                        up = Direction.NORTH;
+                    } else if (x == ex1) {
+                        up = Direction.EAST;
+                    } else {
+                        up = Direction.WEST;
+                    }
+                    set(x, yy, z, copperStairs(x, layer, up));
+                }
+            }
+            ex1++;
+            ez1++;
+            ex2--;
+            ez2--;
             layer++;
         }
-        set((x1 + x2) / 2 + 0, y + layer, (z1 + z2) / 2, s(Blocks.LIGHTNING_ROD));
+        set((x1 + x2) / 2, y + 1 + layer, (z1 + z2) / 2, s(Blocks.LIGHTNING_ROD));
     }
 
     /** Лестница-пандус к воротам вдоль склона холма (на вершину холма, как на городском скриншоте). */

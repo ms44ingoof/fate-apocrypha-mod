@@ -47,9 +47,11 @@ public enum SideBoard {
             int[] p = null;
             for (TrifasRoads.Opening o : TrifasRoads.openings(location)) {
                 if (o.to() == toward) {
-                    // 9 блоков за воротами вдоль дороги и 6 блоков в сторону от неё
-                    int x = (int) Math.round(o.gx() + o.ux() * 9.0D - o.uz() * 6.0D);
-                    int z = (int) Math.round(o.gz() + o.uz() * 9.0D + o.ux() * 6.0D);
+                    // 9 блоков за воротами вдоль дороги и 6 блоков в сторону от неё. Пандус замка кончается внутри
+                    // круга закрытой зоны замка (радиус 175), поэтому его доску выносим дальше, за круг
+                    double along = location == StoryLocation.CASTLE_GATE ? 32.0D : 9.0D;
+                    int x = (int) Math.round(o.gx() + o.ux() * along - o.uz() * 6.0D);
+                    int z = (int) Math.round(o.gz() + o.uz() * along + o.ux() * 6.0D);
                     // лектор смотрит на дорогу
                     double fx = o.uz();
                     double fz = -o.ux();

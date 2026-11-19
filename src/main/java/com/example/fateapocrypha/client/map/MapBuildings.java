@@ -169,8 +169,8 @@ final class MapBuildings {
         // привратная башня: две башни и арка между ними, пирамидальные синие крыши
         int ga = z1 - 8;
         int gb = z1 + 2;
-        add(c, cx - 15, ga, cx - 4, gb, 0, 27, 12, Roof.STEPPED, STONE, BLUE_ROOF, 0.18F);
-        add(c, cx + 4, ga, cx + 15, gb, 0, 27, 12, Roof.STEPPED, STONE, BLUE_ROOF, 0.18F);
+        add(c, cx - 15, ga, cx - 4, gb, 0, 27, 7, Roof.HIP, STONE, COPPER, 0.18F);
+        add(c, cx + 4, ga, cx + 15, gb, 0, 27, 7, Roof.HIP, STONE, COPPER, 0.18F);
         add(c, cx - 3, ga, cx + 3, gb, 10, 17, 0, Roof.NONE, STONE, STONE_TOP, 0.18F);
 
         // дворец на террасе корпуса: белые башни, мраморные стены, крыша из окисленной меди
