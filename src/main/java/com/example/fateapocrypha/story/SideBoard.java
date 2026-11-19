@@ -88,10 +88,26 @@ public enum SideBoard {
         return new BlockPos(x(), y(), z());
     }
 
-    /** Доска в этой точке мира или null. */
+    private static final int[] FX = {0, 1, 0, -1};
+    private static final int[] FZ = {-1, 0, 1, 0};
+
+    /** Принадлежит ли блок конструкции доски: столбы, щит, навес и площадка (в её собственных осях). */
+    public boolean contains(BlockPos p) {
+        int dx = p.getX() - x();
+        int dz = p.getZ() - z();
+        int f = facing();
+        int depth = dx * FX[f] + dz * FZ[f];
+        int sideX = -FZ[f];   // единичный вектор вбок: по часовой стрелке от направления взгляда
+        int sideZ = FX[f];
+        int side = dx * sideX + dz * sideZ;
+        int dy = p.getY() - y();
+        return Math.abs(side) <= 3 && depth >= -1 && depth <= 2 && dy >= -1 && dy <= 5;
+    }
+
+    /** Доска, которой принадлежит этот блок, или null. */
     public static SideBoard at(BlockPos pos) {
         for (SideBoard b : values()) {
-            if (b.x() == pos.getX() && b.z() == pos.getZ() && Math.abs(b.y() - pos.getY()) <= 2) {
+            if (Math.abs(b.x() - pos.getX()) <= 4 && Math.abs(b.z() - pos.getZ()) <= 4 && b.contains(pos)) {
                 return b;
             }
         }

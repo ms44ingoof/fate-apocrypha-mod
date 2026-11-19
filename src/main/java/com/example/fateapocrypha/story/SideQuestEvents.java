@@ -32,7 +32,7 @@ public class SideQuestEvents {
             return;
         }
         if (event.getEntity() instanceof ServerPlayer player) {
-            SideQuestManager.interact(player, board);
+            SideQuestManager.open(player, board);
         }
     }
 

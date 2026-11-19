@@ -767,5 +767,12 @@
   "side.fateapocrypha.ruins_survey.title": "Разведка равнины",
   "side.fateapocrypha.ruins_survey.desc": "Руины граничат с равниной, где когда-то шёл бой. Дойдите по дороге до отмеченной точки, оглядитесь и вернитесь к доске у руин.",
   "side.fateapocrypha.ruins_survey.start": "«Посмотри, что стало с равниной. Мне нужны глаза, а не героизм».",
-  "side.fateapocrypha.ruins_survey.done": "Ваш рассказ записан. Карта руин пополнилась новой пометкой."
+  "side.fateapocrypha.ruins_survey.done": "Ваш рассказ записан. Карта руин пополнилась новой пометкой.",
+  "gui.fateapocrypha.board_take": "Взять задание",
+  "gui.fateapocrypha.board_turn_in": "Сдать",
+  "gui.fateapocrypha.board_deliver": "Вручить посылку",
+  "gui.fateapocrypha.board_missing": "Не хватает",
+  "gui.fateapocrypha.board_empty": "На доске пока пусто. Возвращайтесь по ходу сюжета.",
+  "gui.fateapocrypha.board_goal": "Цель:",
+  "gui.fateapocrypha.board_goal_new": "Возьмите задание, чтобы узнать подробности."
 }

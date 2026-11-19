@@ -1,6 +1,7 @@
 package com.example.fateapocrypha.story;
 
 import com.example.fateapocrypha.network.ModNetwork;
+import com.example.fateapocrypha.network.OpenBoardPacket;
 import com.example.fateapocrypha.network.SideQuestSyncPacket;
 import java.util.ArrayList;
 import java.util.List;
@@ -102,69 +103,54 @@ public final class SideQuestManager {
     }
 
     // ---------- работа с доской ----------
-    /** Игрок нажал на доску: сдать выполненное, взять новое или узнать, что осталось сделать. */
-    public static void interact(ServerPlayer player, SideBoard board) {
-        boolean acted = false;
-        List<SideQuest> here = new ArrayList<>();
-        for (SideQuest q : SideQuest.values()) {
-            if (q.giver() == board || q.target() == board) {
-                here.add(q);
-            }
-        }
+    /** Игрок нажал на доску: отправляем актуальные состояния и открываем окно доски. */
+    public static void open(ServerPlayer player, SideBoard board) {
+        sync(player);
+        ModNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new OpenBoardPacket(board.ordinal()));
+    }
 
-        // 1. посылки, которые сдают на этой доске
-        for (SideQuest q : here) {
-            if (q.type() == SideQuest.Type.DELIVER && q.target() == board && state(player, q) == ACTIVE) {
+    /** Игрок рядом с доской (проверка на сервере для пакетов из окна). */
+    public static boolean near(ServerPlayer player, SideBoard board) {
+        return Math.hypot(player.getX() - board.x(), player.getZ() - board.z()) <= 12.0D
+                && Math.abs(player.getY() - board.y()) <= 12.0D;
+    }
+
+    /** Взять новое задание с этой доски. */
+    public static void accept(ServerPlayer player, SideBoard board, SideQuest q) {
+        if (q.giver() != board || state(player, q) != AVAILABLE) {
+            return;
+        }
+        setState(player, q, ACTIVE);
+        player.sendSystemMessage(Component.translatable("side.fateapocrypha.accepted",
+                Component.translatable(q.titleKey())).withStyle(ChatFormatting.GOLD));
+        player.sendSystemMessage(Component.translatable(q.startKey()).withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
+        player.sendSystemMessage(objectiveText(player, q).copy().withStyle(ChatFormatting.YELLOW));
+        player.level().playSound(null, player.blockPosition(), SoundEvents.BOOK_PAGE_TURN,
+                SoundSource.PLAYERS, 1.0F, 1.0F);
+    }
+
+    /** Сдать задание на этой доске: посылку, найденное при разведке или принесённые предметы. */
+    public static void turnIn(ServerPlayer player, SideBoard board, SideQuest q) {
+        int st = state(player, q);
+        if (q.type() == SideQuest.Type.DELIVER && q.target() == board && st == ACTIVE) {
+            complete(player, q);
+            return;
+        }
+        if (q.giver() != board) {
+            return;
+        }
+        if (st == READY) {
+            complete(player, q);
+        } else if (st == ACTIVE && q.type() == SideQuest.Type.FETCH) {
+            int have = countItem(player, q.item());
+            if (have >= q.count()) {
+                consume(player, q.item(), q.count());
                 complete(player, q);
-                acted = true;
+            } else {
+                player.sendSystemMessage(Component.translatable("side.fateapocrypha.not_enough",
+                        Component.translatable(q.titleKey()), new ItemStack(q.item()).getHoverName(),
+                        have, q.count()).withStyle(ChatFormatting.YELLOW));
             }
-        }
-
-        // 2. задания этой доски: сдать или напомнить
-        for (SideQuest q : here) {
-            if (q.giver() != board) {
-                continue;
-            }
-            int st = state(player, q);
-            if (st == READY) {
-                complete(player, q);
-                acted = true;
-            } else if (st == ACTIVE && q.type() == SideQuest.Type.FETCH) {
-                int have = countItem(player, q.item());
-                if (have >= q.count()) {
-                    consume(player, q.item(), q.count());
-                    complete(player, q);
-                } else {
-                    player.sendSystemMessage(Component.translatable("side.fateapocrypha.not_enough",
-                            Component.translatable(q.titleKey()), new ItemStack(q.item()).getHoverName(),
-                            have, q.count()).withStyle(ChatFormatting.YELLOW));
-                }
-                acted = true;
-            } else if (st == ACTIVE) {
-                player.sendSystemMessage(Component.translatable("side.fateapocrypha.in_progress",
-                        Component.translatable(q.titleKey()), objectiveText(player, q)).withStyle(ChatFormatting.YELLOW));
-                acted = true;
-            }
-        }
-
-        // 3. новое задание (по одному за нажатие)
-        for (SideQuest q : here) {
-            if (q.giver() == board && state(player, q) == AVAILABLE) {
-                setState(player, q, ACTIVE);
-                player.sendSystemMessage(Component.translatable("side.fateapocrypha.accepted",
-                        Component.translatable(q.titleKey())).withStyle(ChatFormatting.GOLD));
-                player.sendSystemMessage(Component.translatable(q.startKey()).withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
-                player.sendSystemMessage(objectiveText(player, q).copy().withStyle(ChatFormatting.YELLOW));
-                player.level().playSound(null, player.blockPosition(), SoundEvents.BOOK_PAGE_TURN,
-                        SoundSource.PLAYERS, 1.0F, 1.0F);
-                acted = true;
-                break;
-            }
-        }
-
-        if (!acted) {
-            player.sendSystemMessage(Component.translatable("side.fateapocrypha.nothing", Component.translatable(board.nameKey()))
-                    .withStyle(ChatFormatting.GRAY));
         }
     }
 
