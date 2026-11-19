@@ -2,7 +2,10 @@ package com.example.fateapocrypha.client.screen;
 
 import com.example.fateapocrypha.client.ClientKeys;
 import com.example.fateapocrypha.client.ClientQuestState;
+import com.example.fateapocrypha.client.ClientSideQuests;
 import com.example.fateapocrypha.client.UiDraw;
+import com.example.fateapocrypha.story.SideQuest;
+import com.example.fateapocrypha.story.SideQuestManager;
 import com.example.fateapocrypha.story.StoryChapter;
 import com.example.fateapocrypha.story.StoryLocation;
 import com.example.fateapocrypha.story.StoryRewards;
@@ -24,6 +27,10 @@ public class QuestJournalScreen extends Screen {
 
     private int selected;
     private int scroll = 0;
+    private int tab = 0;
+    private int sideSelected = 0;
+    private final int[] tabX1 = new int[3];
+    private final int[] tabX2 = new int[3];
     private int px;
     private int py;
     private int pw;
@@ -82,8 +89,15 @@ public class QuestJournalScreen extends Screen {
         UiDraw.outlined(g, px, py, px + pw, py + ph, 12, 0x99E6C25A, 0xF41F2538, 0xF4131726);
 
         renderHeader(g, mouseX, mouseY);
-        renderList(g, mouseX, mouseY);
-        renderDetails(g, mouseX, mouseY);
+        if (tab == 1) {
+            renderSideList(g, mouseX, mouseY);
+            renderSideDetails(g, mouseX, mouseY);
+        } else if (tab == 2) {
+            g.drawCenteredString(font, Component.translatable("gui.fateapocrypha.world_soon"), px + pw / 2, py + ph / 2, 0xFF8A90A8);
+        } else {
+            renderList(g, mouseX, mouseY);
+            renderDetails(g, mouseX, mouseY);
+        }
 
         Component keyName = ClientKeys.JOURNAL.getTranslatedKeyMessage();
         Component hint = Component.translatable("gui.fateapocrypha.close", keyName);
@@ -104,7 +118,9 @@ public class QuestJournalScreen extends Screen {
         }
         int x = px + pw / 2 - total / 2;
         for (int i = 0; i < tabs.length; i++) {
-            boolean active = i == 0;
+            boolean active = i == tab;
+            tabX1[i] = x;
+            tabX2[i] = x + widths[i];
             boolean hover = inside(mouseX, mouseY, x, py + 10, x + widths[i], py + 30);
             if (active) {
                 UiDraw.outlined(g, x, py + 10, x + widths[i], py + 30, 10, 0xFFE6C25A, 0xFF5A4A22, 0xFF3A2F16);
@@ -279,12 +295,215 @@ public class QuestJournalScreen extends Screen {
         }
     }
 
+    // ---------- побочные задания ----------
+    /** Открытые задания: сначала можно сдать и идущие, затем новые, затем выполненные. */
+    private List<SideQuest> sideEntries() {
+        List<SideQuest> list = new ArrayList<>();
+        int[] order = {SideQuestManager.READY, SideQuestManager.ACTIVE, SideQuestManager.AVAILABLE, SideQuestManager.DONE};
+        for (int st : order) {
+            for (SideQuest q : SideQuest.values()) {
+                if (ClientSideQuests.state(q) == st) {
+                    list.add(q);
+                }
+            }
+        }
+        return list;
+    }
+
+    private static String stateKey(int st) {
+        return switch (st) {
+            case SideQuestManager.AVAILABLE -> "gui.fateapocrypha.side_state.available";
+            case SideQuestManager.ACTIVE -> "gui.fateapocrypha.side_state.active";
+            case SideQuestManager.READY -> "gui.fateapocrypha.side_state.ready";
+            default -> "gui.fateapocrypha.done";
+        };
+    }
+
+    private static int stateColor(int st) {
+        return st == SideQuestManager.DONE || st == SideQuestManager.READY ? GREEN
+                : st == SideQuestManager.AVAILABLE ? GOLD : 0xFF6FA8E8;
+    }
+
+    private void renderSideList(GuiGraphics g, int mouseX, int mouseY) {
+        int x = px + 16;
+        UiDraw.diamond(g, x + 5, py + 56, 4, GOLD);
+        g.drawString(font, Component.translatable("gui.fateapocrypha.side_quests"), x + 16, py + 52, 0xFFFFFFFF, true);
+        List<SideQuest> entries = sideEntries();
+        if (entries.isEmpty()) {
+            List<FormattedCharSequence> lines = font.split(Component.translatable("gui.fateapocrypha.side_empty"), lw);
+            for (int i = 0; i < lines.size(); i++) {
+                g.drawString(font, lines.get(i), x, py + 78 + i * 11, 0xFF8A90A8, false);
+            }
+            return;
+        }
+        int rows = visibleRows();
+        scroll = Math.max(0, Math.min(scroll, Math.max(0, entries.size() - rows)));
+        sideSelected = Math.max(0, Math.min(sideSelected, entries.size() - 1));
+        for (int r = 0; r < rows && r + scroll < entries.size(); r++) {
+            SideQuest q = entries.get(r + scroll);
+            int st = ClientSideQuests.state(q);
+            int y = listTop() - 20 + r * ROW_STEP;
+            boolean isSel = r + scroll == sideSelected;
+            boolean hover = inside(mouseX, mouseY, x, y, x + lw, y + ROW_H);
+            int border = isSel ? 0xFFE6C25A : hover ? 0xFF55607F : 0xFF2E3550;
+            int top = isSel ? 0xFF46557D : hover ? 0xFF363F5E : 0xFF2B3249;
+            int bottom = isSel ? 0xFF313C5C : hover ? 0xFF2B3452 : 0xFF222838;
+            UiDraw.outlined(g, x, y, x + lw, y + ROW_H, 8, border, top, bottom);
+            if (isSel) {
+                UiDraw.rounded(g, x + 4, y + 8, x + 7, y + ROW_H - 8, 1, GOLD);
+            }
+            int ix = x + 21;
+            int iy = y + ROW_H / 2;
+            UiDraw.circle(g, ix, iy, 8, 0xFF151A28);
+            if (st == SideQuestManager.DONE) {
+                UiDraw.circle(g, ix, iy, 7, 0xFF1F4A31);
+                UiDraw.check(g, ix, iy - 1, GREEN);
+            } else {
+                UiDraw.circle(g, ix, iy, 7, 0xFF2A2F44);
+                UiDraw.circle(g, ix, iy, 3, stateColor(st));
+            }
+            String title = font.plainSubstrByWidth(Component.translatable(q.titleKey()).getString(), lw - 52);
+            g.drawString(font, title, x + 36, y + 8, 0xFFFFFFFF, true);
+            g.drawString(font, Component.translatable(stateKey(st)), x + 36, y + 21, stateColor(st), false);
+        }
+    }
+
+    private void renderSideDetails(GuiGraphics g, int mouseX, int mouseY) {
+        List<SideQuest> entries = sideEntries();
+        if (entries.isEmpty()) {
+            return;
+        }
+        SideQuest q = entries.get(Math.max(0, Math.min(sideSelected, entries.size() - 1)));
+        int st = ClientSideQuests.state(q);
+        int rx = px + lw + 42;
+        int rw = pw - lw - 62;
+
+        g.pose().pushPose();
+        g.pose().translate(rx, py + 52, 0.0F);
+        g.pose().scale(1.5F, 1.5F, 1.0F);
+        g.drawString(font, Component.translatable(q.titleKey()), 0, 0, 0xFFFFFFFF, true);
+        g.pose().popPose();
+        g.drawString(font, Component.translatable("gui.fateapocrypha.side_type." + q.type().name().toLowerCase()), rx, py + 73, 0xFFB8A878, false);
+        UiDraw.fadeLine(g, rx, py + 86, rw, GOLD, 0.5F);
+
+        // где: доска
+        int y = py + 96;
+        UiDraw.outlined(g, rx, y, rx + rw, y + 24, 8, 0x66E6C25A, 0xFF283048, 0xFF1E2438);
+        UiDraw.circle(g, rx + 14, y + 12, 6, GOLD);
+        UiDraw.circle(g, rx + 14, y + 12, 2, 0xFF1E2438);
+        Component where;
+        if (q.type() == SideQuest.Type.DELIVER && st == SideQuestManager.ACTIVE) {
+            where = Component.translatable("gui.fateapocrypha.side_target", Component.translatable(q.target().nameKey()));
+        } else if (q.type() == SideQuest.Type.EXPLORE && st == SideQuestManager.ACTIVE) {
+            int[] p = q.explorePoint();
+            where = Component.translatable("gui.fateapocrypha.side_explore", p[0], p[1]);
+        } else {
+            where = Component.translatable("gui.fateapocrypha.side_board", Component.translatable(q.giver().nameKey()));
+        }
+        g.drawString(font, where, rx + 28, y + 8, 0xFFFFFFFF, false);
+        y += 32;
+
+        int descBottom = py + ph - 124;
+        if (descBottom - y > 20) {
+            UiDraw.rounded(g, rx, y, rx + rw, descBottom, 8, 0x33000000);
+            List<FormattedCharSequence> lines = font.split(Component.translatable(q.descKey()), rw - 20);
+            int maxLines = Math.max(1, (descBottom - y - 14) / 11);
+            for (int i = 0; i < lines.size() && i < maxLines; i++) {
+                g.drawString(font, lines.get(i), rx + 10, y + 8 + i * 11, 0xFFD6DAE6, false);
+            }
+        }
+
+        // награды
+        int ry = py + ph - 112;
+        UiDraw.diamond(g, rx + 4, ry + 4, 3, GOLD);
+        g.drawString(font, Component.translatable("gui.fateapocrypha.rewards"), rx + 14, ry, 0xFFB8A878, false);
+        StoryRewards.Reward reward = q.reward();
+        List<ItemStack> slots = new ArrayList<>(reward.items());
+        if (reward.levels() > 0) {
+            slots.add(new ItemStack(Items.EXPERIENCE_BOTTLE, reward.levels()));
+        }
+        ItemStack hovered = ItemStack.EMPTY;
+        boolean done = st == SideQuestManager.DONE;
+        for (int i = 0; i < slots.size(); i++) {
+            int sx = rx + i * 34;
+            int sy = ry + 14;
+            boolean hover = inside(mouseX, mouseY, sx, sy, sx + 30, sy + 30);
+            UiDraw.outlined(g, sx, sy, sx + 30, sy + 30, 7, hover ? 0xFFE6C25A : 0xFF5A6690,
+                    done ? 0xFF2F3A52 : 0xFF3F4B6E, done ? 0xFF222B40 : 0xFF2D3652);
+            g.renderItem(slots.get(i), sx + 7, sy + 7);
+            g.renderItemDecorations(font, slots.get(i), sx + 7, sy + 7);
+            if (hover) {
+                hovered = slots.get(i);
+            }
+        }
+
+        // статус
+        int by = py + ph - 48;
+        int borderColor = done ? 0xFF2F6B47 : st == SideQuestManager.AVAILABLE ? 0xFF8A7430 : 0xFF3E5788;
+        int topColor = done ? 0xFF22442F : st == SideQuestManager.AVAILABLE ? 0xFF40371C : 0xFF263553;
+        int bottomColor = done ? 0xFF193323 : st == SideQuestManager.AVAILABLE ? 0xFF302914 : 0xFF1B2640;
+        Component text;
+        if (done) {
+            text = Component.translatable("gui.fateapocrypha.status_done");
+        } else if (st == SideQuestManager.AVAILABLE) {
+            text = Component.translatable("gui.fateapocrypha.side_take", Component.translatable(q.giver().nameKey()));
+        } else {
+            text = statusLine(q, st);
+        }
+        UiDraw.outlined(g, rx, by, rx + rw, by + 26, 9, borderColor, topColor, bottomColor);
+        UiDraw.circle(g, rx + 14, by + 13, 5, done ? GREEN : stateColor(st));
+        List<FormattedCharSequence> status = font.split(text, rw - 40);
+        g.drawString(font, status.isEmpty() ? FormattedCharSequence.EMPTY : status.get(0), rx + 28, by + 9, 0xFFFFFFFF, false);
+
+        if (!hovered.isEmpty()) {
+            g.renderTooltip(font, hovered, mouseX, mouseY);
+        }
+    }
+
+    private Component statusLine(SideQuest q, int st) {
+        switch (q.type()) {
+            case FETCH:
+                return Component.translatable("side.fateapocrypha.obj.fetch", new ItemStack(q.item()).getHoverName(),
+                        Math.min(ClientSideQuests.have(q), q.count()), q.count());
+            case EXPLORE:
+                if (st == SideQuestManager.READY) {
+                    return Component.translatable("side.fateapocrypha.obj.return", Component.translatable(q.giver().nameKey()));
+                }
+                int[] p = q.explorePoint();
+                return Component.translatable("side.fateapocrypha.obj.explore", p[0], p[1]);
+            default:
+                return Component.translatable("side.fateapocrypha.obj.deliver", Component.translatable(q.target().nameKey()));
+        }
+    }
+
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         int cx1 = px + pw - 32;
         if (inside(mouseX, mouseY, cx1, py + 10, cx1 + 20, py + 30)) {
             onClose();
             return true;
+        }
+        for (int i = 0; i < 3; i++) {
+            if (inside(mouseX, mouseY, tabX1[i], py + 10, tabX2[i], py + 30)) {
+                tab = i;
+                scroll = 0;
+                return true;
+            }
+        }
+        if (tab == 1) {
+            List<SideQuest> side = sideEntries();
+            int sx = px + 16;
+            for (int r = 0; r < visibleRows() && r + scroll < side.size(); r++) {
+                int y = listTop() - 20 + r * ROW_STEP;
+                if (inside(mouseX, mouseY, sx, y, sx + lw, y + ROW_H)) {
+                    sideSelected = r + scroll;
+                    return true;
+                }
+            }
+            return super.mouseClicked(mouseX, mouseY, button);
+        }
+        if (tab == 2) {
+            return super.mouseClicked(mouseX, mouseY, button);
         }
         int x = px + 16;
         List<StoryChapter> entries = entries();

@@ -14,5 +14,6 @@ public final class QuestSync {
         ModNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
                 new QuestSyncPacket(StoryManager.getChapter(player).ordinal(), StoryManager.isStarted(player),
                         StoryManager.hasSeals(player)));
+        SideQuestManager.sync(player);
     }
 }

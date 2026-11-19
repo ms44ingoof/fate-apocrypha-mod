@@ -3,7 +3,11 @@ package com.example.fateapocrypha.client.map;
 import com.example.fateapocrypha.ModDimensions;
 import com.example.fateapocrypha.client.ClientKeys;
 import com.example.fateapocrypha.client.ClientQuestState;
+import com.example.fateapocrypha.client.ClientSideQuests;
 import com.example.fateapocrypha.client.UiDraw;
+import com.example.fateapocrypha.story.SideBoard;
+import com.example.fateapocrypha.story.SideQuest;
+import com.example.fateapocrypha.story.SideQuestManager;
 import com.example.fateapocrypha.story.StoryChapter;
 import com.example.fateapocrypha.story.StoryLocation;
 import com.example.fateapocrypha.client.fx.TrifasWeather;
@@ -258,7 +262,9 @@ public class MapScreen extends Screen {
             if (MapSettings.roads) {
                 drawRoads(g);
             }
+            drawBuildings(g);
             drawMarkers(g, mouseX, mouseY);
+            drawSideBoards(g);
             drawMarks(g);
             drawPlayer(g);
         } else {
@@ -537,7 +543,9 @@ public class MapScreen extends Screen {
                 UiDraw.circle(g, x, y, (int) (13 * pulse), 0x33F5D37A);
                 UiDraw.circle(g, x, y, (int) (9 * pulse), 0x44F5D37A);
             }
-            if (m.castle()) {
+            if (MapBuildings.hasArt(m.location(), zoom)) {
+                // здания места уже нарисованы на карте: вместо точки метка только с подписью
+            } else if (m.castle()) {
                 drawCastleIcon(g, x, y, m.color());
             } else {
                 UiDraw.circle(g, x, y, 5, 0xFFFFFFFF);
@@ -559,8 +567,68 @@ public class MapScreen extends Screen {
                 int tw = font.width(m.name());
                 int lx = x - tw / 2;
                 int ly = y + 8;
+                if (m.castle() && MapBuildings.hasArt(m.location(), zoom)) {
+                    ly = (int) toScreenY(com.example.fateapocrypha.world.CastleSite.RAMP_Z + 4);   // подпись под пандусом замка
+                }
                 UiDraw.rounded(g, lx - 4, ly - 2, lx + tw + 4, ly + 10, 5, 0xCCFFFFFF);
                 g.drawString(font, m.name(), lx, ly, INK, false);
+            }
+        }
+    }
+
+    /** Объёмные постройки мест, открытых игроком, и случайные постройки мира. */
+    private void drawBuildings(GuiGraphics g) {
+        Set<StoryLocation> known = new HashSet<>();
+        for (Marker m : markers) {
+            known.add(m.location());
+        }
+        MapBuildings.draw(g, zoom, vx1, vy1, vx2, vy2, this::toScreenX, this::toScreenY, known);
+    }
+
+    /** Доски объявлений побочных заданий: «!» новое, синий значок задание идёт, зелёный сдать или доставить сюда. */
+    private void drawSideBoards(GuiGraphics g) {
+        long time = Util.getMillis();
+        // цели разведки активных заданий: мягкий круг и точка
+        for (SideQuest q : SideQuest.values()) {
+            if (q.type() != SideQuest.Type.EXPLORE || ClientSideQuests.state(q) != SideQuestManager.ACTIVE) {
+                continue;
+            }
+            int[] p = q.explorePoint();
+            int x = (int) toScreenX(p[0]);
+            int y = (int) toScreenY(p[1]);
+            int r = Math.max(5, (int) (q.radius() * zoom));
+            if (x + r < vx1 || x - r > vx2 || y + r < vy1 || y - r > vy2) {
+                continue;
+            }
+            float pulse = 0.5F + 0.5F * (float) Math.sin(time / 380.0D);
+            UiDraw.circle(g, x, y, r, 0x22 << 24 | 0x6FA8E8);
+            UiDraw.circle(g, x, y, Math.max(3, (int) (r * (0.55F + 0.1F * pulse))), 0x28 << 24 | 0x6FA8E8);
+            UiDraw.diamond(g, x, y, 4, 0xFFFFFFFF);
+            UiDraw.diamond(g, x, y, 3, 0xFF6FA8E8);
+        }
+        for (SideBoard b : SideBoard.values()) {
+            int st = ClientSideQuests.boardState(b);
+            if (st == 0) {
+                continue;
+            }
+            int x = (int) toScreenX(b.x() + 0.5D);
+            int y = (int) toScreenY(b.z() + 0.5D);
+            if (x < vx1 - 20 || x > vx2 + 20 || y < vy1 - 20 || y > vy2 + 20) {
+                continue;
+            }
+            int color = st == 3 ? 0x7BD389 : st == 1 ? 0xF5C95A : 0x6FA8E8;
+            int bob = st == 1 ? (int) Math.round(Math.sin(time / 300.0D) * 1.5D) : 0;
+            UiDraw.diamond(g, x, y + bob, 6, 0xFFFFFFFF);
+            UiDraw.diamond(g, x, y + bob, 5, 0xFF000000 | color);
+            String mark = st == 1 ? "!" : st == 3 ? "?" : "~";
+            g.drawString(font, mark, x - font.width(mark) / 2, y + bob - 4, 0xFFFFFFFF, false);
+            if (MapSettings.labels && zoom >= 0.5F) {
+                Component name = Component.translatable(b.nameKey());
+                int tw = font.width(name);
+                int lx = x - tw / 2;
+                int ly = y + 9;
+                UiDraw.rounded(g, lx - 4, ly - 2, lx + tw + 4, ly + 10, 5, 0xCCFFFFFF);
+                g.drawString(font, name, lx, ly, INK, false);
             }
         }
     }

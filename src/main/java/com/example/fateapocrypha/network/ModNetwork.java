@@ -28,5 +28,7 @@ public class ModNetwork {
                 SkipDialoguePacket::encode, SkipDialoguePacket::decode, SkipDialoguePacket::handle);
         CHANNEL.registerMessage(id++, QuestSyncPacket.class,
                 QuestSyncPacket::encode, QuestSyncPacket::decode, QuestSyncPacket::handle);
+        CHANNEL.registerMessage(id++, SideQuestSyncPacket.class,
+                SideQuestSyncPacket::encode, SideQuestSyncPacket::decode, SideQuestSyncPacket::handle);
     }
 }
