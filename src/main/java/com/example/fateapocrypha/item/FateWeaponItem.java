@@ -7,6 +7,7 @@ import java.util.Set;
 import javax.annotation.Nullable;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
@@ -21,6 +22,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.entity.monster.Phantom;
@@ -30,6 +32,7 @@ import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.item.Tier;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3f;
@@ -44,7 +47,14 @@ public class FateWeaponItem extends SwordItem {
         BLOOD_ARTHUR("blood_arthur", 40),
         VASAVI("vasavi", 45),
         ARGALIA("argalia", 10),
-        BANNER("banner", 60);
+        BANNER("banner", 60),
+        BLACK_KEYS("black_keys", 8),
+        IMPALE("impale", 30),
+        HEEL("heel", 40),
+        PHOEBUS("phoebus", 35),
+        GARDENS("gardens", 45),
+        FOG("fog", 25),
+        REBEL("rebel", 50);
 
         private final String id;
         private final int cooldownSeconds;
@@ -71,7 +81,18 @@ public class FateWeaponItem extends SwordItem {
     @Override
     public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
         if (ability == Ability.DRAGON_SLASH && (target instanceof EnderDragon || target instanceof Phantom)) {
+            target.invulnerableTime = 0;   // основной удар уже включил неуязвимость: без сброса добавка не пройдёт
             target.hurt(attacker.damageSources().magic(), 6.0F);
+        }
+        // Нож Джека: удар в спину добавляет урон
+        if (ability == Ability.FOG && target.level() instanceof ServerLevel server) {
+            Vec3 facing = target.getLookAngle();
+            Vec3 toAttacker = attacker.position().subtract(target.position());
+            if (toAttacker.lengthSqr() > 1.0e-4D && facing.x * toAttacker.x + facing.z * toAttacker.z < 0.0D) {
+                target.invulnerableTime = 0;
+                target.hurt(attacker.damageSources().magic(), 4.0F);
+                server.sendParticles(ParticleTypes.CRIT, target.getX(), target.getY() + 1.0D, target.getZ(), 12, 0.3D, 0.5D, 0.3D, 0.2D);
+            }
         }
         return super.hurtEnemy(stack, target, attacker);
     }
@@ -89,6 +110,13 @@ public class FateWeaponItem extends SwordItem {
                 case BLOOD_ARTHUR -> used = bloodArthur(server, player);
                 case VASAVI -> used = vasavi(server, player);
                 case ARGALIA -> used = argalia(server, player);
+                case BLACK_KEYS -> used = blackKeys(server, player);
+                case IMPALE -> used = impale(server, player);
+                case HEEL -> used = heel(server, player);
+                case PHOEBUS -> used = phoebus(server, player);
+                case GARDENS -> used = gardens(server, player);
+                case FOG -> used = fog(server, player);
+                case REBEL -> used = rebel(server, player);
                 default -> used = banner(server, player);
             }
             if (!used) {
@@ -255,6 +283,203 @@ public class FateWeaponItem extends SwordItem {
             level.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, e.getX(), e.getY() + 1.0D, e.getZ(), 12, 0.5D, 0.7D, 0.5D, 0.15D);
         }
         level.playSound(null, player.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.0F, 1.5F);
+        return true;
+    }
+
+    // ---------------------------------------------------------------- оружие Слуг Чёрных и Красных
+    /** Чёрные ключи Широ: веер из трёх клинков, каждый бьёт первую цель на линии (до 24 блоков). */
+    private boolean blackKeys(ServerLevel level, Player player) {
+        Vec3 eye = player.getEyePosition();
+        Vec3 look = player.getLookAngle();
+        DustParticleOptions dust = new DustParticleOptions(new Vector3f(0.45F, 0.25F, 0.7F), 1.1F);
+        Set<LivingEntity> hit = new HashSet<>();
+        for (int k = -1; k <= 1; k++) {
+            Vec3 dir = look.yRot((float) Math.toRadians(k * 7.0D));
+            for (double d = 1.0D; d <= 24.0D; d += 0.5D) {
+                Vec3 p = eye.add(dir.scale(d));
+                BlockPos bp = BlockPos.containing(p);
+                if (!level.getBlockState(bp).getCollisionShape(level, bp).isEmpty()) {
+                    level.sendParticles(ParticleTypes.CRIT, p.x, p.y, p.z, 4, 0.1D, 0.1D, 0.1D, 0.1D);
+                    break;
+                }
+                level.sendParticles(dust, p.x, p.y, p.z, 1, 0.03D, 0.03D, 0.03D, 0.0D);
+                AABB around = new AABB(p.x - 0.6D, p.y - 0.6D, p.z - 0.6D, p.x + 0.6D, p.y + 0.6D, p.z + 0.6D);
+                LivingEntity struck = null;
+                for (LivingEntity e : level.getEntitiesOfClass(LivingEntity.class, around, t -> valid(t, player))) {
+                    if (!hit.contains(e)) {
+                        struck = e;
+                        break;
+                    }
+                }
+                if (struck != null) {
+                    hit.add(struck);
+                    struck.invulnerableTime = 0;
+                    struck.hurt(source(player), 7.0F);
+                    level.sendParticles(ParticleTypes.CRIT, struck.getX(), struck.getY() + 1.0D, struck.getZ(), 8, 0.3D, 0.4D, 0.3D, 0.2D);
+                    break;
+                }
+            }
+        }
+        level.playSound(null, player.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.9F, 1.7F);
+        level.playSound(null, player.blockPosition(), SoundEvents.CROSSBOW_SHOOT, SoundSource.PLAYERS, 0.8F, 1.3F);
+        return true;
+    }
+
+    /** Казыклы-бей Влада: колья вырастают из земли вокруг владельца (радиус 6), враги ранены, замедлены и подброшены. */
+    private boolean impale(ServerLevel level, Player player) {
+        Vec3 base = player.position();
+        BlockParticleOption stake = new BlockParticleOption(ParticleTypes.BLOCK, Blocks.DEEPSLATE.defaultBlockState());
+        DustParticleOptions blood = new DustParticleOptions(new Vector3f(0.6F, 0.05F, 0.08F), 1.4F);
+        for (LivingEntity e : level.getEntitiesOfClass(LivingEntity.class, player.getBoundingBox().inflate(6.0D, 2.0D, 6.0D), t -> valid(t, player))) {
+            if (e.distanceTo(player) > 6.0F) {
+                continue;
+            }
+            e.hurt(source(player), 9.0F);
+            e.addEffect(new MobEffectInstance(MobEffects.WITHER, 60, 0));
+            e.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 80, 2));
+            e.setDeltaMovement(e.getDeltaMovement().x, 0.55D, e.getDeltaMovement().z);
+            e.hurtMarked = true;
+            level.sendParticles(blood, e.getX(), e.getY() + 1.0D, e.getZ(), 20, 0.3D, 0.6D, 0.3D, 0.02D);
+        }
+        for (int ring = 2; ring <= 6; ring += 2) {
+            int points = 6 + ring * 4;
+            for (int i = 0; i < points; i++) {
+                double a = Math.PI * 2.0D * i / points;
+                double x = base.x + Math.cos(a) * ring;
+                double z = base.z + Math.sin(a) * ring;
+                level.sendParticles(stake, x, base.y + 0.2D, z, 6, 0.1D, 0.5D, 0.1D, 0.15D);
+                if ((i + ring) % 3 == 0) {
+                    level.sendParticles(ParticleTypes.CRIT, x, base.y + 0.9D, z, 1, 0.05D, 0.4D, 0.05D, 0.02D);
+                }
+            }
+        }
+        level.playSound(null, player.blockPosition(), SoundEvents.POINTED_DRIPSTONE_LAND, SoundSource.PLAYERS, 1.4F, 0.6F);
+        level.playSound(null, player.blockPosition(), SoundEvents.PLAYER_ATTACK_CRIT, SoundSource.PLAYERS, 1.0F, 0.7F);
+        return true;
+    }
+
+    /** Копьё Ахиллеса: неуязвимость героя. Короткая защита и скорость, а врагов рядом отбрасывает. */
+    private boolean heel(ServerLevel level, Player player) {
+        player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 100, 2));
+        player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 100, 1));
+        for (LivingEntity e : level.getEntitiesOfClass(LivingEntity.class, player.getBoundingBox().inflate(4.0D, 1.5D, 4.0D), t -> valid(t, player))) {
+            e.hurt(source(player), 5.0F);
+            e.knockback(1.3D, player.getX() - e.getX(), player.getZ() - e.getZ());
+        }
+        Vec3 base = player.position();
+        for (int i = 0; i < 24; i++) {
+            double a = Math.PI * 2.0D * i / 24.0D;
+            level.sendParticles(ParticleTypes.END_ROD, base.x + Math.cos(a) * 3.0D, base.y + 0.3D, base.z + Math.sin(a) * 3.0D,
+                    2, 0.05D, 0.3D, 0.05D, 0.02D);
+        }
+        level.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, base.x, base.y + 1.0D, base.z, 25, 0.6D, 0.8D, 0.6D, 0.2D);
+        level.playSound(null, player.blockPosition(), SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 1.2F, 0.8F);
+        level.playSound(null, player.blockPosition(), SoundEvents.BEACON_POWER_SELECT, SoundSource.PLAYERS, 0.8F, 1.6F);
+        return true;
+    }
+
+    /** Лук Аталанты: ливень стрел на точку в прицеле (до 40 блоков), радиус 5. */
+    private boolean phoebus(ServerLevel level, Player player) {
+        Vec3 eye = player.getEyePosition();
+        Vec3 look = player.getLookAngle();
+        Vec3 spot = eye.add(look.scale(40.0D));
+        for (double d = 2.0D; d <= 40.0D; d += 0.5D) {
+            Vec3 p = eye.add(look.scale(d));
+            BlockPos bp = BlockPos.containing(p);
+            if (!level.getBlockState(bp).getCollisionShape(level, bp).isEmpty()) {
+                spot = p.subtract(look.scale(0.5D));
+                break;
+            }
+            AABB around = new AABB(p.x - 0.8D, p.y - 0.8D, p.z - 0.8D, p.x + 0.8D, p.y + 0.8D, p.z + 0.8D);
+            if (!level.getEntitiesOfClass(LivingEntity.class, around, t -> valid(t, player)).isEmpty()) {
+                spot = p;
+                break;
+            }
+        }
+        final Vec3 center = spot;
+        for (LivingEntity e : level.getEntitiesOfClass(LivingEntity.class, new AABB(center, center).inflate(5.0D, 4.0D, 5.0D), t -> valid(t, player))) {
+            if (e.position().distanceTo(center) <= 5.5D) {
+                e.hurt(source(player), 12.0F);
+            }
+        }
+        for (int i = 0; i < 18; i++) {
+            double a = level.getRandom().nextDouble() * Math.PI * 2.0D;
+            double r = Math.sqrt(level.getRandom().nextDouble()) * 5.0D;
+            double x = center.x + Math.cos(a) * r;
+            double z = center.z + Math.sin(a) * r;
+            for (int h = 0; h < 8; h++) {
+                level.sendParticles(h % 2 == 0 ? ParticleTypes.END_ROD : ParticleTypes.CRIT, x, center.y + 0.5D + h * 1.0D, z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
+            }
+            level.sendParticles(ParticleTypes.CRIT, x, center.y + 0.3D, z, 3, 0.2D, 0.1D, 0.2D, 0.15D);
+        }
+        level.sendParticles(ParticleTypes.EXPLOSION, center.x, center.y + 0.5D, center.z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
+        level.playSound(null, player.blockPosition(), SoundEvents.ARROW_SHOOT, SoundSource.PLAYERS, 1.0F, 0.8F);
+        level.playSound(null, BlockPos.containing(center), SoundEvents.ARROW_HIT, SoundSource.PLAYERS, 1.2F, 0.7F);
+        level.playSound(null, BlockPos.containing(center), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.5F, 1.6F);
+        return true;
+    }
+
+    /** Посох Семирамис: ядовитый сад вокруг владельца (радиус 8), враги ранены, отравлены и замедлены. */
+    private boolean gardens(ServerLevel level, Player player) {
+        for (LivingEntity e : level.getEntitiesOfClass(LivingEntity.class, player.getBoundingBox().inflate(8.0D, 3.0D, 8.0D), t -> valid(t, player))) {
+            if (e.distanceTo(player) > 8.0F) {
+                continue;
+            }
+            e.hurt(source(player), 6.0F);
+            e.addEffect(new MobEffectInstance(MobEffects.POISON, 120, 1));
+            e.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 0));
+        }
+        Vec3 base = player.position();
+        for (int ring = 2; ring <= 8; ring += 2) {
+            int points = ring * 5;
+            for (int i = 0; i < points; i++) {
+                double a = Math.PI * 2.0D * i / points;
+                double x = base.x + Math.cos(a) * ring;
+                double z = base.z + Math.sin(a) * ring;
+                level.sendParticles(ParticleTypes.WITCH, x, base.y + 0.4D, z, 2, 0.2D, 0.3D, 0.2D, 0.01D);
+                if (i % 2 == 0) {
+                    level.sendParticles(ParticleTypes.CHERRY_LEAVES, x, base.y + 1.2D, z, 1, 0.3D, 0.4D, 0.3D, 0.02D);
+                }
+            }
+        }
+        level.sendParticles(ParticleTypes.DRAGON_BREATH, base.x, base.y + 0.3D, base.z, 40, 3.0D, 0.2D, 3.0D, 0.02D);
+        level.playSound(null, player.blockPosition(), SoundEvents.EVOKER_CAST_SPELL, SoundSource.PLAYERS, 1.2F, 0.8F);
+        return true;
+    }
+
+    /** Нож Джека: туман Лондона. Невидимость и скорость, преследователи теряют цель. */
+    private boolean fog(ServerLevel level, Player player) {
+        player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 120, 0));
+        player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 120, 1));
+        for (Mob mob : level.getEntitiesOfClass(Mob.class, player.getBoundingBox().inflate(16.0D), m -> m.getTarget() == player)) {
+            mob.setTarget(null);
+        }
+        Vec3 base = player.position();
+        level.sendParticles(ParticleTypes.LARGE_SMOKE, base.x, base.y + 1.0D, base.z, 40, 0.8D, 0.8D, 0.8D, 0.02D);
+        level.sendParticles(ParticleTypes.CLOUD, base.x, base.y + 0.6D, base.z, 30, 1.2D, 0.4D, 1.2D, 0.03D);
+        level.playSound(null, player.blockPosition(), SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 0.9F, 0.6F);
+        return true;
+    }
+
+    /** Меч Спартака: крик мятежника. Владелец сильнее, враги рядом слабеют и отступают. */
+    private boolean rebel(ServerLevel level, Player player) {
+        player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 200, 1));
+        player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 100, 0));
+        for (LivingEntity e : level.getEntitiesOfClass(LivingEntity.class, player.getBoundingBox().inflate(8.0D, 3.0D, 8.0D), t -> valid(t, player))) {
+            if (e.distanceTo(player) > 8.0F) {
+                continue;
+            }
+            e.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 200, 0));
+            e.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 0));
+            e.knockback(0.6D, player.getX() - e.getX(), player.getZ() - e.getZ());
+        }
+        Vec3 base = player.position();
+        level.sendParticles(ParticleTypes.ANGRY_VILLAGER, base.x, base.y + 2.0D, base.z, 8, 0.6D, 0.3D, 0.6D, 0.0D);
+        for (int i = 0; i < 20; i++) {
+            double a = Math.PI * 2.0D * i / 20.0D;
+            level.sendParticles(ParticleTypes.CRIT, base.x + Math.cos(a) * 3.0D, base.y + 1.0D, base.z + Math.sin(a) * 3.0D, 2, 0.1D, 0.4D, 0.1D, 0.1D);
+        }
+        level.playSound(null, player.blockPosition(), SoundEvents.RAVAGER_ROAR, SoundSource.PLAYERS, 1.0F, 0.9F);
         return true;
     }
 }

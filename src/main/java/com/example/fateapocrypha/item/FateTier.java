@@ -5,9 +5,10 @@ import java.util.function.Supplier;
 import net.minecraft.world.item.Tier;
 import net.minecraft.world.item.crafting.Ingredient;
 
-/** Материал легендарного оружия: прочнее незерита, чинится святой сталью. */
+/** Материалы легендарного оружия: священный (святая сталь) прочнее незерита, теневой (чёрная сталь) легче и быстрее. */
 public enum FateTier implements Tier {
-    SACRED(2800, 9.0F, 4.0F, 4, 25, () -> Ingredient.of(ModItems.HOLY_STEEL.get()));
+    SACRED(2800, 9.0F, 4.0F, 4, 25, () -> Ingredient.of(ModItems.HOLY_STEEL.get())),
+    SHADOW(2000, 8.0F, 3.0F, 4, 22, () -> Ingredient.of(ModItems.BLACK_STEEL.get()));
 
     private final int uses;
     private final float speed;

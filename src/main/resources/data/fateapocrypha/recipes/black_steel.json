@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "fateapocrypha:holy_steel"
+    },
+    {
+      "item": "fateapocrypha:holy_steel"
+    },
+    {
+      "item": "minecraft:coal"
+    },
+    {
+      "item": "minecraft:coal"
+    }
+  ],
+  "result": {
+    "item": "fateapocrypha:black_steel",
+    "count": 2
+  }
+}

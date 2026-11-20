@@ -25,11 +25,25 @@ public class ModCreativeTabs {
                         output.accept(ModItems.LIGHTNING_CORE.get());
                         output.accept(ModItems.HIPPOGRIFF_FEATHER.get());
                         output.accept(ModItems.HOLY_CLOTH.get());
+                        output.accept(ModItems.BLACK_STEEL.get());
+                        output.accept(ModItems.BLOOD_THORN.get());
+                        output.accept(ModItems.PELIAN_ASH.get());
+                        output.accept(ModItems.SILVER_BOWSTRING.get());
+                        output.accept(ModItems.GARDENS_GEM.get());
+                        output.accept(ModItems.FOG_ESSENCE.get());
+                        output.accept(ModItems.BROKEN_CHAIN.get());
                         output.accept(ModItems.BALMUNG.get());
                         output.accept(ModItems.CLARENT.get());
                         output.accept(ModItems.VASAVI_SHAKTI.get());
                         output.accept(ModItems.ARGALIA_LANCE.get());
                         output.accept(ModItems.LA_PUCELLE.get());
+                        output.accept(ModItems.BLACK_KEYS.get());
+                        output.accept(ModItems.RIPPER_KNIFE.get());
+                        output.accept(ModItems.SPARTACUS_BLADE.get());
+                        output.accept(ModItems.KAZIKLI_BEY.get());
+                        output.accept(ModItems.ACHILLES_SPEAR.get());
+                        output.accept(ModItems.ATALANTA_BOW.get());
+                        output.accept(ModItems.SEMIRAMIS_STAFF.get());
                     })
                     .build());
 }

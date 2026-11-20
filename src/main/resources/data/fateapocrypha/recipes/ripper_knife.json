@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "B",
+    "B",
+    "F"
+  ],
+  "key": {
+    "B": {
+      "item": "fateapocrypha:black_steel"
+    },
+    "F": {
+      "item": "fateapocrypha:fog_essence"
+    }
+  },
+  "result": {
+    "item": "fateapocrypha:ripper_knife",
+    "count": 1
+  }
+}

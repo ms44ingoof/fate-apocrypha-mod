@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    " H ",
+    "PAP",
+    " A "
+  ],
+  "key": {
+    "H": {
+      "item": "fateapocrypha:holy_steel"
+    },
+    "P": {
+      "item": "fateapocrypha:prana_crystal"
+    },
+    "A": {
+      "item": "fateapocrypha:pelian_ash"
+    }
+  },
+  "result": {
+    "item": "fateapocrypha:achilles_spear",
+    "count": 1
+  }
+}

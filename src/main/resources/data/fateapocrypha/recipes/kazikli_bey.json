@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "R R",
+    "HBH",
+    " T "
+  ],
+  "key": {
+    "R": {
+      "item": "fateapocrypha:blood_thorn"
+    },
+    "H": {
+      "item": "fateapocrypha:holy_steel"
+    },
+    "B": {
+      "item": "fateapocrypha:black_steel"
+    },
+    "T": {
+      "item": "minecraft:stick"
+    }
+  },
+  "result": {
+    "item": "fateapocrypha:kazikli_bey",
+    "count": 1
+  }
+}

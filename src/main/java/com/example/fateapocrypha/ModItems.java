@@ -38,10 +38,21 @@ public class ModItems {
     public static final RegistryObject<Item> LIGHTNING_CORE = material("lightning_core");
     public static final RegistryObject<Item> HIPPOGRIFF_FEATHER = material("hippogriff_feather");
     public static final RegistryObject<Item> HOLY_CLOTH = material("holy_cloth");
+    public static final RegistryObject<Item> BLACK_STEEL = material("black_steel");
+    public static final RegistryObject<Item> BLOOD_THORN = material("blood_thorn");
+    public static final RegistryObject<Item> PELIAN_ASH = material("pelian_ash");
+    public static final RegistryObject<Item> SILVER_BOWSTRING = material("silver_bowstring");
+    public static final RegistryObject<Item> GARDENS_GEM = material("gardens_gem");
+    public static final RegistryObject<Item> FOG_ESSENCE = material("fog_essence");
+    public static final RegistryObject<Item> BROKEN_CHAIN = material("broken_chain");
 
     // ---------- легендарное оружие ----------
     private static RegistryObject<Item> weapon(String id, int damage, float speed, FateWeaponItem.Ability ability) {
-        return ITEMS.register(id, () -> new FateWeaponItem(FateTier.SACRED, damage, speed,
+        return weapon(id, FateTier.SACRED, damage, speed, ability);
+    }
+
+    private static RegistryObject<Item> weapon(String id, FateTier tier, int damage, float speed, FateWeaponItem.Ability ability) {
+        return ITEMS.register(id, () -> new FateWeaponItem(tier, damage, speed,
                 new Item.Properties().stacksTo(1).rarity(Rarity.EPIC).fireResistant(), ability));
     }
 
@@ -50,4 +61,13 @@ public class ModItems {
     public static final RegistryObject<Item> VASAVI_SHAKTI = weapon("vasavi_shakti", 4, -2.6F, FateWeaponItem.Ability.VASAVI);
     public static final RegistryObject<Item> ARGALIA_LANCE = weapon("argalia_lance", 2, -2.0F, FateWeaponItem.Ability.ARGALIA);
     public static final RegistryObject<Item> LA_PUCELLE = weapon("la_pucelle", 0, -2.4F, FateWeaponItem.Ability.BANNER);
+
+    // Оружие Слуг Чёрных и Красных: у лёгких клинков теневой материал (быстрее, чинится чёрной сталью)
+    public static final RegistryObject<Item> BLACK_KEYS = weapon("black_keys", FateTier.SHADOW, 2, -1.2F, FateWeaponItem.Ability.BLACK_KEYS);
+    public static final RegistryObject<Item> RIPPER_KNIFE = weapon("ripper_knife", FateTier.SHADOW, 1, -1.0F, FateWeaponItem.Ability.FOG);
+    public static final RegistryObject<Item> SPARTACUS_BLADE = weapon("spartacus_blade", FateTier.SHADOW, 4, -3.0F, FateWeaponItem.Ability.REBEL);
+    public static final RegistryObject<Item> KAZIKLI_BEY = weapon("kazikli_bey", 2, -2.6F, FateWeaponItem.Ability.IMPALE);
+    public static final RegistryObject<Item> ACHILLES_SPEAR = weapon("achilles_spear", 2, -2.2F, FateWeaponItem.Ability.HEEL);
+    public static final RegistryObject<Item> ATALANTA_BOW = weapon("atalanta_bow", 0, -2.0F, FateWeaponItem.Ability.PHOEBUS);
+    public static final RegistryObject<Item> SEMIRAMIS_STAFF = weapon("semiramis_staff", 0, -2.8F, FateWeaponItem.Ability.GARDENS);
 }

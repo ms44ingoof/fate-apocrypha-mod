@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "BKB",
+    " T "
+  ],
+  "key": {
+    "B": {
+      "item": "fateapocrypha:black_steel"
+    },
+    "K": {
+      "item": "fateapocrypha:crimson_shard"
+    },
+    "T": {
+      "item": "minecraft:stick"
+    }
+  },
+  "result": {
+    "item": "fateapocrypha:black_keys",
+    "count": 1
+  }
+}
