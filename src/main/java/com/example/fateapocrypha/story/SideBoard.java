@@ -93,7 +93,10 @@ public enum SideBoard {
     private static final int[] FX = {0, 1, 0, -1};
     private static final int[] FZ = {-1, 0, 1, 0};
 
-    /** Принадлежит ли блок конструкции доски: столбы, щит, навес и площадка (в её собственных осях). */
+    /**
+     * Принадлежит ли блок самой доске: щит, два столба, навес и бочка с компостером. Каменная площадка и земля вокруг
+     * не считаются, поэтому клик по полу рядом с доской её не открывает.
+     */
     public boolean contains(BlockPos p) {
         int dx = p.getX() - x();
         int dz = p.getZ() - z();
@@ -103,7 +106,16 @@ public enum SideBoard {
         int sideZ = FX[f];
         int side = dx * sideX + dz * sideZ;
         int dy = p.getY() - y();
-        return Math.abs(side) <= 3 && depth >= -1 && depth <= 2 && dy >= -1 && dy <= 5;
+        if (depth == 0 && Math.abs(side) <= 1 && (dy == 1 || dy == 2)) {
+            return true;                                   // щит
+        }
+        if (depth == 0 && Math.abs(side) == 2 && dy >= 0 && dy <= 4) {
+            return true;                                   // столбы и фонари
+        }
+        if (dy == 3 && Math.abs(side) <= 2 && (depth == 0 || depth == 1)) {
+            return true;                                   // навес
+        }
+        return depth == 1 && Math.abs(side) == 2 && dy == 0;   // бочка и компостер
     }
 
     /** Доска, которой принадлежит этот блок, или null. */

@@ -57,6 +57,22 @@ final class BuildKit {
         }
     }
 
+    /**
+     * Горящая свеча, которая гарантированно на чём-то стоит. Если снизу не полный блок (воздух, ковёр, нижняя плита),
+     * под свечу кладётся верхняя плита: раньше такие свечи висели в воздухе или торчали из пола.
+     */
+    void candle(int x, int y, int z) {
+        BlockPos pos = new BlockPos(x, y, z);
+        BlockPos below = pos.below();
+        if (!net.minecraft.world.level.block.Block.canSupportCenter(level, below, net.minecraft.core.Direction.UP)) {
+            level.setBlock(below, Blocks.SPRUCE_SLAB.defaultBlockState()
+                    .setValue(net.minecraft.world.level.block.SlabBlock.TYPE,
+                            net.minecraft.world.level.block.state.properties.SlabType.TOP), 2);
+        }
+        level.setBlock(pos, Blocks.CANDLE.defaultBlockState()
+                .setValue(net.minecraft.world.level.block.CandleBlock.LIT, true), 2);
+    }
+
     boolean isAir(int x, int y, int z) {
         return level.getBlockState(new BlockPos(x, y, z)).isAir();
     }

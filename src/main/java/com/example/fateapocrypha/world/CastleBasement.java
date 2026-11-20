@@ -175,7 +175,7 @@ final class CastleBasement {
         // стол стражи в конце коридора
         table(165, 225, 166, 225);
         chair(165, 226, Direction.NORTH);
-        k.set(166, FY + 2, 225, s(Blocks.CANDLE).setValue(CandleBlock.LIT, true));
+        k.candle(166, FY + 2, 225);
     }
 
     private void cell(int x1, int zA, int zB, boolean north, int n) {
@@ -221,7 +221,7 @@ final class CastleBasement {
                 if (x % 3 == 0) {
                     barrel(x, FY + 2, row, Direction.SOUTH, null);
                 } else {
-                    k.set(x, FY + 2, row, s(Blocks.CANDLE).setValue(CandleBlock.LIT, true));
+                    k.candle(x, FY + 2, row);
                 }
             }
         }
@@ -261,7 +261,7 @@ final class CastleBasement {
             hang(c[0], c[1], true);
         }
         for (int dx : new int[] {-1, 1}) {
-            k.set(207 + dx, FY + 1, 205, s(Blocks.CANDLE).setValue(CandleBlock.LIT, true));
+            k.candle(207 + dx, FY + 1, 205);
         }
     }
 
@@ -282,7 +282,7 @@ final class CastleBasement {
                 chair(x, 215, Direction.SOUTH);
                 chair(x, 218, Direction.NORTH);
             }
-            k.set(t[0] + 1, FY + 2, 216, s(Blocks.CANDLE).setValue(CandleBlock.LIT, true));
+            k.candle(t[0] + 1, FY + 2, 216);
         }
         for (int z = 213; z <= 221; z += 2) {
             barrel(226, FY + 1, z, Direction.EAST, LootFiller.Kind.KITCHEN);
@@ -353,7 +353,7 @@ final class CastleBasement {
             hang(c[0], c[1], true);
         }
         table(236, 241, 241, 241);
-        k.set(238, FY + 2, 241, s(Blocks.CANDLE).setValue(CandleBlock.LIT, true));
+        k.candle(238, FY + 2, 241);
     }
 
     // ================= вход из двора =================

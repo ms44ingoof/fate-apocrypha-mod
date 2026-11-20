@@ -262,6 +262,7 @@ public class MapScreen extends Screen {
             if (MapSettings.roads) {
                 drawRoads(g);
             }
+            MapNature.draw(g, zoom, vx1, vy1, vx2, vy2, this::toScreenX, this::toScreenY);
             drawBuildings(g);
             drawMarkers(g, mouseX, mouseY);
             drawSideBoards(g);

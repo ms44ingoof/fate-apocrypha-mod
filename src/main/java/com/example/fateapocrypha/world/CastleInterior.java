@@ -208,7 +208,7 @@ final class CastleInterior {
         k.set(x2 - 3, y, z1 + 5, s(Blocks.ENCHANTING_TABLE));
         k.set(x1 + 1, y, z1 + 7, facing(Blocks.LECTERN, Direction.EAST));
         for (int[] c : new int[][] {{x1 + 2, z1 + 8}, {x2 - 3, z1 + 8}}) {
-            k.set(c[0], y, c[1], s(Blocks.CANDLE).setValue(CandleBlock.LIT, true));
+            k.candle(c[0], y, c[1]);
         }
     }
 
@@ -237,7 +237,7 @@ final class CastleInterior {
     }
 
     private void candle(int x, int y, int z) {
-        k.set(x, y, z, s(Blocks.CANDLE).setValue(CandleBlock.LIT, true));
+        k.candle(x, y, z);
     }
 
     private void pot(int x, int y, int z) {
@@ -583,6 +583,14 @@ final class CastleInterior {
     }
 
     private void life() {
+        // при перестройке замка прежние жители и животные убираются: иначе их становится вдвое больше
+        net.minecraft.world.phys.AABB castle = new net.minecraft.world.phys.AABB(X0 - 2, Y - 14, Z0() - 2,
+                X1 + 3, Y + 40, Z0() + CastleSite.D + 3);
+        for (Mob old : level.getEntitiesOfClass(Mob.class, castle, e -> e.getType() == EntityType.VILLAGER
+                || e.getType() == EntityType.CAT || e.getType() == EntityType.CHICKEN
+                || e.getType() == EntityType.HORSE || e.getType() == EntityType.SHEEP)) {
+            old.discard();
+        }
         // мастера и слуги рядом со своим рабочим местом
         villager(VillagerProfession.ARMORER, X0 + 14, Y + 1, 260);
         villager(VillagerProfession.TOOLSMITH, X0 + 16, Y + 1, 260);
@@ -621,8 +629,9 @@ final class CastleInterior {
         ambient(VillagerProfession.LIBRARIAN, "fa_patrol:plaza", CX, Y + 1, 255, false, 0.0F);
         ambient(VillagerProfession.CLERIC, "fa_patrol:road", X0 + 20, Y + 1, 298, false, 0.0F);
         ambient(VillagerProfession.FLETCHER, "fa_patrol:road", x1 - 20, Y + 1, 298, false, 0.0F);
-        ambient(VillagerProfession.WEAPONSMITH, null, CX - 6, Y + 1, 339, true, 0.0F);
-        ambient(VillagerProfession.WEAPONSMITH, null, CX + 5, Y + 1, 339, true, 0.0F);
+        // привратники: с ними можно поговорить и попросить открыть или закрыть ворота (CastleGate)
+        ambient(VillagerProfession.WEAPONSMITH, CastleGate.GUARD_TAG, CX - 6, Y + 1, 339, true, 0.0F);
+        ambient(VillagerProfession.WEAPONSMITH, CastleGate.GUARD_TAG, CX + 5, Y + 1, 339, true, 0.0F);
     }
 
     private static int Z0() {

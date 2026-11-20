@@ -57,8 +57,25 @@ public final class MiniMap {
         blitLayer(g, MapTextures.baseColor(), base, ox, oy, scale, false);
         blitLayer(g, MapTextures.baseCoast(), base, ox, oy, scale, true);
 
+        // природа и постройки: деревья, горы, замок, дома, ворота (тот же слой, что на большой карте)
+        java.util.Set<StoryLocation> knownPlaces = new java.util.HashSet<>();
+        java.util.List<MapPlaces.Place> places = MapPlaces.discovered(mc);
+        for (MapPlaces.Place place : places) {
+            knownPlaces.add(place.location());
+        }
+        float zoomMini = (float) (1.0D / BLOCKS_PER_PX);
+        final int fx1 = x1;
+        final int fy1 = y1;
+        java.util.function.DoubleUnaryOperator sxm = wx -> fx1 + SIZE / 2.0D + (wx - px) / BLOCKS_PER_PX;
+        java.util.function.DoubleUnaryOperator sym = wz -> fy1 + SIZE / 2.0D + (wz - pz) / BLOCKS_PER_PX;
+        MapNature.draw(g, zoomMini, x1, y1, x2, y2, sxm, sym);
+        MapBuildings.draw(g, zoomMini, x1, y1, x2, y2, sxm, sym, knownPlaces);
+
         // места и свои метки
-        for (MapPlaces.Place place : MapPlaces.discovered(mc)) {
+        for (MapPlaces.Place place : places) {
+            if (MapBuildings.hasArt(place.location(), zoomMini)) {
+                continue;
+            }
             int x = (int) (x1 + SIZE / 2.0D + (place.x() - px) / BLOCKS_PER_PX);
             int y = (int) (y1 + SIZE / 2.0D + (place.z() - pz) / BLOCKS_PER_PX);
             if (x > x1 && x < x2 && y > y1 && y < y2) {

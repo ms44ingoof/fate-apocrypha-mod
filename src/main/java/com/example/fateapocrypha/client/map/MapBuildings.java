@@ -36,6 +36,71 @@ final class MapBuildings {
                  int color, int stripe, float minZoom) {
     }
 
+    /**
+     * Проекция с укрупнением вокруг опорной точки: на малых масштабах постройки места (и отдельные постройки мира)
+     * рисуются крупнее, чем по настоящему масштабу карты, чтобы быть различимыми, как на картах-иллюстрациях.
+     */
+    private static final class Proj {
+        final DoubleUnaryOperator sx;
+        final DoubleUnaryOperator sy;
+        final float zoom;
+        double ax;
+        double az;
+        float f = 1.0F;
+
+        Proj(DoubleUnaryOperator sx, DoubleUnaryOperator sy, float zoom) {
+            this.sx = sx;
+            this.sy = sy;
+            this.zoom = zoom;
+        }
+
+        void anchor(double ax, double az, float f) {
+            this.ax = ax;
+            this.az = az;
+            this.f = f;
+        }
+
+        double x(double wx) {
+            return sx.applyAsDouble(ax + (wx - ax) * f);
+        }
+
+        double y(double wz) {
+            return sy.applyAsDouble(az + (wz - az) * f);
+        }
+
+        float z() {
+            return zoom * f;
+        }
+    }
+
+    private static float boost(float zoom, float from, float max) {
+        return zoom >= from ? 1.0F : Math.min(max, from / zoom);
+    }
+
+    private static void anchorBlock(Proj pr, Block b) {
+        if (b.loc() == StoryLocation.CASTLE_LAB) {
+            pr.anchor(0.0D, 0.0D, 1.0F);
+        } else if (b.loc() != null) {
+            pr.anchor(b.loc().cx(), b.loc().cz(), boost(pr.zoom, 0.7F, 2.2F));
+        } else {
+            double cx = b.round() ? b.x1() : (b.x1() + b.x2()) / 2.0D;
+            double cz = b.round() ? b.z1() : (b.z1() + b.z2()) / 2.0D;
+            pr.anchor(cx, cz, boost(pr.zoom, 0.6F, 2.0F));
+        }
+    }
+
+    private static void anchorPatch(Proj pr, Patch p) {
+        if (p.loc() == StoryLocation.CASTLE_LAB) {
+            pr.anchor(0.0D, 0.0D, 1.0F);
+        } else if (p.loc() != null) {
+            pr.anchor(p.loc().cx(), p.loc().cz(), boost(pr.zoom, 0.7F, 2.2F));
+        } else {
+            double cx = p.disc() ? p.x1() : (p.x1() + p.x2()) / 2.0D;
+            double cz = p.disc() ? p.z1() : (p.z1() + p.z2()) / 2.0D;
+            pr.anchor(cx, cz, boost(pr.zoom, 0.6F, 2.0F));
+        }
+    }
+
     /** Сколько пикселей экрана даёт один блок высоты на единицу масштаба карты. */
     private static final float K = 0.62F;
 
@@ -129,7 +194,7 @@ final class MapBuildings {
         rect(c, x0 + 4, z0 + 4, x1 - 3, z1 - 3, 0xBFDDAE, 0, 0.18F);
         rect(c, CastleSite.KX1 - 4, CastleSite.KZ1 - 4, CastleSite.KX2 + 5, CastleSite.KZ2 + 5, PAVING, 0, 0.18F);
         rect(c, cx - 4, CastleSite.KZ2 + 1, cx + 5, z1 - 2, PAVING, 0, 0.18F);
-        rect(c, x0 + 6, 297, x1 - 5, 300, PAVING, 0, 0.3F);
+        rect(c, x0 + 6, 297, x1 - 5, 300, PAVING, 0, 0.22F);
         disc(c, cx + 0.5D, 272.5D, 13.0D, PAVING, 0.18F);
         disc(c, cx + 0.5D, 272.5D, 6.5D, 0xB9B3AA, 0.18F);
         disc(c, cx + 0.5D, 272.5D, 5.2D, 0x8FCBEF, 0.18F);
@@ -153,11 +218,11 @@ final class MapBuildings {
         tower(c, x1 - 1, cz, 6, 0, 21, 9, Roof.CONE, STONE, BLUE_ROOF, 0.18F);
 
         // хозяйственные постройки двора и конюшня
-        add(c, 138, 255, 150, 266, 0, 4, 0, Roof.NONE, STONE, 0x6B6F7A, 0.4F);
-        add(c, 280, 255, 292, 266, 0, 4, 0, Roof.NONE, STONE, 0x6B6F7A, 0.4F);
-        add(c, 138, 326, 150, 337, 0, 4, 0, Roof.NONE, STONE, 0x6B6F7A, 0.4F);
-        add(c, 280, 326, 292, 337, 0, 4, 0, Roof.NONE, STONE, 0x6B6F7A, 0.4F);
-        add(c, 272, 272, 292, 294, 0, 4, 3, Roof.GABLE_X, 0xB59A74, WOOD_DARK, 0.4F);
+        add(c, 138, 255, 150, 266, 0, 4, 0, Roof.NONE, STONE, 0x6B6F7A, 0.3F);
+        add(c, 280, 255, 292, 266, 0, 4, 0, Roof.NONE, STONE, 0x6B6F7A, 0.3F);
+        add(c, 138, 326, 150, 337, 0, 4, 0, Roof.NONE, STONE, 0x6B6F7A, 0.3F);
+        add(c, 280, 326, 292, 337, 0, 4, 0, Roof.NONE, STONE, 0x6B6F7A, 0.3F);
+        add(c, 272, 272, 292, 294, 0, 4, 3, Roof.GABLE_X, 0xB59A74, WOOD_DARK, 0.3F);
 
         // главный корпус
         add(c, CastleSite.KX1, CastleSite.KZ1, CastleSite.KX2, CastleSite.KZ2, 0, 23, 0, Roof.NONE, 0xCFC9C0, 0xE3DED5, 0.18F);
@@ -185,30 +250,30 @@ final class MapBuildings {
     /** Ферма (сюжетные координаты): дом, амбар, поля. */
     private static void buildFarm() {
         StoryLocation f = StoryLocation.FARM;
-        srect(f, 1188, 1189, 1190, 1216, 0xD3BC8C, 0, 0.3F);
-        srect(f, 1184, 1189, 1194, 1190, 0xD3BC8C, 0, 0.3F);
+        srect(f, 1188, 1189, 1190, 1216, 0xD3BC8C, 0, 0.22F);
+        srect(f, 1184, 1189, 1194, 1190, 0xD3BC8C, 0, 0.22F);
         srect(f, 1172, 1195, 1186, 1212, 0xE9D071, 0xD2B552, 0.3F);     // пшеница
         srect(f, 1192, 1195, 1210, 1212, 0xA9CF73, 0xE79A52, 0.3F);     // морковь
-        sadd(f, 1184, 1180, 1194, 1188, 4, 4, Roof.HIP, WOOD, WOOD_DARK, 0.3F);
-        sadd(f, 1196, 1178, 1208, 1190, 6, 5, Roof.HIP, 0xB0513F, WOOD_DARK, 0.3F);
-        sadd(f, 1198, 1192, 1200, 1194, 2, 0, Roof.NONE, 0xB59A74, 0xC9B28A, 0.8F);
+        sadd(f, 1184, 1180, 1194, 1188, 4, 4, Roof.HIP, WOOD, WOOD_DARK, 0.22F);
+        sadd(f, 1196, 1178, 1208, 1190, 6, 5, Roof.HIP, 0xB0513F, WOOD_DARK, 0.22F);
+        sadd(f, 1198, 1192, 1200, 1194, 2, 0, Roof.NONE, 0xB59A74, 0xC9B28A, 0.6F);
     }
 
     /** Лагерь Красных: площадка, палатки из шерсти, костёр. */
     private static void buildRedCamp() {
         StoryLocation r = StoryLocation.RED_CAMP;
-        sdisc(r, 800, 800, 16.0D, 0xB5A584, 0.3F);
-        sadd(r, 800 - 16, 800 - 10, 800 - 11, 800 - 6, 1, 3, Roof.HIP, 0xC8453F, 0xC8453F, 0.3F);
-        sadd(r, 800 - 16, 800 + 6, 800 - 11, 800 + 10, 1, 3, Roof.HIP, 0x8E8E96, 0x8E8E96, 0.3F);
-        sadd(r, 800 + 11, 800 - 12, 800 + 16, 800 - 8, 1, 3, Roof.HIP, 0xC8453F, 0xC8453F, 0.3F);
+        sdisc(r, 800, 800, 16.0D, 0xB5A584, 0.22F);
+        sadd(r, 800 - 16, 800 - 10, 800 - 11, 800 - 6, 1, 3, Roof.HIP, 0xC8453F, 0xC8453F, 0.22F);
+        sadd(r, 800 - 16, 800 + 6, 800 - 11, 800 + 10, 1, 3, Roof.HIP, 0x8E8E96, 0x8E8E96, 0.22F);
+        sadd(r, 800 + 11, 800 - 12, 800 + 16, 800 - 8, 1, 3, Roof.HIP, 0xC8453F, 0xC8453F, 0.22F);
         int[] fire = Reloc.rect(800, 800, 800, 800);
-        tower(r, fire[0] + 0.5D, fire[1] + 0.5D, 1.0D, 0, 1, 0, Roof.NONE, 0xE8873A, 0xF7C45A, 0.7F);
+        tower(r, fire[0] + 0.5D, fire[1] + 0.5D, 1.0D, 0, 1, 0, Roof.NONE, 0xE8873A, 0xF7C45A, 0.5F);
     }
 
     /** Часовня: каменный зал с высоким двускатным сланцевым покрытием. */
     private static void buildChapel() {
         StoryLocation c = StoryLocation.CHAPEL;
-        sadd(c, 790, 890, 810, 920, 10, 7, Roof.GABLE_Z, 0xD3CDC3, 0x6D6A8F, 0.3F);
+        sadd(c, 790, 890, 810, 920, 10, 7, Roof.GABLE_Z, 0xD3CDC3, 0x6D6A8F, 0.22F);
     }
 
     /** Руины: россыпь булыжника и обломки стен (тот же ряд случайных чисел, что у постройки в StoryWorld). */
@@ -216,7 +281,7 @@ final class MapBuildings {
         StoryLocation u = StoryLocation.RUINS;
         int cx = 800;
         int cz = 1000;
-        srect(u, cx - 20, cz - 20, cx + 20, cz + 20, 0xCBC6BC, 0, 0.3F);
+        srect(u, cx - 20, cz - 20, cx + 20, cz + 20, 0xCBC6BC, 0, 0.22F);
         Random rnd = new Random(99L);
         for (int x = cx - 20; x <= cx + 20; x++) {
             for (int z = cz - 20; z <= cz + 20; z++) {
@@ -238,10 +303,10 @@ final class MapBuildings {
                     rnd.nextInt(3);
                 }
             }
-            sadd(u, x, z, alongX ? x + len - 1 : x, alongX ? z : z + len - 1, height, 0, Roof.NONE, 0xA8B09A, 0xBFC6B2, 0.55F);
+            sadd(u, x, z, alongX ? x + len - 1 : x, alongX ? z : z + len - 1, height, 0, Roof.NONE, 0xA8B09A, 0xBFC6B2, 0.4F);
         }
         for (int[] p : new int[][] {{-14, -9}, {14, -9}, {-14, 9}, {14, 9}}) {
-            sadd(u, cx + p[0], cz + p[1], cx + p[0], cz + p[1], 3, 0, Roof.NONE, 0xB1ABA2, 0xCFCAC0, 0.8F);
+            sadd(u, cx + p[0], cz + p[1], cx + p[0], cz + p[1], 3, 0, Roof.NONE, 0xB1ABA2, 0xCFCAC0, 0.6F);
         }
     }
 
@@ -252,13 +317,13 @@ final class MapBuildings {
             int zc = t == 0 ? 800 : 1000;
             int height = t == 0 ? 7 : 9;
             int wall = t == 0 ? 0xEDE8DC : 0xB5503C;
-            srect(loc, 1180, zc - 3, 1220, zc + 3, 0xBDB8AE, 0, 0.3F);
-            srect(loc, 1180, zc - 4, 1220, zc - 4, 0xD3CEC4, 0, 0.5F);
-            srect(loc, 1180, zc + 4, 1220, zc + 4, 0xD3CEC4, 0, 0.5F);
+            srect(loc, 1180, zc - 3, 1220, zc + 3, 0xBDB8AE, 0, 0.22F);
+            srect(loc, 1180, zc - 4, 1220, zc - 4, 0xD3CEC4, 0, 0.35F);
+            srect(loc, 1180, zc + 4, 1220, zc + 4, 0xD3CEC4, 0, 0.35F);
             int n = 0;
             for (int x = 1180; x < 1220; x += 10) {
-                sadd(loc, x, zc + 6, x + 8, zc + 14, height, 5, Roof.GABLE_X, wall, ROOFS[n % ROOFS.length], 0.3F);
-                sadd(loc, x, zc - 14, x + 8, zc - 6, height, 5, Roof.GABLE_X, wall, ROOFS[(n + 2) % ROOFS.length], 0.3F);
+                sadd(loc, x, zc + 6, x + 8, zc + 14, height, 5, Roof.GABLE_X, wall, ROOFS[n % ROOFS.length], 0.22F);
+                sadd(loc, x, zc - 14, x + 8, zc - 6, height, 5, Roof.GABLE_X, wall, ROOFS[(n + 2) % ROOFS.length], 0.22F);
                 n++;
             }
         }
@@ -267,25 +332,25 @@ final class MapBuildings {
     /** Равнина Голема: аметистовое кольцо, чёрная плита и восемь колонн. */
     private static void buildPlain() {
         StoryLocation p = StoryLocation.PLAIN;
-        sdisc(p, 1200, 1100, 11.0D, 0xA98FD0, 0.3F);
-        sdisc(p, 1200, 1100, 9.5D, 0x3D3A4C, 0.3F);
-        srect(p, 1198, 1098, 1202, 1102, 0x5B3A86, 0, 0.5F);
+        sdisc(p, 1200, 1100, 11.0D, 0xA98FD0, 0.22F);
+        sdisc(p, 1200, 1100, 9.5D, 0x3D3A4C, 0.22F);
+        srect(p, 1198, 1098, 1202, 1102, 0x5B3A86, 0, 0.35F);
         for (int k = 0; k < 8; k++) {
             double px = 1200 + Math.round(13.0D * Math.cos(k * Math.PI / 4.0D));
             double pz = 1100 + Math.round(13.0D * Math.sin(k * Math.PI / 4.0D));
-            tower(p, Reloc.x(px, pz) + 0.5D, Reloc.z(px, pz) + 0.5D, 1.0D, 0, 6, 0, Roof.NONE, STONE, STONE_TOP, 0.5F);
+            tower(p, Reloc.x(px, pz) + 0.5D, Reloc.z(px, pz) + 0.5D, 1.0D, 0, 6, 0, Roof.NONE, STONE, STONE_TOP, 0.35F);
         }
     }
 
     /** Висячие сады: парящий остров, кварцевые аллеи и ротонда дворца с золотым куполом. */
     private static void buildGardens() {
         StoryLocation g = StoryLocation.GARDENS;
-        sdisc(g, 1600, 1100, 37.5D, 0x8F9A82, 0.3F);
-        sdisc(g, 1600, 1100, 36.0D, 0xA9DB93, 0.3F);
-        srect(g, 1600 - 35, 1100 - 1, 1600 + 35, 1100 + 1, 0xF4F1EA, 0, 0.3F);
-        srect(g, 1600 - 1, 1100 - 35, 1600 + 1, 1100 + 35, 0xF4F1EA, 0, 0.3F);
-        sdisc(g, 1600, 1100, 9.0D, 0xF4F1EA, 0.3F);
-        tower(g, Reloc.x(1600, 1100) + 0.5D, Reloc.z(1600, 1100) + 0.5D, 8.0D, 0, 10, 7, Roof.DOME, WHITE, 0xE9C96A, 0.3F);
+        sdisc(g, 1600, 1100, 37.5D, 0x8F9A82, 0.22F);
+        sdisc(g, 1600, 1100, 36.0D, 0xA9DB93, 0.22F);
+        srect(g, 1600 - 35, 1100 - 1, 1600 + 35, 1100 + 1, 0xF4F1EA, 0, 0.22F);
+        srect(g, 1600 - 1, 1100 - 35, 1600 + 1, 1100 + 35, 0xF4F1EA, 0, 0.22F);
+        sdisc(g, 1600, 1100, 9.0D, 0xF4F1EA, 0.22F);
+        tower(g, Reloc.x(1600, 1100) + 0.5D, Reloc.z(1600, 1100) + 0.5D, 8.0D, 0, 10, 7, Roof.DOME, WHITE, 0xE9C96A, 0.22F);
     }
 
     /** Ворота на дорогах (StoryGates): два столба с каждой стороны и перекладина. Ворота замка это сама привратная башня. */
@@ -302,12 +367,12 @@ final class MapBuildings {
                 for (int side : new int[] {-4, 4}) {
                     double px = alongX ? gx : gx + side;
                     double pz = alongX ? gz + side : gz;
-                    add(prim, px, pz, alongX ? px + 1 : px, alongX ? pz : pz + 1, 0, 8, 0, Roof.NONE, STONE, STONE_TOP, 0.4F);
+                    add(prim, px, pz, alongX ? px + 1 : px, alongX ? pz : pz + 1, 0, 8, 0, Roof.NONE, STONE, STONE_TOP, 0.3F);
                 }
                 if (alongX) {
-                    add(prim, gx, gz - 4, gx + 1, gz + 4, 7, 1, 0, Roof.NONE, STONE_DARK, STONE_TOP, 0.4F);
+                    add(prim, gx, gz - 4, gx + 1, gz + 4, 7, 1, 0, Roof.NONE, STONE_DARK, STONE_TOP, 0.3F);
                 } else {
-                    add(prim, gx - 4, gz, gx + 4, gz + 1, 7, 1, 0, Roof.NONE, STONE_DARK, STONE_TOP, 0.4F);
+                    add(prim, gx - 4, gz, gx + 4, gz + 1, 7, 1, 0, Roof.NONE, STONE_DARK, STONE_TOP, 0.3F);
                 }
             }
         }
@@ -388,7 +453,7 @@ final class MapBuildings {
     }
 
     private static void decorPiece(List<Block> blocks, List<Patch> patches, int type, Random rnd, int ax, int az) {
-        final float z = 0.5F;
+        final float z = 0.3F;
         switch (type) {
             case 0 -> {   // дом: бревенчатая хижина
                 boolean oak = rnd.nextBoolean();
@@ -403,7 +468,7 @@ final class MapBuildings {
                 int[] wools = {0xC8453F, 0xE7E2D6, 0x8E8E96};
                 int wool = wools[rnd.nextInt(3)];
                 blocks.add(new Block(null, false, ax - 2, az - 2, ax + 1, az + 2, 0, 1, 3, Roof.HIP, wool, wool, z));
-                blocks.add(new Block(null, true, ax + 3.5D, az + 0.5D, 0.8D, 0.0D, 0, 1, 0, Roof.NONE, 0xE8873A, 0xF7C45A, 0.8F));
+                blocks.add(new Block(null, true, ax + 3.5D, az + 0.5D, 0.8D, 0.0D, 0, 1, 0, Roof.NONE, 0xE8873A, 0xF7C45A, 0.6F));
             }
             case 3 -> {   // святилище: каменная площадка и колонна
                 blocks.add(new Block(null, false, ax - 3, az - 3, ax + 3, az + 3, 0, 1, 0, Roof.NONE, 0xAFAFAD, 0xC9C9C4, z));
@@ -415,7 +480,7 @@ final class MapBuildings {
                     double px = ax + Math.round(5.0D * Math.cos(Math.toRadians(a)));
                     double pz = az + Math.round(5.0D * Math.sin(Math.toRadians(a)));
                     blocks.add(new Block(null, false, px, pz, px + 1, pz, 0, 2 + (a / 36) % 3, 0, Roof.NONE,
-                            0xA8B09A, 0xBFC6B2, 0.9F));
+                            0xA8B09A, 0xBFC6B2, 0.7F));
                 }
             }
             default -> {   // дозорная башня
@@ -436,30 +501,35 @@ final class MapBuildings {
     static void draw(GuiGraphics g, float zoom, int vx1, int vy1, int vx2, int vy2,
                      DoubleUnaryOperator sx, DoubleUnaryOperator sy, Set<StoryLocation> known) {
         ensureDecor();
+        Proj pr = new Proj(sx, sy, zoom);
         for (Patch p : PATCHES) {
             if (zoom >= p.minZoom() && (p.loc() == null || known.contains(p.loc()))) {
-                drawPatch(g, p, zoom, vx1, vy1, vx2, vy2, sx, sy);
+                anchorPatch(pr, p);
+                drawPatch(g, p, pr, vx1, vy1, vx2, vy2);
             }
         }
         for (Patch p : decorPatches) {
             if (zoom >= p.minZoom()) {
-                drawPatch(g, p, zoom, vx1, vy1, vx2, vy2, sx, sy);
+                anchorPatch(pr, p);
+                drawPatch(g, p, pr, vx1, vy1, vx2, vy2);
             }
         }
 
         VISIBLE.clear();
-        collect(BLOCKS, zoom, vx1, vy1, vx2, vy2, sx, sy, known);
-        collect(decorBlocks, zoom, vx1, vy1, vx2, vy2, sx, sy, known);
+        collect(BLOCKS, pr, vx1, vy1, vx2, vy2, known);
+        collect(decorBlocks, pr, vx1, vy1, vx2, vy2, known);
         VISIBLE.sort(DEPTH);
         // сначала всё на земле, затем приподнятое (башни и дворец на крыше корпуса): иначе корпус перекрыл бы их
         for (Block b : VISIBLE) {
             if (b.base() <= 0.0D) {
-                drawBlock(g, b, zoom, sx, sy);
+                anchorBlock(pr, b);
+                drawBlock(g, b, pr);
             }
         }
         for (Block b : VISIBLE) {
             if (b.base() > 0.0D) {
-                drawBlock(g, b, zoom, sx, sy);
+                anchorBlock(pr, b);
+                drawBlock(g, b, pr);
             }
         }
     }
@@ -471,23 +541,23 @@ final class MapBuildings {
         }
         switch (loc) {
             case FARM, RED_CAMP, CHAPEL, RUINS, STREET, LONDON, PLAIN, GARDENS:
-                return zoom >= 0.55F;
+                return zoom >= 0.25F;
             default:
                 return false;
         }
     }
 
-    private static void collect(List<Block> list, float zoom, int vx1, int vy1, int vx2, int vy2,
-                                DoubleUnaryOperator sx, DoubleUnaryOperator sy, Set<StoryLocation> known) {
+    private static void collect(List<Block> list, Proj pr, int vx1, int vy1, int vx2, int vy2, Set<StoryLocation> known) {
         for (Block b : list) {
-            if (zoom < b.minZoom() || (b.loc() != null && !known.contains(b.loc()))) {
+            if (pr.zoom < b.minZoom() || (b.loc() != null && !known.contains(b.loc()))) {
                 continue;
             }
-            double pad = (b.base() + b.h() + b.roofH()) * K * zoom + 4.0D;
-            double ax = sx.applyAsDouble(b.round() ? b.x1() - b.x2() : b.x1());
-            double bx = sx.applyAsDouble(b.round() ? b.x1() + b.x2() : b.x2() + 1);
-            double ay = sy.applyAsDouble(b.round() ? b.z1() - b.x2() : b.z1());
-            double by = sy.applyAsDouble(b.round() ? b.z1() + b.x2() : b.z2() + 1);
+            anchorBlock(pr, b);
+            double pad = (b.base() + b.h() + b.roofH()) * K * pr.z() + 4.0D;
+            double ax = pr.x(b.round() ? b.x1() - b.x2() : b.x1());
+            double bx = pr.x(b.round() ? b.x1() + b.x2() : b.x2() + 1);
+            double ay = pr.y(b.round() ? b.z1() - b.x2() : b.z1());
+            double by = pr.y(b.round() ? b.z1() + b.x2() : b.z2() + 1);
             if (bx < vx1 - 4 || ax > vx2 + 4 || by + 4 < vy1 || ay - pad > vy2) {
                 continue;
             }
@@ -495,12 +565,12 @@ final class MapBuildings {
         }
     }
 
-    private static void drawPatch(GuiGraphics g, Patch p, float zoom, int vx1, int vy1, int vx2, int vy2,
-                                  DoubleUnaryOperator sx, DoubleUnaryOperator sy) {
+    private static void drawPatch(GuiGraphics g, Patch p, Proj pr, int vx1, int vy1, int vx2, int vy2) {
+        float zoom = pr.z();
         int argb = 0xFF000000 | p.color();
         if (p.disc()) {
-            int cx = round(sx.applyAsDouble(p.x1()));
-            int cy = round(sy.applyAsDouble(p.z1()));
+            int cx = round(pr.x(p.x1()));
+            int cy = round(pr.y(p.z1()));
             int r = Math.max(1, round(p.x2() * zoom));
             if (cx + r < vx1 || cx - r > vx2 || cy + r < vy1 || cy - r > vy2) {
                 return;
@@ -508,10 +578,10 @@ final class MapBuildings {
             disc(g, cx, cy, r, argb);
             return;
         }
-        int xa = round(sx.applyAsDouble(p.x1()));
-        int xb = Math.max(xa + 1, round(sx.applyAsDouble(p.x2())));
-        int ya = round(sy.applyAsDouble(p.z1()));
-        int yb = Math.max(ya + 1, round(sy.applyAsDouble(p.z2())));
+        int xa = round(pr.x(p.x1()));
+        int xb = Math.max(xa + 1, round(pr.x(p.x2())));
+        int ya = round(pr.y(p.z1()));
+        int yb = Math.max(ya + 1, round(pr.y(p.z2())));
         if (xb < vx1 || xa > vx2 || yb < vy1 || ya > vy2) {
             return;
         }
@@ -525,20 +595,21 @@ final class MapBuildings {
         }
     }
 
-    private static void drawBlock(GuiGraphics g, Block b, float zoom, DoubleUnaryOperator sx, DoubleUnaryOperator sy) {
+    private static void drawBlock(GuiGraphics g, Block b, Proj pr) {
         if (b.round()) {
-            drawRound(g, b, zoom, sx, sy);
+            drawRound(g, b, pr);
         } else {
-            drawBox(g, b, zoom, sx, sy);
+            drawBox(g, b, pr);
         }
     }
 
-    private static void drawBox(GuiGraphics g, Block b, float zoom, DoubleUnaryOperator sx, DoubleUnaryOperator sy) {
+    private static void drawBox(GuiGraphics g, Block b, Proj pr) {
+        float zoom = pr.z();
         float k = K * zoom;
-        int xa = round(sx.applyAsDouble(b.x1()));
-        int xb = Math.max(xa + 1, round(sx.applyAsDouble(b.x2() + 1)));
-        int ya = round(sy.applyAsDouble(b.z1()));
-        int yb = Math.max(ya + 1, round(sy.applyAsDouble(b.z2() + 1)));
+        int xa = round(pr.x(b.x1()));
+        int xb = Math.max(xa + 1, round(pr.x(b.x2() + 1)));
+        int ya = round(pr.y(b.z1()));
+        int yb = Math.max(ya + 1, round(pr.y(b.z2() + 1)));
         int e = round(b.base() * k);
         int hp = Math.max(1, round(b.h() * k));
         int rh = round(b.roofH() * k);
@@ -623,10 +694,11 @@ final class MapBuildings {
         }
     }
 
-    private static void drawRound(GuiGraphics g, Block b, float zoom, DoubleUnaryOperator sx, DoubleUnaryOperator sy) {
+    private static void drawRound(GuiGraphics g, Block b, Proj pr) {
+        float zoom = pr.z();
         float k = K * zoom;
-        int cx = round(sx.applyAsDouble(b.x1()));
-        int cy = round(sy.applyAsDouble(b.z1()));
+        int cx = round(pr.x(b.x1()));
+        int cy = round(pr.y(b.z1()));
         int r = Math.max(1, round(b.x2() * zoom));
         int e = round(b.base() * k);
         int hp = Math.max(1, round(b.h() * k));
@@ -673,7 +745,7 @@ final class MapBuildings {
     }
 
     /** Умножает яркость цвета (без альфы). */
-    private static int shade(int rgb, float f) {
+    static int shade(int rgb, float f) {
         int r = Math.min(255, (int) (((rgb >> 16) & 0xFF) * f));
         int gr = Math.min(255, (int) (((rgb >> 8) & 0xFF) * f));
         int b = Math.min(255, (int) ((rgb & 0xFF) * f));
@@ -681,7 +753,7 @@ final class MapBuildings {
     }
 
     /** Закрашенный круг построчно. */
-    private static void disc(GuiGraphics g, int cx, int cy, int r, int argb) {
+    static void disc(GuiGraphics g, int cx, int cy, int r, int argb) {
         for (int dy = -r; dy <= r; dy++) {
             int half = (int) Math.round(Math.sqrt(Math.max(0.0D, (double) r * r - (double) dy * dy + r * 0.4D)));
             g.fill(cx - half, cy + dy, cx + half + 1, cy + dy + 1, argb);
@@ -689,7 +761,7 @@ final class MapBuildings {
     }
 
     /** Закрашенный выпуклый многоугольник (до 6 вершин) построчно. */
-    private static void poly(GuiGraphics g, int[] xs, int[] ys, int argb) {
+    static void poly(GuiGraphics g, int[] xs, int[] ys, int argb) {
         int n = xs.length;
         int minY = Integer.MAX_VALUE;
         int maxY = Integer.MIN_VALUE;

@@ -6,12 +6,11 @@ import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.WallSignBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
 /**
  * Ставит доски объявлений побочных заданий: плоский деревянный щит между двумя столбами, под навесом, на щите
- * приколоты листки (пустые таблички), по бокам фонари, под ногами каменная площадка.
+ * клиент рисует список заданий, по бокам фонари, под ногами каменная площадка.
  * Доска строится, когда игрок подошёл ближе 96 блоков и нужные чанки загружены; пропавшая доска ставится заново.
  */
 public final class SideBoards {
@@ -85,12 +84,7 @@ public final class SideBoards {
             put(kit, x, z, f, side, 0, y + 1, frame);
             put(kit, x, z, f, side, 0, y + 2, frame);
         }
-        // листки с заданиями: пустые таблички на лицевой стороне щита
-        BlockState note = BuildKit.s(Blocks.BIRCH_WALL_SIGN).setValue(WallSignBlock.FACING, f);
-        for (int side = -1; side <= 1; side++) {
-            put(kit, x, z, f, side, 1, y + 1, note);
-            put(kit, x, z, f, side, 1, y + 2, note);
-        }
+        // задания пишутся на самом щите: их рисует клиент (BoardRenderer), блоков-табличек нет
         // бочка и компостер по бокам
         put(kit, x, z, f, -2, 1, y, BuildKit.s(Blocks.BARREL));
         put(kit, x, z, f, 2, 1, y, BuildKit.s(Blocks.COMPOSTER));

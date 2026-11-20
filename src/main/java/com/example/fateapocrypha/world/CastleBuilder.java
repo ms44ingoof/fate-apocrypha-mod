@@ -49,6 +49,10 @@ public final class CastleBuilder {
         greatHall();
         gallery();
         wings();
+        for (int z : new int[] {200, 226}) {
+            wingArch(true, z);
+            wingArch(false, z);
+        }
         palace();
         towers();
         courtyard();
@@ -164,7 +168,7 @@ public final class CastleBuilder {
         ring(cx, cz, radius, -1.0D, y, st, false, false);
     }
 
-    /** Круглая башня с зубцами и синей конической крышей. */
+    /** Круглая башня с бойницами и конической крышей из патинированной меди (крыша без зубцов под ней). */
     private void tower(int cx, int cz, int r, int y0, int h, int coneH, boolean white) {
         // освобождаем внутренность (башня может пересекать стену)
         for (int y = y0 + 1; y <= y0 + h; y++) {
@@ -191,19 +195,9 @@ public final class CastleBuilder {
                 }
             }
         }
-        // зубцы
-        int idx = 0;
-        for (int a = 0; a < 360; a += Math.max(8, (int) (360.0D / (2.0D * Math.PI * r) * 1.0D))) {
-            if ((idx++ & 1) == 0) {
-                double rad = Math.toRadians(a);
-                int x = cx + (int) Math.round((r + 0.0D) * Math.cos(rad));
-                int z = cz + (int) Math.round((r + 0.0D) * Math.sin(rad));
-                box(x, y0 + h + 1, z, x, y0 + h + 2, z, s(Blocks.STONE_BRICKS));
-            }
-        }
         // коническая крыша из патинированной меди: полосы окисленной и выветренной меди
         BlockState roof = s(Blocks.OXIDIZED_COPPER);
-        int yy = y0 + h + 2;
+        int yy = y0 + h + 1;   // крыша стоит прямо на стене: без зубцов под ней нет щелей
         for (int kk = 0; kk <= coneH; kk++) {
             double rr = (r + 1.2D) * (1.0D - (double) kk / coneH);
             if (rr < 0.7D) {
@@ -332,19 +326,41 @@ public final class CastleBuilder {
     }
 
     /** Лестница-пандус к воротам вдоль склона холма (на вершину холма, как на городском скриншоте). */
+    /**
+     * Пандус к воротам. Раньше поверхность повторяла рельеф, и на крутых местах ступени были выше блока: пройти было
+     * нельзя. Теперь профиль спускается не круче одного блока на шаг (ступенями), а если рельеф ниже, пандус
+     * продлевается за RAMP_Z, пока не дойдёт до земли.
+     */
     private void ramp() {
-        for (int z = Z1 + 3; z <= CastleSite.RAMP_Z; z++) {
-            int g = TrifasTerrain.height(CX, z);
-            boolean riser = TrifasTerrain.height(CX, z + 1) < g;
+        int zStart = Z1 + 3;
+        int zEnd = CastleSite.RAMP_Z + 16;
+        int[] top = new int[zEnd - zStart + 2];
+        int[] ground = new int[zEnd - zStart + 2];
+        int last = zEnd;
+        for (int z = zStart; z <= zEnd + 1; z++) {
+            int i = z - zStart;
+            ground[i] = TrifasTerrain.height(CX, z);
+            top[i] = i == 0 ? ground[i] : Math.min(top[i - 1], Math.max(ground[i], top[i - 1] - 1));
+        }
+        for (int z = CastleSite.RAMP_Z; z <= zEnd; z++) {
+            int i = z - zStart;
+            if (top[i] <= ground[i]) {
+                last = z;
+                break;
+            }
+        }
+        for (int z = zStart; z <= last; z++) {
+            int i = z - zStart;
+            int g = top[i];
+            int t = ground[i];
+            boolean riser = z < last && top[i + 1] < g;
             for (int x = CX - 6; x <= CX + 6; x++) {
-                box(x, g - 3, z, x, g - 1, z, s(Blocks.STONE_BRICKS));
-                for (int y = g + 1; y <= g + 6; y++) {
-                    k.clearVegetation(x, y, z);
-                }
+                box(x, Math.min(t, g) - 3, z, x, g - 1, z, s(Blocks.STONE_BRICKS));
+                clear(x, g + 1, z, x, Math.max(g, t) + 6, z);
                 set(x, g, z, riser ? BuildKit.stairs(Blocks.STONE_BRICK_STAIRS, Direction.NORTH, false) : s(Blocks.STONE_BRICKS));
             }
             for (int x : new int[] {CX - 7, CX + 7}) {
-                box(x, g - 2, z, x, g + 2, z, s(Blocks.STONE_BRICKS));
+                box(x, Math.min(t, g) - 2, z, x, g + 2, z, s(Blocks.STONE_BRICKS));
                 set(x, g + 3, z, s(((z >> 1) & 1) == 0 ? Blocks.STONE_BRICK_SLAB : Blocks.POLISHED_ANDESITE));
                 if ((z - Z1) % 8 == 3) {
                     set(x, g + 4, z, s(Blocks.LANTERN));
@@ -375,21 +391,11 @@ public final class CastleBuilder {
             set(KX1, Y + 12, z, s(Blocks.POLISHED_ANDESITE));
             set(KX2, Y + 12, z, s(Blocks.POLISHED_ANDESITE));
         }
-        // пол и плиты вторых этажей (галерея и крылья), центральный зал открыт на всю высоту
+        // пол первого этажа; пол вторых этажей в крыльях строит wings(), лишних плит на Y+12 нет:
+        // раньше между потолком первого и полом второго этажа оставался глухой пустой слой
         for (int x = KX1 + 3; x <= KX2 - 3; x++) {
             for (int z = KZ1 + 4; z <= KZ2 - 4; z++) {
                 set(x, Y, z, s(Blocks.POLISHED_DEEPSLATE));
-            }
-        }
-        for (int x = KX1 + 3; x <= KX2 - 3; x++) {
-            for (int z = 172; z <= 180; z++) {
-                set(x, Y + 12, z, s(Blocks.DARK_OAK_PLANKS));
-            }
-            for (int z = 181; z <= 244; z++) {
-                boolean hall = x >= 184 && x <= 246;
-                if (!hall) {
-                    set(x, Y + 12, z, s(Blocks.DARK_OAK_PLANKS));
-                }
             }
         }
     }
@@ -431,6 +437,82 @@ public final class CastleBuilder {
     }
 
     // ================= большой зал =================
+    /** Парапет марша: сплошной квартц от пола до уровня S (первый блок над ступенью) и плита сверху, всего 1,5 блока. */
+    private void parapet(int x, int z, int surface) {
+        box(x, Y + 1, z, x, surface, z, s(Blocks.QUARTZ_BLOCK));
+        set(x, surface + 1, z, s(Blocks.QUARTZ_SLAB));
+    }
+
+    /** Столб у подножия марша: квартцевая колонна с фонарём. */
+    private void newel(int x, int z, int floorY) {
+        box(x, floorY + 1, z, x, floorY + 3, z, s(Blocks.QUARTZ_PILLAR));
+        set(x, floorY + 4, z, s(Blocks.LANTERN));
+    }
+
+    /** Перила по линии: железные прутья в два блока, через четыре блока квартцевый столб с фонарём. */
+    private void railLine(int x1, int z1, int x2, int z2, int y) {
+        int n = Math.max(Math.abs(x2 - x1), Math.abs(z2 - z1));
+        for (int i = 0; i <= n; i++) {
+            int x = x1 + (x2 > x1 ? i : x2 < x1 ? -i : 0);
+            int z = z1 + (z2 > z1 ? i : z2 < z1 ? -i : 0);
+            if (i % 4 == 0 || i == n) {
+                box(x, y, z, x, y + 2, z, s(Blocks.QUARTZ_PILLAR));
+                set(x, y + 3, z, s(Blocks.LANTERN));
+            } else {
+                box(x, y, z, x, y + 1, z, s(Blocks.IRON_BARS));
+            }
+        }
+    }
+
+    /** Проём из зала в крыло: пилястры, перемычка с фасками и деревянная обвязка со стороны крыла. */
+    private void hallArch(boolean west, int z) {
+        int xa = west ? 184 : 245;
+        int xb = west ? 185 : 246;
+        int face = west ? 185 : 245;
+        for (int zz : new int[] {z - 1, z + 5}) {
+            box(xa, Y + 1, zz, xb, Y + 8, zz, s(Blocks.QUARTZ_PILLAR));
+            set(face, Y + 1, zz, s(Blocks.GOLD_BLOCK));
+            set(face, Y + 8, zz, s(Blocks.CHISELED_QUARTZ_BLOCK));
+        }
+        for (int zz = z - 1; zz <= z + 5; zz++) {
+            box(xa, Y + 8, zz, xb, Y + 8, zz, s(Blocks.QUARTZ_BLOCK));
+        }
+        // фаски под перемычкой (перевёрнутые ступени)
+        for (int x = xa; x <= xb; x++) {
+            set(x, Y + 7, z, BuildKit.stairs(Blocks.QUARTZ_STAIRS, Direction.NORTH, true));
+            set(x, Y + 7, z + 4, BuildKit.stairs(Blocks.QUARTZ_STAIRS, Direction.SOUTH, true));
+        }
+    }
+
+    /** Деревянная обвязка проёма со стороны крыла: столбы, балка и фаски. Строится после wings(), которая ставит обшивку. */
+    private void wingArch(boolean west, int z) {
+        int hx = west ? 183 : 247;
+        for (int zz : new int[] {z - 1, z + 5}) {
+            box(hx, Y + 1, zz, hx, Y + 8, zz, s(Blocks.STRIPPED_DARK_OAK_LOG));
+        }
+        for (int zz = z - 1; zz <= z + 5; zz++) {
+            set(hx, Y + 8, zz, s(Blocks.DARK_OAK_LOG).setValue(RotatedPillarBlock.AXIS, Direction.Axis.Z));
+        }
+        set(hx, Y + 7, z, BuildKit.stairs(Blocks.DARK_OAK_STAIRS, Direction.NORTH, true));
+        set(hx, Y + 7, z + 4, BuildKit.stairs(Blocks.DARK_OAK_STAIRS, Direction.SOUTH, true));
+    }
+
+    /** Дверь галереи в зал и в крылья: проём вдоль оси X, стена по оси Z толщиной два блока. */
+    private void galleryArch(int x) {
+        for (int xx : new int[] {x - 1, x + 5}) {
+            box(xx, Y + 1, 179, xx, Y + 9, 180, s(Blocks.QUARTZ_PILLAR));
+            set(xx, Y + 1, 179, s(Blocks.GOLD_BLOCK));
+            set(xx, Y + 9, 179, s(Blocks.CHISELED_QUARTZ_BLOCK));
+        }
+        for (int xx = x - 1; xx <= x + 5; xx++) {
+            box(xx, Y + 9, 179, xx, Y + 9, 180, s(Blocks.QUARTZ_BLOCK));
+        }
+        for (int z = 179; z <= 180; z++) {
+            set(x, Y + 8, z, BuildKit.stairs(Blocks.QUARTZ_STAIRS, Direction.WEST, true));
+            set(x + 4, Y + 8, z, BuildKit.stairs(Blocks.QUARTZ_STAIRS, Direction.EAST, true));
+        }
+    }
+
     private void greatHall() {
         int hx1 = 186;
         int hx2 = 244;
@@ -490,14 +572,18 @@ public final class CastleBuilder {
             box(hx1, Y + 22, z, hx2, Y + 22, z, s(Blocks.POLISHED_ANDESITE));
         }
 
-        // центральный марш: 8 ступеней белого мрамора
+        // центральный марш: 8 ступеней белого мрамора, по бокам каменные парапеты в полтора блока
         for (int i = 1; i <= 8; i++) {
             int z = 233 - i;
             for (int x = CX - 7; x <= CX + 7; x++) {
                 box(x, Y + 1, z, x, Y + i - 1, z, s(Blocks.QUARTZ_BLOCK));
                 set(x, Y + i, z, BuildKit.stairs(Blocks.QUARTZ_STAIRS, Direction.NORTH, false));
             }
+            parapet(CX - 8, z, Y + i + 1);
+            parapet(CX + 8, z, Y + i + 1);
         }
+        newel(CX - 8, 233, Y);
+        newel(CX + 8, 233, Y);
         // площадка
         for (int x = CX - 15; x <= CX + 15; x++) {
             for (int z = 217; z <= 224; z++) {
@@ -506,7 +592,7 @@ public final class CastleBuilder {
             }
         }
         box(CX - 3, Y + 9, 217, CX + 3, Y + 9, 224, s(Blocks.RED_CARPET));
-        // боковые марши на балкон
+        // боковые марши на балкон: ступени и парапеты по обеим сторонам каждого марша
         for (int i = 1; i <= 8; i++) {
             int z = 217 - i;
             for (int x : new int[] {CX - 15, CX + 10}) {
@@ -514,6 +600,9 @@ public final class CastleBuilder {
                     box(x + dx, Y + 1, z, x + dx, Y + 7 + i, z, s(Blocks.QUARTZ_BLOCK));
                     set(x + dx, Y + 8 + i, z, BuildKit.stairs(Blocks.QUARTZ_STAIRS, Direction.NORTH, false));
                 }
+            }
+            for (int x : new int[] {CX - 16, CX - 9, CX + 9, CX + 16}) {
+                parapet(x, z, Y + 9 + i);
             }
         }
         // балкон на уровне второго этажа
@@ -529,22 +618,25 @@ public final class CastleBuilder {
             box(x, Y + 1, 190, x, Y + 15, 190, s(Blocks.QUARTZ_PILLAR));
         }
         box(CX - 3, Y + 17, 190, CX + 3, Y + 17, 200, s(Blocks.RED_CARPET));
-        // перила: железные прутья с золотыми столбиками
-        for (int x = CX - 24; x <= CX + 24; x++) {
-            if (x > CX - 10 && x < CX + 10) {
-                continue;
-            }
-            set(x, Y + 17, 208, s(Blocks.IRON_BARS));
-            if ((x - CX) % 4 == 0) {
-                set(x, Y + 17, 208, s(Blocks.GOLD_BLOCK));
-                set(x, Y + 18, 208, s(Blocks.LANTERN));
-            }
-        }
-        for (int z = 209; z <= 216; z++) {
-            for (int x : new int[] {CX - 16, CX - 9, CX + 9, CX + 16}) {
-                set(x, Y + 9 + (z - 209) + 1, z, s(Blocks.IRON_BARS));
-            }
-        }
+        // перила балкона: не загораживают выходы маршей (x от CX-15 до CX-10 и от CX+10 до CX+15)
+        int by = Y + 17;
+        railLine(CX - 24, 208, CX - 16, 208, by);
+        railLine(CX + 16, 208, CX + 24, 208, by);
+        railLine(CX - 10, 201, CX - 10, 207, by);
+        railLine(CX + 10, 201, CX + 10, 207, by);
+        railLine(CX - 9, 200, CX + 9, 200, by);
+        railLine(CX - 24, 190, CX + 24, 190, by);
+        railLine(CX - 24, 191, CX - 24, 196, by);
+        railLine(CX - 24, 200, CX - 24, 207, by);
+        railLine(CX + 24, 191, CX + 24, 196, by);
+        railLine(CX + 24, 200, CX + 24, 207, by);
+        // перила площадки: края над залом
+        int ly = Y + 9;
+        railLine(CX - 15, 224, CX - 9, 224, ly);
+        railLine(CX + 9, 224, CX + 15, 224, ly);
+        railLine(CX - 15, 218, CX - 15, 223, ly);
+        railLine(CX + 15, 218, CX + 15, 223, ly);
+        railLine(CX - 9, 217, CX + 9, 217, ly);
 
         // люстра: цепи, золотое кольцо, фонари и стержни
         int lx = CX;
@@ -582,6 +674,13 @@ public final class CastleBuilder {
         }
         for (int x : new int[] {195, 231}) {
             clear(x, Y + 1, 179, x + 4, Y + 8, 180);
+        }
+        for (int z : new int[] {200, 226}) {
+            hallArch(true, z);
+            hallArch(false, z);
+        }
+        for (int x : new int[] {195, 231}) {
+            galleryArch(x);
         }
         // торшеры у пилястр: зал был слишком тёмным
         for (int z = 186; z <= 238; z += 8) {
@@ -631,6 +730,13 @@ public final class CastleBuilder {
             }
             clear(cx, Y + 9, 169, cx, Y + 9, 171);
             set(cx, Y + 9, 168, s(Blocks.GLASS));
+            // верхний ряд окон: галерея теперь высокая, до самой кровли
+            for (int dx = -1; dx <= 1; dx++) {
+                clear(cx + dx, Y + 13, 169, cx + dx, Y + 19, 171);
+                box(cx + dx, Y + 13, 168, cx + dx, Y + 19, 168, s(Blocks.GLASS));
+            }
+            clear(cx, Y + 20, 169, cx, Y + 20, 171);
+            set(cx, Y + 20, 168, s(Blocks.GLASS));
             // пилястры между окнами, золотые капители
             int px = cx + 4;
             if (px <= gx2) {
@@ -656,7 +762,7 @@ public final class CastleBuilder {
                     .setValue(net.minecraft.world.level.block.StairBlock.HALF, net.minecraft.world.level.block.state.properties.Half.TOP));
         }
         for (int x = gx1 + 12; x <= gx2 - 8; x += 16) {
-            for (int y = Y + 11; y >= Y + 9; y--) {
+            for (int y = Y + 22; y >= Y + 9; y--) {
                 set(x, y, 175, s(Blocks.CHAIN));
             }
             set(x, Y + 8, 175, BuildKit.HANGING_LANTERN);
@@ -670,6 +776,9 @@ public final class CastleBuilder {
         // дверь галереи в крылья
         for (int x : new int[] {172, 254}) {
             clear(x, Y + 1, 179, x + 4, Y + 8, 180);
+        }
+        for (int x : new int[] {172, 254}) {
+            galleryArch(x);
         }
         // южные бра
         for (int x = gx1 + 6; x <= gx2; x += 8) {
@@ -795,7 +904,8 @@ public final class CastleBuilder {
                 }
             }
             for (int dx = 0; dx <= 2; dx++) {
-                clear(sx + dx, Y + 23, 188, sx + dx, Y + 23, 189);   // проём в плите крыши
+                clear(sx + dx, Y + 23, 188, sx + dx, Y + 23, 190);   // проём в плите крыши по всей длине верхних ступеней
+                clear(sx + dx, Y + 24, 180, sx + dx, Y + 27, 187);   // выход на террасу свободен
             }
         }
     }
