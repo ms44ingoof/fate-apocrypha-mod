@@ -148,7 +148,6 @@ public enum SideQuest {
                 levels = 4;
                 list.add(new ItemStack(Items.ARROW, 16));
                 list.add(new ItemStack(ModItems.PRANA_CRYSTAL.get(), 1));
-                list.add(new ItemStack(ModItems.SILVER_BOWSTRING.get(), 1));
             }
             case CHAPEL_CANDLES -> {
                 levels = 4;
@@ -159,19 +158,16 @@ public enum SideQuest {
                 levels = 5;
                 list.add(new ItemStack(Items.EMERALD, 3));
                 list.add(new ItemStack(ModItems.CRIMSON_SHARD.get(), 1));
-                list.add(new ItemStack(ModItems.FOG_ESSENCE.get(), 1));
             }
             case LONDON_PARCEL -> {
                 levels = 5;
                 list.add(new ItemStack(Items.DIAMOND, 1));
                 list.add(new ItemStack(ModItems.LIGHTNING_CORE.get(), 1));
-                list.add(new ItemStack(ModItems.BLACK_STEEL.get(), 2));
             }
             default -> {
                 levels = 6;
                 list.add(new ItemStack(Items.DIAMOND, 1));
                 list.add(new ItemStack(ModItems.DRAGON_SCALE.get(), 1));
-                list.add(new ItemStack(ModItems.BROKEN_CHAIN.get(), 1));
             }
         }
         return new StoryRewards.Reward(list, levels);

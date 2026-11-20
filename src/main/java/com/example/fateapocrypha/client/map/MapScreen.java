@@ -35,7 +35,7 @@ import org.lwjgl.glfw.GLFW;
 public class MapScreen extends Screen {
     private static final int INK = 0xFF7A6A80;
     private static final int INK_SOFT = 0xFFA796AD;
-    private static final int SEA_COLOR = 0xFFD7EEF9;
+    private static final int UNEXPLORED = 0xFF10131A;
     private static final int BTN = 18;
 
     private static boolean hasLast = false;
@@ -97,7 +97,6 @@ public class MapScreen extends Screen {
     @Override
     protected void init() {
         MapSettings.load();
-        MapTextures.ensureBase();
         pw = Math.min(width - 16, 900);
         ph = Math.min(height - 16, 520);
         px = (width - pw) / 2;
@@ -113,8 +112,8 @@ public class MapScreen extends Screen {
                 cx = player.getX();
                 cz = player.getZ();
             }
-            zoom = 0.30F;
-            zoomTarget = 0.30F;
+            zoom = 1.0F;
+            zoomTarget = 1.0F;
             hasLast = true;
         } else {
             cx = lastCx;
@@ -240,7 +239,6 @@ public class MapScreen extends Screen {
     // ================= кадр =================
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partial) {
-        MapTextures.tick();
         updateView();
         this.renderBackground(g);
 
@@ -249,27 +247,22 @@ public class MapScreen extends Screen {
         drawTitle(g);
 
         g.enableScissor(vx1, vy1, vx2, vy2);
-        g.fill(vx1, vy1, vx2, vy2, SEA_COLOR);
+        g.fill(vx1, vy1, vx2, vy2, UNEXPLORED);
         if (castleView) {
             drawCastle(g, mouseX, mouseY);
-        } else if (MapTextures.baseReady()) {
-            drawTerrain(g);
-            drawSparkles(g);
-            drawClouds(g);
+        } else {
+            // настоящая карта мира из исследованных чанков: несколько блитов готовых текстур за кадр
+            ChunkMap.draw(g, zoom, vx1, vy1, vx2, vy2, this::toScreenX, this::toScreenY);
             if (MapSettings.grid) {
                 drawGrid(g);
             }
             if (MapSettings.roads) {
                 drawRoads(g);
             }
-            MapNature.draw(g, zoom, vx1, vy1, vx2, vy2, this::toScreenX, this::toScreenY);
-            drawBuildings(g);
             drawMarkers(g, mouseX, mouseY);
             drawSideBoards(g);
             drawMarks(g);
             drawPlayer(g);
-        } else {
-            drawLoading(g);
         }
         g.disableScissor();
 
@@ -288,7 +281,7 @@ public class MapScreen extends Screen {
         if (popup) {
             drawPopup(g, mouseX, mouseY);
         }
-        if (MapTextures.baseReady() && !castleView && editing == null && !popupContains(mouseX, mouseY)
+        if (!castleView && editing == null && !popupContains(mouseX, mouseY)
                 && !(listOpen && listContains(mouseX, mouseY))) {
             drawHover(g, mouseX, mouseY);
         }
@@ -330,7 +323,6 @@ public class MapScreen extends Screen {
         if (before != zoom || anchoring || flying || dragging) {
             lastChange = now;
         }
-        requestDetailIfNeeded(now);
     }
 
     private void clampCenter() {
@@ -338,95 +330,11 @@ public class MapScreen extends Screen {
         cz = Math.max(MapTerrain.Z0, Math.min(MapTerrain.Z0 + MapTerrain.HEIGHT, cz));
     }
 
-    private void requestDetailIfNeeded(long now) {
-        if (!MapTextures.baseReady() || zoomTarget < 0.32F || now - lastChange < 250L) {
-            return;
-        }
-        double halfW = (vx2 - vx1) / 2.0D / zoom;
-        double halfH = (vy2 - vy1) / 2.0D / zoom;
-        double wantBpp = Math.max(0.5D, Math.min(2.0D, 0.8D / zoom));
-        MapTerrain.Result d = MapTextures.detail();
-        if (d != null) {
-            double dx1 = d.x0();
-            double dz1 = d.z0();
-            double dx2 = d.x0() + d.width() * d.bpp();
-            double dz2 = d.z0() + d.height() * d.bpp();
-            boolean covers = cx - halfW >= dx1 && cx + halfW <= dx2 && cz - halfH >= dz1 && cz + halfH <= dz2;
-            if (covers && d.bpp() <= wantBpp * 1.7D && d.bpp() >= wantBpp * 0.5D) {
-                return;
-            }
-        }
-        if (MapTextures.detailBusy()) {
-            return;
-        }
-        MapTextures.requestDetail(cx - halfW * 1.45D, cz - halfH * 1.45D, cx + halfW * 1.45D, cz + halfH * 1.45D, wantBpp);
-    }
 
     // ================= рельеф =================
-    private void drawLayer(GuiGraphics g, ResourceLocation tex, int tw, int th, double wx0, double wz0, double bpp) {
-        g.pose().pushPose();
-        g.pose().translate((float) toScreenX(wx0), (float) toScreenY(wz0), 0.0F);
-        float scale = (float) (zoom * bpp);
-        g.pose().scale(scale, scale, 1.0F);
-        g.blit(tex, 0, 0, 0, 0, tw, th, tw, th);
-        g.pose().popPose();
-    }
 
-    private void tinted(GuiGraphics g, ResourceLocation tex, MapTerrain.Result r, float alpha) {
-        float red = ((MapSettings.outline >> 16) & 0xFF) / 255.0F;
-        float green = ((MapSettings.outline >> 8) & 0xFF) / 255.0F;
-        float blue = (MapSettings.outline & 0xFF) / 255.0F;
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        g.setColor(red, green, blue, alpha);
-        drawLayer(g, tex, r.width(), r.height(), r.x0(), r.z0(), r.bpp());
-        g.setColor(1.0F, 1.0F, 1.0F, 1.0F);
-    }
 
-    private void drawTerrain(GuiGraphics g) {
-        MapTerrain.Result base = MapTextures.base();
-        if (base == null) {
-            return;
-        }
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        drawLayer(g, MapTextures.baseColor(), base.width(), base.height(), base.x0(), base.z0(), base.bpp());
 
-        MapTerrain.Result d = MapTextures.detail();
-        boolean detailCovers = false;
-        if (d != null && zoom >= 0.28F) {
-            double halfW = (vx2 - vx1) / 2.0D / zoom;
-            double halfH = (vy2 - vy1) / 2.0D / zoom;
-            detailCovers = cx - halfW >= d.x0() && cx + halfW <= d.x0() + d.width() * d.bpp()
-                    && cz - halfH >= d.z0() && cz + halfH <= d.z0() + d.height() * d.bpp();
-        }
-        if (!detailCovers) {
-            if (MapSettings.contours) {
-                tinted(g, MapTextures.baseContour(), base, 1.0F);
-            }
-            tinted(g, MapTextures.baseCoast(), base, 1.0F);
-        }
-        if (d != null && zoom >= 0.28F) {
-            drawLayer(g, MapTextures.detailColor(), d.width(), d.height(), d.x0(), d.z0(), d.bpp());
-            if (MapSettings.contours) {
-                tinted(g, MapTextures.detailContour(), d, 1.0F);
-            }
-            tinted(g, MapTextures.detailCoast(), d, 1.0F);
-        }
-    }
-
-    private void drawLoading(GuiGraphics g) {
-        int cxm = (vx1 + vx2) / 2;
-        int cym = (vy1 + vy2) / 2;
-        Component text = Component.translatable("gui.fateapocrypha.map.loading");
-        g.drawString(font, text, cxm - font.width(text) / 2, cym - 14, INK, false);
-        int bw = 120;
-        UiDraw.rounded(g, cxm - bw / 2, cym, cxm + bw / 2, cym + 6, 3, 0x66FFFFFF);
-        int fill = (int) (bw * MapTextures.baseProgress());
-        if (fill > 4) {
-            UiDraw.rounded(g, cxm - bw / 2, cym, cxm - bw / 2 + fill, cym + 6, 3, 0xFF000000 | MapSettings.outline);
-        }
-    }
 
     // ================= сетка и дороги =================
     private void drawGrid(GuiGraphics g) {
@@ -479,54 +387,7 @@ public class MapScreen extends Screen {
         return (int) (h ^ (h >>> 16));
     }
 
-    /** Мерцающие блики на воде: сетка в мировых координатах, поэтому блики остаются на месте при движении карты. */
-    private void drawSparkles(GuiGraphics g) {
-        double cell = 80.0D / zoom;
-        long time = Util.getMillis();
-        long i0 = (long) Math.floor(toWorldX(vx1) / cell);
-        long i1 = (long) Math.floor(toWorldX(vx2) / cell);
-        long j0 = (long) Math.floor(toWorldZ(vy1) / cell);
-        long j1 = (long) Math.floor(toWorldZ(vy2) / cell);
-        for (long i = i0; i <= i1; i++) {
-            for (long j = j0; j <= j1; j++) {
-                int h = cellHash(i, j);
-                double phase = ((h >> 16) & 1023) / 1023.0D * Math.PI * 2.0D;
-                double tw = Math.sin(time / 520.0D + phase);
-                if (tw < 0.55D) {
-                    continue;
-                }
-                double wx = (i + (h & 255) / 255.0D) * cell;
-                double wz = (j + ((h >> 8) & 255) / 255.0D) * cell;
-                if (TrifasTerrain.height((int) wx, (int) wz) >= TrifasTerrain.SEA) {
-                    continue;   // блики только на море
-                }
-                int sx = (int) toScreenX(wx);
-                int sy = (int) toScreenY(wz);
-                int alpha = (int) (200.0D * (tw - 0.55D) / 0.45D);
-                int color = (alpha << 24) | 0xFFFFFF;
-                g.fill(sx, sy - 2, sx + 1, sy + 3, color);
-                g.fill(sx - 2, sy, sx + 3, sy + 1, color);
-            }
-        }
-    }
 
-    /** Мягкие облачка плывут над картой (со слабым параллаксом при движении). */
-    private void drawClouds(GuiGraphics g) {
-        long time = Util.getMillis();
-        int w = vx2 - vx1 + 260;
-        int alpha = zoom > 1.6F ? 0x14 : 0x2E;
-        int color = (alpha << 24) | 0xFFFFFF;
-        for (int i = 0; i < 6; i++) {
-            double speed = 5.0D + i * 2.2D;
-            double shift = i * 211.0D + time / 1000.0D * speed - cx * zoom * 0.18D;
-            double x = vx1 - 130 + (((shift % w) + w) % w);
-            double y = vy1 + 28 + (i * 97) % Math.max(60, vy2 - vy1 - 70);
-            int r = 9 + (i % 3) * 3;
-            UiDraw.circle(g, (int) x - r, (int) y + 3, r - 2, color);
-            UiDraw.circle(g, (int) x, (int) y - 2, r + 3, color);
-            UiDraw.circle(g, (int) x + r + 2, (int) y + 2, r, color);
-        }
-    }
 
     // ================= метки =================
     private void drawMarkers(GuiGraphics g, int mouseX, int mouseY) {
@@ -544,9 +405,7 @@ public class MapScreen extends Screen {
                 UiDraw.circle(g, x, y, (int) (13 * pulse), 0x33F5D37A);
                 UiDraw.circle(g, x, y, (int) (9 * pulse), 0x44F5D37A);
             }
-            if (MapBuildings.hasArt(m.location(), zoom)) {
-                // здания места уже нарисованы на карте: вместо точки метка только с подписью
-            } else if (m.castle()) {
+            if (m.castle()) {
                 drawCastleIcon(g, x, y, m.color());
             } else {
                 UiDraw.circle(g, x, y, 5, 0xFFFFFFFF);
@@ -568,23 +427,12 @@ public class MapScreen extends Screen {
                 int tw = font.width(m.name());
                 int lx = x - tw / 2;
                 int ly = y + 8;
-                if (m.castle() && MapBuildings.hasArt(m.location(), zoom)) {
-                    ly = (int) toScreenY(com.example.fateapocrypha.world.CastleSite.RAMP_Z + 4);   // подпись под пандусом замка
-                }
                 UiDraw.rounded(g, lx - 4, ly - 2, lx + tw + 4, ly + 10, 5, 0xCCFFFFFF);
                 g.drawString(font, m.name(), lx, ly, INK, false);
             }
         }
     }
 
-    /** Объёмные постройки мест, открытых игроком, и случайные постройки мира. */
-    private void drawBuildings(GuiGraphics g) {
-        Set<StoryLocation> known = new HashSet<>();
-        for (Marker m : markers) {
-            known.add(m.location());
-        }
-        MapBuildings.draw(g, zoom, vx1, vy1, vx2, vy2, this::toScreenX, this::toScreenY, known);
-    }
 
     /** Доски объявлений побочных заданий: «!» новое, синий значок задание идёт, зелёный сдать или доставить сюда. */
     private void drawSideBoards(GuiGraphics g) {
@@ -1511,8 +1359,7 @@ public class MapScreen extends Screen {
 
     /** Правая кнопка: новая метка на пустом месте или правка существующей. */
     private boolean rightClick(double mx, double my) {
-        if (castleView || popupContains(mx, my) || mx < vx1 || mx > vx2 || my < vy1 || my > vy2
-                || !MapTextures.baseReady()) {
+        if (castleView || popupContains(mx, my) || mx < vx1 || mx > vx2 || my < vy1 || my > vy2) {
             return true;
         }
         Minecraft mc = Minecraft.getInstance();

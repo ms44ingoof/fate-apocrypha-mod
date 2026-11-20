@@ -38,9 +38,6 @@ public final class StoryRewards {
      * Награды подобраны под крафт оружия: у каждого легендарного оружия есть уникальный компонент из сюжета
      * (Бальмунг: чешуя и кровь Фафнира из снов; Кларент: осколки Мордред; Васави Шакти: ядра молнии; копьё Астольфо: перья
      * Гиппогрифа; Знамя Жанны: святая ткань). Святая сталь и кристаллы праны общие для всех рецептов.
-     * Оружие Слуг: Чёрные ключи (осколок из интерлюдии Широ), меч мятежника (обломки цепей из интерлюдии Спартака),
-     * Казыклы-бей (шипы из падения Чёрной фракции), Нож Джека (эссенция тумана из иллюзии), лук Аталанты (тетива из Сопротивления),
-     * посох Семирамис (самоцвет из интерлюдии Грааля), копьё Ахиллеса (ясень из интерлюдии Хирона). Чёрная сталь куется из святой.
      */
     public static Reward of(StoryChapter chapter) {
         switch (chapter) {
@@ -53,23 +50,21 @@ public final class StoryRewards {
             case FARM: return r(4, item(Items.BREAD, 8), item(Items.EMERALD, 3), item(ModItems.HOLY_CLOTH.get(), 2));
             case DREAM_FAFNIR: return r(5, item(ModItems.DRAGON_SCALE.get(), 3), item(Items.BLAZE_POWDER, 2));
             case INTERLUDE_RED: return r(2, item(ModItems.CRIMSON_SHARD.get(), 1), item(ModItems.PRANA_CRYSTAL.get(), 1));
+            case INTERLUDE_SHIRO:
             case INTERLUDE_FRANKENSTEIN:
+            case INTERLUDE_SPARTACUS:
             case INTERLUDE_AVICEBRON:
+            case INTERLUDE_DARNIC:
+            case INTERLUDE_GRAIL:
+            case INTERLUDE_ACHILLES:
                 return r(2, item(Items.EMERALD, 2), item(ModItems.PRANA_CRYSTAL.get(), 1));
-            case INTERLUDE_SHIRO: return r(2, item(ModItems.CRIMSON_SHARD.get(), 1), item(ModItems.PRANA_CRYSTAL.get(), 1));
-            case INTERLUDE_SPARTACUS: return r(2, item(ModItems.BROKEN_CHAIN.get(), 2), item(ModItems.PRANA_CRYSTAL.get(), 1));
-            case INTERLUDE_DARNIC: return r(2, item(ModItems.BLOOD_THORN.get(), 2), item(ModItems.PRANA_CRYSTAL.get(), 1));
-            case INTERLUDE_GRAIL: return r(2, item(ModItems.GARDENS_GEM.get(), 1), item(ModItems.PRANA_CRYSTAL.get(), 1));
-            case INTERLUDE_ACHILLES: return r(2, item(ModItems.PELIAN_ASH.get(), 2), item(ModItems.PRANA_CRYSTAL.get(), 1));
             case INTERLUDE_SEMIRAMIS: return r(2, item(ModItems.CRIMSON_SHARD.get(), 1), item(ModItems.PRANA_CRYSTAL.get(), 1));
             case INTERLUDE_PUCELLE: return r(2, item(ModItems.HOLY_CLOTH.get(), 1), item(ModItems.PRANA_CRYSTAL.get(), 1));
             case FRANKEN_LEGACY: return r(5, item(ModItems.LIGHTNING_CORE.get(), 2), item(Items.LIGHTNING_ROD, 1));
             case CELENIKE: return r(5, item(ModItems.HIPPOGRIFF_FEATHER.get(), 2), item(Items.IRON_HELMET, 1), item(Items.IRON_BOOTS, 1));
-            case JACK: return r(6, item(ModItems.HOLY_STEEL.get(), 2), item(Items.IRON_CHESTPLATE, 1), item(Items.IRON_LEGGINGS, 1),
-                    item(ModItems.FOG_ESSENCE.get(), 2));
+            case JACK: return r(6, item(ModItems.HOLY_STEEL.get(), 2), item(Items.IRON_CHESTPLATE, 1), item(Items.IRON_LEGGINGS, 1));
             case GOLEM_ADAM: return r(8, item(Items.DIAMOND, 3), item(Items.GOLDEN_CARROT, 8), item(ModItems.PRANA_CRYSTAL.get(), 3));
-            case RESISTANCE: return r(5, item(Items.GOLDEN_CARROT, 8), item(Items.ARROW, 32), item(ModItems.PRANA_CRYSTAL.get(), 2),
-                    item(ModItems.SILVER_BOWSTRING.get(), 1));
+            case RESISTANCE: return r(5, item(Items.GOLDEN_CARROT, 8), item(Items.ARROW, 32), item(ModItems.PRANA_CRYSTAL.get(), 2));
             case NIGHT_TALK: return r(3, item(Items.CAKE, 1), item(ModItems.HOLY_CLOTH.get(), 1));
             case DREAM_FAFNIR_2: return r(5, item(ModItems.FAFNIR_BLOOD.get(), 2), item(Items.FIRE_CHARGE, 6));
             case GARDENS_ASSAULT: return r(6, item(Items.GOLDEN_APPLE, 2), item(Items.DIAMOND, 2), item(ModItems.HOLY_STEEL.get(), 2));

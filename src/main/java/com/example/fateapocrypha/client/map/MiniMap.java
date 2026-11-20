@@ -15,8 +15,8 @@ import net.minecraft.resources.ResourceLocation;
 /** Мини-карта в углу экрана: север сверху, берег и места, свои метки, стрелка к заданию и пульсирующий круг игрока. */
 public final class MiniMap {
     private static final int SIZE = 104;
-    private static final double BLOCKS_PER_PX = 3.0D;
-    private static final int SEA = 0xFFD7EEF9;
+    private static final double BLOCKS_PER_PX = 1.0D;   // один блок на пиксель: видны отдельные дома, деревья и дороги
+    private static final int UNEXPLORED = 0xFF10131A;
 
     private MiniMap() {
     }
@@ -32,12 +32,6 @@ public final class MiniMap {
         if (!MapSettings.minimap) {
             return;
         }
-        MapTextures.ensureBase();
-        MapTextures.tick();
-        if (!MapTextures.baseReady()) {
-            return;
-        }
-        MapTerrain.Result base = MapTextures.base();
         int margin = 8;
         int corner = MapSettings.minimapCorner;
         int x1 = (corner & 1) == 0 ? margin : sw - SIZE - margin;
@@ -49,33 +43,16 @@ public final class MiniMap {
         long time = Util.getMillis();
 
         UiDraw.shadow(g, x1 - 2, y1 - 2, x2 + 2, y2 + 2, 6);
-        g.fill(x1, y1, x2, y2, SEA);
+        g.fill(x1, y1, x2, y2, UNEXPLORED);
         g.enableScissor(x1, y1, x2, y2);
-        float scale = (float) (MapTextures.BASE_BPP / BLOCKS_PER_PX);
-        float ox = (float) (x1 + SIZE / 2.0D - (px - base.x0()) / BLOCKS_PER_PX);
-        float oy = (float) (y1 + SIZE / 2.0D - (pz - base.z0()) / BLOCKS_PER_PX);
-        blitLayer(g, MapTextures.baseColor(), base, ox, oy, scale, false);
-        blitLayer(g, MapTextures.baseCoast(), base, ox, oy, scale, true);
-
-        // природа и постройки: деревья, горы, замок, дома, ворота (тот же слой, что на большой карте)
-        java.util.Set<StoryLocation> knownPlaces = new java.util.HashSet<>();
-        java.util.List<MapPlaces.Place> places = MapPlaces.discovered(mc);
-        for (MapPlaces.Place place : places) {
-            knownPlaces.add(place.location());
-        }
-        float zoomMini = (float) (1.0D / BLOCKS_PER_PX);
         final int fx1 = x1;
         final int fy1 = y1;
         java.util.function.DoubleUnaryOperator sxm = wx -> fx1 + SIZE / 2.0D + (wx - px) / BLOCKS_PER_PX;
         java.util.function.DoubleUnaryOperator sym = wz -> fy1 + SIZE / 2.0D + (wz - pz) / BLOCKS_PER_PX;
-        MapNature.draw(g, zoomMini, x1, y1, x2, y2, sxm, sym);
-        MapBuildings.draw(g, zoomMini, x1, y1, x2, y2, sxm, sym, knownPlaces);
+        ChunkMap.draw(g, (float) (1.0D / BLOCKS_PER_PX), x1, y1, x2, y2, sxm, sym);
 
-        // места и свои метки
-        for (MapPlaces.Place place : places) {
-            if (MapBuildings.hasArt(place.location(), zoomMini)) {
-                continue;
-            }
+        // места
+        for (MapPlaces.Place place : MapPlaces.discovered(mc)) {
             int x = (int) (x1 + SIZE / 2.0D + (place.x() - px) / BLOCKS_PER_PX);
             int y = (int) (y1 + SIZE / 2.0D + (place.z() - pz) / BLOCKS_PER_PX);
             if (x > x1 && x < x2 && y > y1 && y < y2) {
@@ -149,25 +126,5 @@ public final class MiniMap {
         int tw = mc.font.width(coords);
         UiDraw.rounded(g, x1 + SIZE / 2 - tw / 2 - 4, y2 + 3, x1 + SIZE / 2 + tw / 2 + 4, y2 + 14, 5, 0xB8FFFFFF);
         g.drawString(mc.font, coords, x1 + SIZE / 2 - tw / 2, y2 + 5, 0xFF7A6A80, false);
-    }
-
-    private static void blitLayer(GuiGraphics g, ResourceLocation tex, MapTerrain.Result base, float ox, float oy,
-                                  float scale, boolean tinted) {
-        if (tinted) {
-            float red = ((MapSettings.outline >> 16) & 0xFF) / 255.0F;
-            float green = ((MapSettings.outline >> 8) & 0xFF) / 255.0F;
-            float blue = (MapSettings.outline & 0xFF) / 255.0F;
-            RenderSystem.enableBlend();
-            RenderSystem.defaultBlendFunc();
-            g.setColor(red, green, blue, 1.0F);
-        }
-        g.pose().pushPose();
-        g.pose().translate(ox, oy, 0.0F);
-        g.pose().scale(scale, scale, 1.0F);
-        g.blit(tex, 0, 0, 0, 0, base.width(), base.height(), base.width(), base.height());
-        g.pose().popPose();
-        if (tinted) {
-            g.setColor(1.0F, 1.0F, 1.0F, 1.0F);
-        }
     }
 }
