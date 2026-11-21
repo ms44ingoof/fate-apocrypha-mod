@@ -1,6 +1,7 @@
 package com.example.fateapocrypha.scene;
 
 import com.example.fateapocrypha.ModItems;
+import com.example.fateapocrypha.fx.FateFx;
 import com.example.fateapocrypha.servant.ServantType;
 import com.example.fateapocrypha.story.NpcType;
 import com.example.fateapocrypha.story.StoryChapter;
@@ -1597,4 +1598,125 @@ public class StoryScenes {
         return s;
     }
 
+
+    // =====================================================================================
+    // Моменты: небольшие сцены после эпилога. Запускаются Shift + ПКМ у костра Красных, в часовне и на ферме
+    // (см. MomentEvents). Сюжет не двигают, только добавляют живости героям и миру.
+    // =====================================================================================
+    public static List<Step> moment(String id) {
+        return switch (id) {
+            case "campfire" -> momentCampfire();
+            case "chapel" -> momentChapel();
+            case "farm" -> momentFarm();
+            default -> List.of();
+        };
+    }
+
+    private static void momentStart(List<Step> s, Step ensure, double px, double pz, float yaw) {
+        s.add(Steps.rememberPosition());
+        s.add(Steps.fade(0, 6, 25, true));
+        s.add(ensure);
+        s.add(Steps.teleport(px, Y, pz, yaw));
+    }
+
+    private static void momentEnd(List<Step> s) {
+        s.add(Steps.fade(30, 20, 20, true));
+        s.add(Steps.despawnAllNpcs());
+        s.add(Steps.returnToPosition());
+    }
+
+    private static Step momentSay(String speaker, String id, int n) {
+        return Steps.say(speaker, "dialogue.fateapocrypha.moment_" + id + "." + n, 130);
+    }
+
+    private static final String ASTOLFO_NAME = "npc.fateapocrypha.astolfo";
+
+    /** У костра: Астольфо жарит «зефир», Мордред делает вид, что ей всё равно. */
+    private static List<Step> momentCampfire() {
+        final double cx = StoryWorld.STAGE_RED_X + 0.5;
+        final double cz = StoryWorld.STAGE_RED_Z + 0.5;
+        List<Step> s = new ArrayList<>();
+        momentStart(s, Steps.run(c -> StoryWorld.ensureStages(c.trifas())), cx + 2.6, cz + 1.4, 105.0F);
+        s.add(Steps.spawnNpc("astolfo", NpcType.ASTOLFO, cx - 2.4, Y, cz - 0.4, -90.0F));
+        s.add(Steps.spawnNpc("mordred", NpcType.MORDRED, cx - 0.4, Y, cz - 2.8, 0.0F));
+        s.add(Steps.title("moment.fateapocrypha.campfire.title", "moment.fateapocrypha.campfire.subtitle"));
+        s.add(Steps.fx(FateFx.RING, cx, Y, cz, 0xFFB45A, 6.0F, 36));
+        s.add(Steps.wait(50));
+        s.add(Steps.npcAnim("astolfo", "wave", 60));
+        s.add(momentSay(ASTOLFO_NAME, "campfire", 1));
+        s.add(Steps.npcAnim("mordred", "facepalm", 70));
+        s.add(momentSay(MORDRED, "campfire", 2));
+        s.add(momentSay(ASTOLFO_NAME, "campfire", 3));
+        s.add(Steps.npcAnim("mordred", "shrug", 70));
+        s.add(momentSay(MORDRED, "campfire", 4));
+        s.add(Steps.npcAnim("astolfo", "laugh", 80));
+        s.add(Steps.particles(ParticleTypes.HEART, cx - 2.4, Y + 2.2, cz - 0.4, 6, 0.5D));
+        s.add(momentSay(ASTOLFO_NAME, "campfire", 5));
+        s.add(momentSay(MORDRED, "campfire", 6));
+        s.add(Steps.npcAnim("astolfo", "sit", 120));
+        s.add(Steps.npcAnim("mordred", "sit", 120));
+        s.add(momentSay(ASTOLFO_NAME, "campfire", 7));
+        s.add(Steps.wait(30));
+        momentEnd(s);
+        return s;
+    }
+
+    /** В часовне: Жанна молится, Астольфо приносит «святые взрывные» свечи. */
+    private static List<Step> momentChapel() {
+        final double cx = StoryWorld.STAGE_CHAPEL_X + 0.5;
+        List<Step> s = new ArrayList<>();
+        momentStart(s, Steps.run(c -> StoryWorld.ensureStages(c.trifas())), cx, 899.5, 0.0F);
+        s.add(Steps.spawnNpc("jeanne", NpcType.JEANNE, cx, Y, 909.5, 0.0F));
+        s.add(Steps.spawnNpc("astolfo", NpcType.ASTOLFO, cx + 0.5, Y, 891.5, 0.0F));
+        s.add(Steps.title("moment.fateapocrypha.chapel.title", "moment.fateapocrypha.chapel.subtitle"));
+        s.add(Steps.npcAnim("jeanne", "pray", 400));
+        s.add(Steps.fx(FateFx.CIRCLE, cx, Y, 909.5, FateFx.GOLD, 2.8F, 160));
+        s.add(Steps.wait(60));
+        s.add(momentSay(JEANNE, "chapel", 1));
+        s.add(Steps.npcWalk("astolfo", cx + 0.5, Y, 905.5, 1.1D, 200, false));
+        s.add(Steps.npcAnim("astolfo", "wave", 50));
+        s.add(momentSay(ASTOLFO_NAME, "chapel", 2));
+        s.add(Steps.npcFace("jeanne", 180.0F));
+        s.add(momentSay(JEANNE, "chapel", 3));
+        s.add(momentSay(ASTOLFO_NAME, "chapel", 4));
+        s.add(Steps.fx(FateFx.BURST, cx + 0.5, Y + 1.2, 905.5, FateFx.GOLD, 2.5F, 14));
+        s.add(Steps.shake(0.35F, 8));
+        s.add(Steps.npcAnim("jeanne", "facepalm", 70));
+        s.add(momentSay(JEANNE, "chapel", 5));
+        s.add(Steps.npcAnim("astolfo", "salute", 60));
+        s.add(momentSay(ASTOLFO_NAME, "chapel", 6));
+        s.add(Steps.npcAnim("jeanne", "pray", 140));
+        s.add(momentSay(JEANNE, "chapel", 7));
+        s.add(Steps.wait(30));
+        momentEnd(s);
+        return s;
+    }
+
+    /** На ферме: Зиг против курицы. */
+    private static List<Step> momentFarm() {
+        final double fx = 1189.5;
+        List<Step> s = new ArrayList<>();
+        momentStart(s, Steps.run(c -> StoryWorld.ensureFarm(c.trifas())), fx, 1203.5, 180.0F);
+        s.add(Steps.spawnNpc("farmer", NpcType.FARMER, fx - 1.5, Y, 1197.5, 0.0F));
+        s.add(Steps.spawnNpc("zig", NpcType.ZIG, fx + 1.5, Y, 1200.5, 180.0F));
+        s.add(Steps.spawnAnimals(new double[][] {{fx - 4.5, Y, 1199.5}, {fx + 4.5, Y, 1202.5}}));
+        s.add(Steps.title("moment.fateapocrypha.farm.title", "moment.fateapocrypha.farm.subtitle"));
+        s.add(Steps.wait(50));
+        s.add(Steps.npcAnim("farmer", "point", 70));
+        s.add(momentSay(FARMER, "farm", 1));
+        s.add(Steps.npcAnim("zig", "think", 90));
+        s.add(momentSay("npc.fateapocrypha.zig", "farm", 2));
+        s.add(momentSay(FARMER, "farm", 3));
+        s.add(Steps.npcAnim("zig", "shrug", 70));
+        s.add(momentSay("npc.fateapocrypha.zig", "farm", 4));
+        s.add(momentSay(FARMER, "farm", 5));
+        s.add(Steps.npcAnim("zig", "victory", 80));
+        s.add(Steps.particles(ParticleTypes.HAPPY_VILLAGER, fx + 1.5, Y + 2.0, 1200.5, 12, 0.6D));
+        s.add(momentSay("npc.fateapocrypha.zig", "farm", 6));
+        s.add(Steps.npcAnim("farmer", "laugh", 80));
+        s.add(momentSay(FARMER, "farm", 7));
+        s.add(Steps.wait(30));
+        momentEnd(s);
+        return s;
+    }
 }

@@ -1,5 +1,6 @@
 package com.example.fateapocrypha.scene;
 
+import com.example.fateapocrypha.fx.FateFx;
 import com.example.fateapocrypha.ModEntities;
 import com.example.fateapocrypha.entity.ServantEntity;
 import com.example.fateapocrypha.entity.StoryCameraEntity;
@@ -547,6 +548,39 @@ public class Steps {
                 bolt.setVisualOnly(true);
                 level.addFreshEntity(bolt);
             }
+            FateFx.ring(level, x, y, z, 0xBFD8FF, 6.0F, 14);
+            FateFx.shake(level, x, y, z, 40.0D, 0.9F, 12);
+        });
+    }
+
+    /** Собственный эффект в точке сюжетных координат (kind: FateFx.CIRCLE, RING, PILLAR, BURST; size: радиус или высота). */
+    public static Step fx(int kind, double x, double y, double z, int color, float size, int ticks) {
+        return run(c -> {
+            ServerLevel level = c.trifas();
+            if (level != null) {
+                FateFx.spawn(level, kind, Reloc.x(x, z), Reloc.y(x, z, y), Reloc.z(x, z), 0.0D, 0.0D, 0.0D, color, size, ticks);
+            }
+        });
+    }
+
+    /** Магический круг под игроком (для призыва, печатей и памятных моментов). */
+    public static Step circleAtPlayer(int color, float radius, int ticks) {
+        return run(c -> {
+            ServerLevel level = c.trifas();
+            if (level != null) {
+                FateFx.circle(level, c.player.getX(), c.player.getY(), c.player.getZ(), color, radius, ticks);
+                FateFx.pillar(level, c.player.getX(), c.player.getY(), c.player.getZ(), color, radius * 2.5F, ticks / 2);
+            }
+        });
+    }
+
+    /** Тряска камеры у игрока. */
+    public static Step shake(float power, int ticks) {
+        return run(c -> {
+            ServerLevel level = c.trifas();
+            if (level != null) {
+                FateFx.shake(level, c.player.getX(), c.player.getY(), c.player.getZ(), 8.0D, power, ticks);
+            }
         });
     }
 
@@ -963,6 +997,11 @@ public class Steps {
                 level.sendParticles(ParticleTypes.END_ROD, c.player.getX(), c.player.getY(1.0D), c.player.getZ(),
                         60, 0.6D, 1.0D, 0.6D, 0.1D);
             }
+            if (level != null) {
+                FateFx.circle(level, c.player.getX(), c.player.getY(), c.player.getZ(), FateFx.RED, 3.2F, 70);
+                FateFx.pillar(level, c.player.getX(), c.player.getY(), c.player.getZ(), 0xFF8A8A, 9.0F, 40);
+                FateFx.shake(level, c.player.getX(), c.player.getY(), c.player.getZ(), 8.0D, 0.5F, 20);
+            }
             c.player.level().playSound(null, c.player.blockPosition(), SoundEvents.BEACON_POWER_SELECT,
                     SoundSource.PLAYERS, 1.0F, 1.0F);
         });
@@ -981,6 +1020,9 @@ public class Steps {
                 }
                 level.sendParticles(ParticleTypes.ELECTRIC_SPARK, c.player.getX(), c.player.getY(1.0D),
                         c.player.getZ(), 80, 0.7D, 1.0D, 0.7D, 0.3D);
+                FateFx.circle(level, c.player.getX(), c.player.getY(), c.player.getZ(), FateFx.CYAN, 3.0F, 50);
+                FateFx.burst(level, c.player.getX(), c.player.getY(1.0D), c.player.getZ(), 0xDFF8FF, 3.5F, 16);
+                FateFx.shake(level, c.player.getX(), c.player.getY(), c.player.getZ(), 8.0D, 1.1F, 16);
             }
             c.player.removeEffect(MobEffects.DAMAGE_BOOST);
             c.player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, ticks, 2, false, true));
@@ -1022,6 +1064,8 @@ public class Steps {
             }
             level.addFreshEntity(dragon);
             c.mobs.add(dragon.getUUID());
+            FateFx.ring(level, x, y - 3.0D, z, burning ? 0xFF8A3A : 0xBFD8FF, 18.0F, 30);
+            FateFx.shake(level, x, y, z, 80.0D, 1.2F, 40);
         });
     }
 

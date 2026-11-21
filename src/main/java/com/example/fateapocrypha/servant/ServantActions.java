@@ -4,6 +4,7 @@ import com.example.fateapocrypha.ModItems;
 import com.example.fateapocrypha.entity.ServantEntity;
 import com.example.fateapocrypha.story.StoryManager;
 import java.util.UUID;
+import com.example.fateapocrypha.fx.FateFx;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -89,6 +90,15 @@ public class ServantActions {
             message(player, "message.fateapocrypha.no_servant");
             return;
         }
+        if (player.level() instanceof ServerLevel fxLevel) {
+            // печать вспыхивает золотым кругом под игроком
+            FateFx.circle(fxLevel, player.getX(), player.getY(), player.getZ(), FateFx.GOLD, 2.6F, 36);
+            FateFx.pillar(fxLevel, player.getX(), player.getY(), player.getZ(), 0xFFE79A, 6.0F, 14);
+            if (action == ACTION_PHANTASM) {
+                FateFx.ring(fxLevel, servant.getX(), servant.getY(), servant.getZ(), FateFx.GOLD, 9.0F, 22);
+                FateFx.shake(fxLevel, servant.getX(), servant.getY(), servant.getZ(), 30.0D, 0.7F, 12);
+            }
+        }
         switch (action) {
             case ACTION_TELEPORT -> teleportServant(player, servant);
             case ACTION_BUFF -> servant.useBuff(player);
@@ -161,6 +171,10 @@ public class ServantActions {
             level.addFreshEntity(bolt);
         }
 
+        FateFx.circle(level, servant.getX(), servant.getY(), servant.getZ(), 0x7FD1FF, 3.4F, 60);
+        FateFx.pillar(level, servant.getX(), servant.getY(), servant.getZ(), 0xBFE6FF, 14.0F, 24);
+        FateFx.burst(level, servant.getX(), servant.getY() + 1.0D, servant.getZ(), 0xBFE6FF, 3.0F, 18);
+        FateFx.shake(level, servant.getX(), servant.getY(), servant.getZ(), 24.0D, 0.6F, 14);
         StoryManager.setServantId(player, servant.getUUID());
         if (!creative) {
             consumeOne(player, ModItems.SUMMON_CATALYST.get());
@@ -195,6 +209,10 @@ public class ServantActions {
             bolt.setVisualOnly(true);
             level.addFreshEntity(bolt);
         }
+        FateFx.circle(level, servant.getX(), servant.getY(), servant.getZ(), 0x7FD1FF, 3.4F, 60);
+        FateFx.pillar(level, servant.getX(), servant.getY(), servant.getZ(), 0xBFE6FF, 14.0F, 24);
+        FateFx.burst(level, servant.getX(), servant.getY() + 1.0D, servant.getZ(), 0xBFE6FF, 3.0F, 18);
+        FateFx.shake(level, servant.getX(), servant.getY(), servant.getZ(), 24.0D, 0.6F, 14);
         StoryManager.setServantId(player, servant.getUUID());
         return servant;
     }

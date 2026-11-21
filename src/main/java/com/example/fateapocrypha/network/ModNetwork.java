@@ -32,6 +32,10 @@ public class ModNetwork {
                 OpenBoardPacket::encode, OpenBoardPacket::decode, OpenBoardPacket::handle);
         CHANNEL.registerMessage(id++, BoardActionPacket.class,
                 BoardActionPacket::encode, BoardActionPacket::decode, BoardActionPacket::handle);
+        CHANNEL.registerMessage(id++, FxPacket.class,
+                FxPacket::encode, FxPacket::decode, FxPacket::handle);
+        CHANNEL.registerMessage(id++, ShakePacket.class,
+                ShakePacket::encode, ShakePacket::decode, ShakePacket::handle);
         CHANNEL.registerMessage(id++, GateGuardPacket.class,
                 GateGuardPacket::encode, GateGuardPacket::decode, GateGuardPacket::handle);
         CHANNEL.registerMessage(id++, GateActionPacket.class,

@@ -11,7 +11,8 @@ import net.minecraft.world.entity.Mob;
 /**
  * Собственная анимация персонажей мода поверх модели игрока: свой цикл ходьбы и бега (раскачка, подпрыгивание, наклон),
  * «дыхание» в покое, удары четырёх стилей из трёх фаз (замах, удар, возврат) и жесты для сцен: cast, bow, kneel, sit,
- * salute, wave, pray, think, cry, point, dance, charge. Манера движения задаётся AnimStyle каждого героя.
+ * salute, wave, pray, think, cry, point, dance, charge, laugh, facepalm, shrug, stretch, victory, scared;
+ * в покое иногда оглядывается, расправляет плечи, переступает; при ударе отшатывается (flinch). Манера движения задаётся AnimStyle каждого героя.
  */
 public class FateModel<T extends Mob> extends PlayerModel<T> {
     public static final float ATTACK_TICKS = 12.0F;
@@ -73,7 +74,7 @@ public class FateModel<T extends Mob> extends PlayerModel<T> {
 
         walk(limbSwing, amt, st);
         if (amt < 0.08F) {
-            idle(age, st);
+            idle(age + entity.getId() * 53.0F, st);
         }
         if (!action.isEmpty() && !action.equals("attack")) {
             action(action, actT, age);
@@ -82,7 +83,22 @@ public class FateModel<T extends Mob> extends PlayerModel<T> {
             float p = action.equals("attack") ? Mth.clamp(actT / ATTACK_TICKS, 0.0F, 0.999F) : this.attackTime;
             attack(p, st);
         }
+        if (entity.hurtTime > 0) {
+            flinch(entity.hurtTime / (float) Math.max(1, entity.hurtDuration));
+        }
         syncOverlays();
+    }
+
+    /** Реакция на удар: корпус отшатывается, голова запрокидывается, руки дёргаются вверх и затухают к концу. */
+    private void flinch(float h) {
+        float k = h * h;
+        this.body.xRot -= 0.28F * k;
+        this.body.zRot += 0.08F * k;
+        this.head.xRot -= 0.35F * k;
+        this.rightArm.xRot -= 0.55F * k;
+        this.leftArm.xRot -= 0.55F * k;
+        this.rightArm.zRot += 0.25F * k;
+        this.leftArm.zRot -= 0.25F * k;
     }
 
     private void syncOverlays() {
@@ -130,6 +146,23 @@ public class FateModel<T extends Mob> extends PlayerModel<T> {
         this.rightArm.zRot += (0.05F + Mth.cos(t) * 0.04F) * k;
         this.leftArm.zRot -= (0.05F + Mth.cos(t + 1.2F) * 0.04F) * k;
         this.body.zRot += Mth.sin(age * 0.03F) * 0.03F * k;   // перенос веса с ноги на ногу
+        // редкие жесты в покое: оглядеться по сторонам, расправить плечи, переступить с ноги на ногу
+        float cyc = (age % 260.0F) / 260.0F;
+        if (cyc > 0.30F && cyc < 0.42F) {
+            float look = Mth.sin((cyc - 0.30F) / 0.12F * Mth.PI);
+            this.head.yRot += Mth.sin(age * 0.09F) * 0.55F * look * k;
+            this.head.xRot -= 0.06F * look;
+        } else if (cyc > 0.70F && cyc < 0.78F) {
+            float roll = Mth.sin((cyc - 0.70F) / 0.08F * Mth.PI);
+            this.rightArm.xRot -= 0.35F * roll * k;
+            this.leftArm.xRot -= 0.35F * roll * k;
+            this.body.xRot -= 0.05F * roll * k;
+            this.head.xRot -= 0.12F * roll * k;
+        } else if (cyc > 0.90F && cyc < 0.96F) {
+            float shift = Mth.sin((cyc - 0.90F) / 0.06F * Mth.PI);
+            this.rightLeg.xRot -= 0.25F * shift;
+            this.body.zRot += 0.05F * shift;
+        }
     }
 
     // ================= жесты и действия =================
@@ -217,6 +250,52 @@ public class FateModel<T extends Mob> extends PlayerModel<T> {
                 this.head.y -= hop;
                 this.rightArm.y -= hop;
                 this.leftArm.y -= hop;
+            }
+            case "laugh" -> {
+                float shake = Mth.sin(age * 1.35F) * e;
+                this.head.xRot -= (0.38F + Math.abs(shake) * 0.08F) * e;
+                this.body.xRot = Mth.lerp(e, this.body.xRot, -0.22F + shake * 0.05F);
+                pose(this.rightArm, 0.2F, 0.0F, 0.35F, e);
+                pose(this.leftArm, -0.9F, 0.0F, -0.15F, e);
+                this.body.y += shake * 0.15F;
+                this.head.y += shake * 0.15F;
+            }
+            case "facepalm" -> {
+                pose(this.rightArm, -2.45F, -0.35F, 0.0F, e);
+                this.head.xRot += 0.3F * e;
+                this.head.yRot += 0.1F * e;
+                this.body.xRot = Mth.lerp(e, this.body.xRot, 0.12F);
+            }
+            case "shrug" -> {
+                float up = Mth.sin(Math.min(1.0F, t / 10.0F) * Mth.PI) * 0.6F + e * 0.4F;
+                pose(this.rightArm, -0.9F, 0.0F, 0.9F + up * 0.1F, e);
+                pose(this.leftArm, -0.9F, 0.0F, -0.9F - up * 0.1F, e);
+                this.head.zRot = 0.18F * e;
+                this.body.y += 0.15F * up;
+            }
+            case "stretch" -> {
+                pose(this.rightArm, -3.05F, 0.0F, -0.25F, e);
+                pose(this.leftArm, -3.05F, 0.0F, 0.25F, e);
+                this.body.xRot = Mth.lerp(e, this.body.xRot, -0.2F);
+                this.head.xRot -= 0.25F * e;
+            }
+            case "victory" -> {
+                float pump = Mth.sin(age * 0.5F) * 0.12F * e;
+                pose(this.rightArm, -2.9F + pump, 0.0F, -0.2F, e);
+                this.head.xRot -= 0.18F * e;
+                this.body.xRot = Mth.lerp(e, this.body.xRot, -0.08F);
+                float hop = Math.abs(Mth.sin(age * 0.5F)) * 0.9F * e;
+                this.body.y -= hop;
+                this.head.y -= hop;
+                this.rightArm.y -= hop;
+                this.leftArm.y -= hop;
+            }
+            case "scared" -> {
+                pose(this.rightArm, -1.6F, 0.5F, 0.0F, e);
+                pose(this.leftArm, -1.6F, -0.5F, 0.0F, e);
+                this.body.xRot = Mth.lerp(e, this.body.xRot, -0.18F);
+                this.head.xRot -= 0.15F * e;
+                this.body.zRot += Mth.sin(age * 2.2F) * 0.03F * e;
             }
             case "charge" -> {
                 this.body.xRot = Mth.lerp(e, this.body.xRot, 0.55F);

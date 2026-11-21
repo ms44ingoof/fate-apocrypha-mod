@@ -1,6 +1,7 @@
 package com.example.fateapocrypha.item;
 
 import com.example.fateapocrypha.entity.StoryNpcEntity;
+import com.example.fateapocrypha.fx.FateFx;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -145,6 +146,9 @@ public class FateWeaponItem extends SwordItem {
             level.sendParticles(ParticleTypes.SWEEP_ATTACK, x, base.y + 1.0D, z, 1, 0.0D, 0.0D, 0.0D, 0.0D);
             level.sendParticles(ParticleTypes.END_ROD, x, base.y + 1.0D, z, 4, 0.5D, 0.4D, 0.5D, 0.02D);
         }
+        FateFx.slash(level, base.x, base.y + 0.1D, base.z, dir.x, dir.z, FateFx.CYAN, 6.5F, 14);
+        FateFx.ring(level, base.x, base.y + 0.1D, base.z, FateFx.CYAN, 4.0F, 14);
+        FateFx.shake(level, base.x, base.y, base.z, 24.0D, 0.5F, 8);
         level.playSound(null, player.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.2F, 0.7F);
         level.playSound(null, player.blockPosition(), SoundEvents.BEACON_POWER_SELECT, SoundSource.PLAYERS, 0.8F, 1.4F);
         return true;
@@ -156,10 +160,12 @@ public class FateWeaponItem extends SwordItem {
         Vec3 look = player.getLookAngle();
         Set<LivingEntity> hit = new HashSet<>();
         DustParticleOptions dust = new DustParticleOptions(new Vector3f(0.86F, 0.1F, 0.16F), 1.5F);
+        Vec3 end = eye.add(look.scale(20.0D));
         for (double d = 1.0D; d <= 20.0D; d += 0.5D) {
             Vec3 p = eye.add(look.scale(d));
             BlockPos bp = BlockPos.containing(p);
             if (!level.getBlockState(bp).getCollisionShape(level, bp).isEmpty()) {
+                end = p;
                 break;
             }
             level.sendParticles(dust, p.x, p.y, p.z, 3, 0.15D, 0.15D, 0.15D, 0.0D);
@@ -173,6 +179,11 @@ public class FateWeaponItem extends SwordItem {
                 }
             }
         }
+        Vec3 muzzle = eye.add(look.scale(0.8D)).add(0.0D, -0.3D, 0.0D);
+        FateFx.beam(level, muzzle, end, FateFx.RED, 1.4F, 14);
+        FateFx.burst(level, end.x, end.y, end.z, FateFx.RED, 3.0F, 16);
+        FateFx.circle(level, player.getX(), player.getY(), player.getZ(), FateFx.RED, 2.4F, 26);
+        FateFx.shake(level, player.getX(), player.getY(), player.getZ(), 30.0D, 0.9F, 12);
         level.playSound(null, player.blockPosition(), SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.PLAYERS, 0.8F, 1.6F);
         return true;
     }
@@ -208,6 +219,9 @@ public class FateWeaponItem extends SwordItem {
             bolt.setVisualOnly(true);
             level.addFreshEntity(bolt);
         }
+        FateFx.pillar(level, target.getX(), target.getY(), target.getZ(), 0xBFD8FF, 30.0F, 12);
+        FateFx.ring(level, target.getX(), target.getY(), target.getZ(), 0xBFD8FF, 5.0F, 14);
+        FateFx.shake(level, target.getX(), target.getY(), target.getZ(), 28.0D, 0.8F, 10);
         target.hurt(source(player), 18.0F);
         for (LivingEntity e : level.getEntitiesOfClass(LivingEntity.class, target.getBoundingBox().inflate(3.0D), t -> valid(t, player))) {
             if (e != target) {
@@ -236,6 +250,9 @@ public class FateWeaponItem extends SwordItem {
             level.sendParticles(ParticleTypes.END_ROD, p.x, p.y + 1.0D, p.z, 3, 0.2D, 0.3D, 0.2D, 0.02D);
             level.sendParticles(ParticleTypes.CRIT, p.x, p.y + 1.0D, p.z, 2, 0.2D, 0.3D, 0.2D, 0.1D);
         }
+        FateFx.beam(level, start.add(0.0D, 1.0D, 0.0D), start.add(horizontal.scale(6.0D)).add(0.0D, 1.0D, 0.0D),
+                FateFx.GOLD, 1.1F, 9);
+        FateFx.ring(level, start.x, start.y, start.z, FateFx.GOLD, 2.6F, 10);
         player.setDeltaMovement(dash.x, dash.y, dash.z);
         player.hurtMarked = true;
         player.fallDistance = 0.0F;
@@ -254,6 +271,8 @@ public class FateWeaponItem extends SwordItem {
             level.sendParticles(ParticleTypes.HEART, e.getX(), e.getY() + 1.5D, e.getZ(), 6, 0.4D, 0.4D, 0.4D, 0.02D);
             level.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, e.getX(), e.getY() + 1.0D, e.getZ(), 12, 0.5D, 0.7D, 0.5D, 0.15D);
         }
+        FateFx.circle(level, player.getX(), player.getY(), player.getZ(), 0xFFE9A0, 11.0F, 50);
+        FateFx.pillar(level, player.getX(), player.getY(), player.getZ(), 0xFFF1C2, 10.0F, 30);
         level.playSound(null, player.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.0F, 1.5F);
         return true;
     }
