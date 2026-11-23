@@ -40,5 +40,5 @@ public class ClientEvents {
         event.registerEntityRenderer(ModEntities.STORY_NPC.get(), StoryNpcRenderer::new);
         event.registerEntityRenderer(ModEntities.STORY_CAMERA.get(), NoopRenderer::new);
     }
-
+}
   
