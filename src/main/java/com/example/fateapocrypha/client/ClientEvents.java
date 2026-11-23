@@ -69,5 +69,5 @@ public class ClientEvents {
         event.registerAboveAll("quest_hud",
                 (gui, graphics, partialTick, width, height) -> QuestHud.render(graphics, width, height, partialTick));
     }
-}
+
 	
