@@ -40,8 +40,8 @@ public class ClientEvents {
         event.registerEntityRenderer(ModEntities.STORY_NPC.get(), StoryNpcRenderer::new);
         event.registerEntityRenderer(ModEntities.STORY_CAMERA.get(), NoopRenderer::new);
     }
-}
-   /** Регистрирует слой анимаций игрока PAL (на него играют жесты Мастера). */
+
+    /** Регистрирует слой анимаций игрока PAL (на него играют жесты Мастера). */
     @SubscribeEvent
     public static void onClientSetup(net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent event) {
         event.enqueueWork(com.example.fateapocrypha.client.pal.PalBridge::register);
@@ -69,5 +69,4 @@ public class ClientEvents {
         event.registerAboveAll("quest_hud",
                 (gui, graphics, partialTick, width, height) -> QuestHud.render(graphics, width, height, partialTick));
     }
-
-	
+}
