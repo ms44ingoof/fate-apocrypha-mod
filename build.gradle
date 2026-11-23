@@ -18,8 +18,25 @@ minecraft {
     mappings channel: 'official', version: '1.20.1'
 }
 
+repositories {
+    // GeckoLib: модели и анимации существ (Слуги)
+    maven {
+        name = 'GeckoLib'
+        url = 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/'
+        content { includeGroup 'software.bernie.geckolib' }
+    }
+    // Player Animation Library (PAL): анимации игрока
+    maven {
+        name = 'KosmX'
+        url = 'https://maven.kosmx.dev/'
+        content { includeGroup 'dev.kosmx.player-anim' }
+    }
+}
+
 dependencies {
     minecraft 'net.minecraftforge:forge:1.20.1-47.3.0'
+    implementation fg.deobf('software.bernie.geckolib:geckolib-forge-1.20.1:4.4.9')
+    implementation fg.deobf('dev.kosmx.player-anim:player-animation-lib-forge:1.0.2-rc1+1.20')
 }
 
 tasks.withType(JavaCompile).configureEach {

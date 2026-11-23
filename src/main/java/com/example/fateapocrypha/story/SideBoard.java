@@ -13,11 +13,9 @@ public enum SideBoard {
     CASTLE("castle", StoryLocation.CASTLE_GATE, StoryLocation.FOREST),
     FOREST("forest", StoryLocation.FOREST, StoryLocation.CASTLE_GATE),
     FARM("farm", StoryLocation.FARM, StoryLocation.CASTLE_GATE),
-    CAMP("camp", StoryLocation.RED_CAMP, StoryLocation.STREET),
-    CHAPEL("chapel", StoryLocation.CHAPEL, StoryLocation.RED_CAMP),
     STREET("street", StoryLocation.STREET, StoryLocation.LONDON),
     LONDON("london", StoryLocation.LONDON, StoryLocation.PLAIN),
-    RUINS("ruins", StoryLocation.RUINS, StoryLocation.LONDON);
+    PLAIN("plain", StoryLocation.PLAIN, StoryLocation.LONDON);
 
     private final String id;
     private final StoryLocation location;

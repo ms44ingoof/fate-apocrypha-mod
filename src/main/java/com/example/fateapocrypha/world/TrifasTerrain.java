@@ -41,7 +41,7 @@ public final class TrifasTerrain {
         for (int i = 0; i < RAW_PADS.length; i++) {
             PADS[i] = Reloc.rect(RAW_PADS[i][0], RAW_PADS[i][1], RAW_PADS[i][2], RAW_PADS[i][3]);
             PAD_Y[i] = FLOOR;
-            PAD_BLEND[i] = 46;
+            PAD_BLEND[i] = 100;   // широкий и плавный переход от площадки к природному рельефу
         }
         CASTLE_PAD = n - 1;
         PADS[CASTLE_PAD] = CastleSite.moundRect();
@@ -147,6 +147,12 @@ public final class TrifasTerrain {
         return x * x * (3.0D - 2.0D * x);
     }
 
+    /** Более плавная кривая (первая и вторая производные равны нулю на концах): склоны без заметных изломов. */
+    static double smoother(double a, double b, double t) {
+        double x = Math.max(0.0D, Math.min(1.0D, (t - a) / (b - a)));
+        return x * x * x * (x * (x * 6.0D - 15.0D) + 10.0D);
+    }
+
     private static double terrace(double h, double step) {
         double f = h / step;
         double fl = Math.floor(f);
@@ -179,7 +185,7 @@ public final class TrifasTerrain {
     /** 1 на площадке локации, плавно падает до 0 за ширину перехода площадки от неё. */
     public static double padWeight(double x, double z) {
         double[] info = padInfo(x, z);
-        return 1.0D - smooth(PAD_MARGIN, PAD_MARGIN + PAD_BLEND[(int) info[1]], info[0]);
+        return 1.0D - smoother(PAD_MARGIN, PAD_MARGIN + PAD_BLEND[(int) info[1]], info[0]);
     }
 
     /** Склон холма замка (скалы вокруг замка). */
@@ -244,7 +250,7 @@ public final class TrifasTerrain {
     public static int height(int x, int z) {
         double[] info = padInfo(x, z);
         int idx = (int) info[1];
-        double w = 1.0D - smooth(PAD_MARGIN, PAD_MARGIN + PAD_BLEND[idx], info[0]);
+        double w = 1.0D - smoother(PAD_MARGIN, PAD_MARGIN + PAD_BLEND[idx], info[0]);
         double h = w >= 1.0D ? PAD_Y[idx] : lerp(natural(x, z), PAD_Y[idx], w);
         return (int) Math.round(Math.max(4.0D, Math.min(300.0D, h)));
     }

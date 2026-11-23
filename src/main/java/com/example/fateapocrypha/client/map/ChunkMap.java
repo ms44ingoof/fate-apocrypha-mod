@@ -309,11 +309,21 @@ public final class ChunkMap {
                         : north != null ? north.getHeight(Heightmap.Types.MOTION_BLOCKING, lx, 15) : h;
                 int hW = lx > 0 ? hts[lz * 16 + lx - 1]
                         : west != null ? west.getHeight(Heightmap.Types.MOTION_BLOCKING, 15, lz) : h;
-                int y = h - 1;
+                int y = h;   // ChunkAccess.getHeight возвращает y самого верхнего блока (не первый свободный): раньше брался блок под травой, и карта была коричневой
                 int argb = 0;
                 if (y >= minY) {
                     pos.set(bx + lx, y, bz + lz);
                     BlockState st = chunk.getBlockState(pos);
+                    if (y + 1 < level.getMaxBuildHeight()) {
+                        pos.setY(y + 1);
+                        BlockState above = chunk.getBlockState(pos);
+                        if (!above.isAir() && !above.getCollisionShape(level, pos).isEmpty()) {
+                            st = above;   // карта высот отстала на блок: берём настоящий верхний
+                            y++;
+                        } else {
+                            pos.setY(y);
+                        }
+                    }
                     int rgb = color(level, chunk, pos, st, y, minY, h, hN, hW);
                     argb = rgb < 0 ? 0 : 0xFF000000 | rgb;
                 }

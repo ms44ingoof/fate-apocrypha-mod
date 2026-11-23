@@ -41,16 +41,16 @@ public final class TrifasRoads {
     }
 
     /** Связи между локациями: по ним проложены дороги и построены ворота. */
+    /**
+     * Дороги связывают только места, куда игрок ходит сам. Красный лагерь, часовня и руины это площадки интерлюдий
+     * (игрок попадает туда сценой), поэтому тропинки к ним не ведут.
+     */
     private static final StoryLocation[][] EDGES = {
             {StoryLocation.CASTLE_GATE, StoryLocation.FOREST},
             {StoryLocation.CASTLE_GATE, StoryLocation.FARM},
-            {StoryLocation.FOREST, StoryLocation.RED_CAMP},
-            {StoryLocation.RED_CAMP, StoryLocation.CHAPEL},
-            {StoryLocation.RED_CAMP, StoryLocation.STREET},
+            {StoryLocation.FOREST, StoryLocation.STREET},
             {StoryLocation.STREET, StoryLocation.LONDON},
             {StoryLocation.LONDON, StoryLocation.PLAIN},
-            {StoryLocation.PLAIN, StoryLocation.RUINS},
-            {StoryLocation.RUINS, StoryLocation.LONDON},
             {StoryLocation.LONDON, StoryLocation.GARDENS}
     };
 

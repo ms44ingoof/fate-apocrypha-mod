@@ -23,3 +23,17 @@ mandatory=true
 versionRange="[1.20.1,1.21)"
 ordering="NONE"
 side="BOTH"
+
+[[dependencies.fateapocrypha]]
+modId="geckolib"
+mandatory=true
+versionRange="[4.4,)"
+ordering="AFTER"
+side="BOTH"
+
+[[dependencies.fateapocrypha]]
+modId="player_animation_lib"
+mandatory=true
+versionRange="[1.0,)"
+ordering="AFTER"
+side="BOTH"

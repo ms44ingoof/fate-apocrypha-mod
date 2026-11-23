@@ -21,16 +21,16 @@ public enum SideQuest {
             () -> Items.SWEET_BERRIES, 10, null),
     FARM_HARVEST("farm_harvest", Type.FETCH, StoryChapter.DREAM_FAFNIR, SideBoard.FARM, SideBoard.FARM,
             () -> Items.WHEAT, 16, null),
-    CAMP_SCOUT("camp_scout", Type.EXPLORE, StoryChapter.FRANKEN_LEGACY, SideBoard.CAMP, SideBoard.CAMP,
-            null, 0, StoryLocation.STREET),
-    CHAPEL_CANDLES("chapel_candles", Type.FETCH, StoryChapter.FRANKEN_LEGACY, SideBoard.CHAPEL, SideBoard.CHAPEL,
+    CAMP_SCOUT("camp_scout", Type.EXPLORE, StoryChapter.FRANKEN_LEGACY, SideBoard.STREET, SideBoard.STREET,
+            null, 0, StoryLocation.LONDON),
+    CHAPEL_CANDLES("chapel_candles", Type.FETCH, StoryChapter.FRANKEN_LEGACY, SideBoard.LONDON, SideBoard.LONDON,
             () -> Items.CANDLE, 4, null),
     STREET_LETTER("street_letter", Type.DELIVER, StoryChapter.JACK, SideBoard.STREET, SideBoard.LONDON,
             null, 0, null),
-    LONDON_PARCEL("london_parcel", Type.DELIVER, StoryChapter.GOLEM_ADAM, SideBoard.LONDON, SideBoard.RUINS,
+    LONDON_PARCEL("london_parcel", Type.DELIVER, StoryChapter.GOLEM_ADAM, SideBoard.LONDON, SideBoard.PLAIN,
             null, 0, null),
-    RUINS_SURVEY("ruins_survey", Type.EXPLORE, StoryChapter.GOLEM_ADAM, SideBoard.RUINS, SideBoard.RUINS,
-            null, 0, StoryLocation.PLAIN);
+    RUINS_SURVEY("ruins_survey", Type.EXPLORE, StoryChapter.GOLEM_ADAM, SideBoard.PLAIN, SideBoard.PLAIN,
+            null, 0, StoryLocation.LONDON);
 
     public enum Type { FETCH, EXPLORE, DELIVER }
 

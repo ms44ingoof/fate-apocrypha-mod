@@ -1,6 +1,14 @@
 package com.example.fateapocrypha.entity;
 
 import java.util.List;
+import software.bernie.geckolib.animatable.GeoEntity;
+import software.bernie.geckolib.core.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.core.animation.AnimatableManager;
+import software.bernie.geckolib.core.animation.AnimationController;
+import software.bernie.geckolib.core.animation.AnimationState;
+import software.bernie.geckolib.core.animation.RawAnimation;
+import software.bernie.geckolib.core.object.PlayState;
+import software.bernie.geckolib.util.GeckoLibUtil;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -37,7 +45,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
 /** Общая основа всех Слуг: ИИ, усиление (120 с) и Благородный Фантазм (600 с). */
-public abstract class ServantEntity extends TamableAnimal implements AnimatedActor {
+public abstract class ServantEntity extends TamableAnimal implements AnimatedActor, GeoEntity {
     public static final int BUFF_COOLDOWN_TICKS = 120 * 20;
     public static final int PHANTASM_COOLDOWN_TICKS = 600 * 20;
     public static final int TELEPORT_COOLDOWN_TICKS = 15 * 20;
@@ -57,6 +65,27 @@ public abstract class ServantEntity extends TamableAnimal implements AnimatedAct
 
     protected ServantEntity(EntityType<? extends ServantEntity> type, Level level) {
         super(type, level);
+    }
+
+    // ---------- GeckoLib: модель и циклы движения (жесты и удары считает PoseSolver по getAnim) ----------
+    private final AnimatableInstanceCache geoCache = GeckoLibUtil.createInstanceCache(this);
+
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        controllers.add(new AnimationController<>(this, "move", 4, this::movePredicate));
+    }
+
+    private PlayState movePredicate(AnimationState<ServantEntity> state) {
+        if (state.isMoving()) {
+            return state.setAndContinue(RawAnimation.begin().thenLoop(
+                    state.getLimbSwingAmount() > 0.75F ? "animation.fate.run" : "animation.fate.walk"));
+        }
+        return state.setAndContinue(RawAnimation.begin().thenLoop("animation.fate.idle"));
+    }
+
+    @Override
+    public AnimatableInstanceCache getAnimatableInstanceCache() {
+        return this.geoCache;
     }
 
     // ---------- Анимации действий: рисует FateModel ----------

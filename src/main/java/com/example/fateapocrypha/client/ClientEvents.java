@@ -2,6 +2,7 @@ package com.example.fateapocrypha.client;
 
 import com.example.fateapocrypha.FateApocrypha;
 import com.example.fateapocrypha.ModEntities;
+import com.example.fateapocrypha.client.gecko.ServantGeoRenderer;
 import net.minecraft.client.renderer.entity.NoopRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
@@ -20,16 +21,30 @@ public class ClientEvents {
     @SubscribeEvent
     public static void onRegisterRenderers(EntityRenderersEvent.RegisterRenderers event) {
         // третий параметр: true = тонкие руки (Alex), false = обычные (Steve)
-        event.registerEntityRenderer(ModEntities.ASTOLFO.get(),
-                ctx -> new ServantRenderer<>(ctx, skin("astolfo"), true, "astolfo"));
-        event.registerEntityRenderer(ModEntities.MORDRED.get(),
-                ctx -> new ServantRenderer<>(ctx, skin("mordred"), false, "mordred"));
-        event.registerEntityRenderer(ModEntities.JEANNE.get(),
-                ctx -> new ServantRenderer<>(ctx, skin("jeanne"), true, "jeanne"));
-        event.registerEntityRenderer(ModEntities.SEMIRAMIS.get(),
-                ctx -> new ServantRenderer<>(ctx, skin("semiramis"), false, "semiramis"));
+        if (ClientConfig.GECKO_SERVANTS.get()) {
+            // Слуги на GeckoLib: свои модели и анимации (см. client/gecko)
+            event.registerEntityRenderer(ModEntities.ASTOLFO.get(), ServantGeoRenderer::new);
+            event.registerEntityRenderer(ModEntities.MORDRED.get(), ServantGeoRenderer::new);
+            event.registerEntityRenderer(ModEntities.JEANNE.get(), ServantGeoRenderer::new);
+            event.registerEntityRenderer(ModEntities.SEMIRAMIS.get(), ServantGeoRenderer::new);
+        } else {
+            event.registerEntityRenderer(ModEntities.ASTOLFO.get(),
+                    ctx -> new ServantRenderer<>(ctx, skin("astolfo"), true, "astolfo"));
+            event.registerEntityRenderer(ModEntities.MORDRED.get(),
+                    ctx -> new ServantRenderer<>(ctx, skin("mordred"), false, "mordred"));
+            event.registerEntityRenderer(ModEntities.JEANNE.get(),
+                    ctx -> new ServantRenderer<>(ctx, skin("jeanne"), true, "jeanne"));
+            event.registerEntityRenderer(ModEntities.SEMIRAMIS.get(),
+                    ctx -> new ServantRenderer<>(ctx, skin("semiramis"), false, "semiramis"));
+        }
         event.registerEntityRenderer(ModEntities.STORY_NPC.get(), StoryNpcRenderer::new);
         event.registerEntityRenderer(ModEntities.STORY_CAMERA.get(), NoopRenderer::new);
+    }
+
+    /** Регистрирует слой анимаций игрока PAL (на него играют жесты Мастера). */
+    @SubscribeEvent
+    public static void onClientSetup(net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent event) {
+        event.enqueueWork(com.example.fateapocrypha.client.pal.PalBridge::register);
     }
 
     @SubscribeEvent

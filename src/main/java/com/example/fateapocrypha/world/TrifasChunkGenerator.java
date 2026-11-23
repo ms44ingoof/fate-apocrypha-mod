@@ -176,8 +176,8 @@ public class TrifasChunkGenerator extends ChunkGenerator {
                 for (int y = h + 1; y <= TrifasTerrain.SEA; y++) {
                     put(chunk, pos, floorMap, surfMap, lx, y, lz, WATER);
                 }
-                if (h < TrifasTerrain.SEA && TrifasTerrain.onRoad(wx, wz)) {
-                    put(chunk, pos, floorMap, surfMap, lx, TrifasTerrain.SEA, lz, PLANKS);   // мост через реку
+                if (h < TrifasTerrain.SEA) {
+                    bridge(chunk, pos, floorMap, surfMap, lx, lz, wx, wz, h);   // мост через реку
                 }
 
                 // парящий остров над землёй
@@ -198,6 +198,42 @@ public class TrifasChunkGenerator extends ChunkGenerator {
                             put(chunk, pos, floorMap, surfMap, lx, y, lz, state);
                         }
                     }
+                }
+            }
+        }
+    }
+
+    private static final BlockState BRIDGE_DECK = Blocks.SPRUCE_PLANKS.defaultBlockState();
+    private static final BlockState BRIDGE_LOG = Blocks.STRIPPED_SPRUCE_LOG.defaultBlockState();
+    private static final BlockState BRIDGE_FENCE = Blocks.SPRUCE_FENCE.defaultBlockState();
+    private static final BlockState BRIDGE_LANTERN = Blocks.LANTERN.defaultBlockState();
+
+    /**
+     * Мост через реку: настил на блок выше воды, в самой глубокой части изгибается аркой (до трёх блоков над водой),
+     * по краям перила, фонарные столбы и свайные опоры до дна. Ширина около пяти блоков, проход посередине три.
+     */
+    private static void bridge(ChunkAccess chunk, BlockPos.MutableBlockPos pos, Heightmap floorMap, Heightmap surfMap,
+                               int lx, int lz, int wx, int wz, int h) {
+        if (TrifasTerrain.padDist(wx, wz) <= 0.5D) {
+            return;
+        }
+        double rd = TrifasRoads.roadDist(wx, wz);
+        if (rd > 2.7D) {
+            return;
+        }
+        int depth = TrifasTerrain.SEA - h;
+        int deck = TrifasTerrain.SEA + 1 + Math.min(2, depth / 2);
+        boolean edge = rd > 1.95D;
+        put(chunk, pos, floorMap, surfMap, lx, deck, lz, BRIDGE_DECK);
+        if (edge) {
+            put(chunk, pos, floorMap, surfMap, lx, deck - 1, lz, BRIDGE_LOG);       // продольная балка под перилами
+            put(chunk, pos, floorMap, surfMap, lx, deck + 1, lz, BRIDGE_FENCE);
+            if (Math.floorMod(wx * 3 + wz * 5, 4) == 0) {
+                put(chunk, pos, floorMap, surfMap, lx, deck + 2, lz, BRIDGE_LANTERN);   // фонарь на столбе перил
+            }
+            if (Math.floorMod(wx + wz, 3) == 0) {
+                for (int y = h + 1; y < deck - 1; y++) {                                 // свая до дна
+                    put(chunk, pos, floorMap, surfMap, lx, y, lz, BRIDGE_LOG);
                 }
             }
         }

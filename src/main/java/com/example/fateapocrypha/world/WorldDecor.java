@@ -183,20 +183,32 @@ public final class WorldDecor {
         }
     }
 
-    /** Выравнивает площадку: срезает выступы и деревья, подсыпает землю до уровня y0. */
+    /**
+     * Готовит место под постройку. Внутри квадрата радиуса r пол ровно на уровне y0 (деревья и выступы срезаны), а дальше
+     * на 7 блоков земля плавно переходит к природному рельефу: склон вместо вертикальной стенки среза и плоской
+     * площадки, как было раньше.
+     */
     private static void prepare(BuildKit kit, int ax, int az, int r, int y0) {
-        for (int x = ax - r; x <= ax + r; x++) {
-            for (int z = az - r; z <= az + r; z++) {
+        final int skirt = 7;
+        for (int x = ax - r - skirt; x <= ax + r + skirt; x++) {
+            for (int z = az - r - skirt; z <= az + r + skirt; z++) {
+                int d = Math.max(Math.abs(x - ax), Math.abs(z - az));
+                double t = d <= r ? 0.0D : (d - r) / (double) skirt;
+                double w = 1.0D - t * t * t * (t * (t * 6.0D - 15.0D) + 10.0D);
                 int g = BuildKit.ground(x, z);
-                for (int y = y0 + 1; y <= Math.max(g, y0) + 14; y++) {
+                int target = (int) Math.round(g + (y0 - g) * w);
+                int clearTop = Math.max(g, target) + (d <= r ? 14 : 6);
+                for (int y = target + 1; y <= clearTop; y++) {
                     if (!kit.isAir(x, y, z)) {
                         kit.set(x, y, z, BuildKit.AIR);
                     }
                 }
-                for (int y = g; y < y0; y++) {
+                for (int y = g; y < target; y++) {
                     kit.set(x, y + 1, z, BuildKit.s(Blocks.DIRT));
                 }
-                kit.set(x, y0, z, BuildKit.s(Blocks.GRASS_BLOCK));
+                if (target != g || d <= r) {
+                    kit.set(x, target, z, BuildKit.s(Blocks.GRASS_BLOCK));
+                }
             }
         }
     }

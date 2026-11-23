@@ -1,0 +1,67 @@
+{
+  "name": "beam",
+  "author": "fateapocrypha",
+  "description": "Fate/Apocrypha",
+  "emote": {
+    "beginTick": 0,
+    "endTick": 18,
+    "stopTick": 22,
+    "isLoop": false,
+    "returnTick": 0,
+    "nsfw": false,
+    "degrees": true,
+    "moves": [
+      {
+        "tick": 0,
+        "easing": "INOUTSINE",
+        "right_arm": {
+          "pitch": 0
+        },
+        "left_arm": {
+          "pitch": 0
+        }
+      },
+      {
+        "tick": 5,
+        "easing": "INOUTSINE",
+        "right_arm": {
+          "pitch": -95
+        },
+        "left_arm": {
+          "pitch": -95,
+          "yaw": 12
+        },
+        "head": {
+          "pitch": -6
+        }
+      },
+      {
+        "tick": 14,
+        "easing": "INOUTSINE",
+        "right_arm": {
+          "pitch": -95
+        },
+        "left_arm": {
+          "pitch": -95,
+          "yaw": 12
+        },
+        "head": {
+          "pitch": -6
+        }
+      },
+      {
+        "tick": 18,
+        "easing": "INOUTSINE",
+        "right_arm": {
+          "pitch": 0
+        },
+        "left_arm": {
+          "pitch": 0
+        },
+        "head": {
+          "pitch": 0
+        }
+      }
+    ]
+  }
+}

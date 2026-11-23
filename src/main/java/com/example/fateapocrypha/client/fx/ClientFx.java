@@ -35,6 +35,11 @@ public final class ClientFx {
     private static final int BEAM = 3;
     private static final int SLASH = 4;
     private static final int BURST = 5;
+    private static final int HELIX = 6;
+    private static final int RAIN = 7;
+    private static final int SUN = 8;
+    private static final int WINGS = 9;
+    private static final int LIGHTNING = 10;
 
     private static final class Fx {
         final int kind;
@@ -153,6 +158,11 @@ public final class ClientFx {
                 case BEAM -> beam(bb, m, cam, f, age);
                 case SLASH -> slash(bb, m, cam, f, age);
                 case BURST -> burst(bb, m, cam, f, age);
+                case HELIX -> helix(bb, m, cam, f, age);
+                case RAIN -> rain(bb, m, cam, f, age);
+                case SUN -> sun(bb, m, cam, f, age);
+                case WINGS -> wings(bb, m, cam, f, age);
+                case LIGHTNING -> lightning(bb, m, cam, f, age);
                 default -> { }
             }
         }
@@ -251,13 +261,66 @@ public final class ClientFx {
         double y = f.y + 0.06D;
         ringLine(bb, m, cam, f.x, y, f.z, radius, radius * 0.045D, 64, f.r, f.g, f.b, a * 0.9F);
         ringLine(bb, m, cam, f.x, y, f.z, radius * 0.80D, radius * 0.02D, 64, f.r, f.g, f.b, a * 0.6F);
-        // гексаграмма из двух треугольников, вращается медленно
+        int style = (int) f.ay;
         double hr = radius * 0.74D;
-        for (int i = 0; i < 6; i++) {
-            double a1 = spin + i * Math.PI / 3.0D;
-            double a2 = spin + (i + 2) * Math.PI / 3.0D;
-            flatSeg(bb, m, cam, f.x + Math.cos(a1) * hr, f.z + Math.sin(a1) * hr,
-                    f.x + Math.cos(a2) * hr, f.z + Math.sin(a2) * hr, y, radius * 0.025D, f.r, f.g, f.b, a * 0.8F);
+        float wl = (float) (radius * 0.025D);
+        switch (style) {
+            case 1 -> {   // солнце: двенадцать лучей-шипов и внутреннее кольцо
+                for (int i = 0; i < 12; i++) {
+                    double ang = spin * 0.8D + i * Math.PI / 6.0D;
+                    double r2 = radius * (0.66D + 0.1D * Math.sin(age * 0.3D + i));
+                    flatSeg(bb, m, cam, f.x + Math.cos(ang) * radius * 0.36D, f.z + Math.sin(ang) * radius * 0.36D,
+                            f.x + Math.cos(ang) * r2, f.z + Math.sin(ang) * r2, y, radius * 0.045D, f.r, f.g, f.b, a * 0.85F);
+                }
+                ringLine(bb, m, cam, f.x, y, f.z, radius * 0.36D, wl, 40, f.r, f.g, f.b, a * 0.8F);
+            }
+            case 2 -> {   // октаграмма {8/3}
+                for (int i = 0; i < 8; i++) {
+                    double a1 = spin + i * Math.PI / 4.0D;
+                    double a2 = spin + (i + 3) * Math.PI / 4.0D;
+                    flatSeg(bb, m, cam, f.x + Math.cos(a1) * hr, f.z + Math.sin(a1) * hr,
+                            f.x + Math.cos(a2) * hr, f.z + Math.sin(a2) * hr, y, wl, f.r, f.g, f.b, a * 0.85F);
+                }
+            }
+            case 3 -> {   // лотос: восемь лепестков
+                for (int i = 0; i < 8; i++) {
+                    double ang = spin * 0.5D + i * Math.PI / 4.0D;
+                    double tx = f.x + Math.cos(ang) * hr;
+                    double tz = f.z + Math.sin(ang) * hr;
+                    double s1x = f.x + Math.cos(ang - 0.30D) * radius * 0.40D;
+                    double s1z = f.z + Math.sin(ang - 0.30D) * radius * 0.40D;
+                    double s2x = f.x + Math.cos(ang + 0.30D) * radius * 0.40D;
+                    double s2z = f.z + Math.sin(ang + 0.30D) * radius * 0.40D;
+                    flatSeg(bb, m, cam, f.x, f.z, s1x, s1z, y, wl, f.r, f.g, f.b, a * 0.7F);
+                    flatSeg(bb, m, cam, s1x, s1z, tx, tz, y, wl, f.r, f.g, f.b, a * 0.9F);
+                    flatSeg(bb, m, cam, tx, tz, s2x, s2z, y, wl, f.r, f.g, f.b, a * 0.9F);
+                    flatSeg(bb, m, cam, s2x, s2z, f.x, f.z, y, wl, f.r, f.g, f.b, a * 0.7F);
+                }
+            }
+            case 4 -> {   // шестерня: два квадрата и зубцы по кольцу
+                for (int q = 0; q < 2; q++) {
+                    for (int i = 0; i < 4; i++) {
+                        double a1 = spin * (q == 0 ? 1.0D : -1.0D) + q * Math.PI / 4.0D + i * Math.PI / 2.0D;
+                        double a2 = a1 + Math.PI / 2.0D;
+                        flatSeg(bb, m, cam, f.x + Math.cos(a1) * hr, f.z + Math.sin(a1) * hr,
+                                f.x + Math.cos(a2) * hr, f.z + Math.sin(a2) * hr, y, wl, f.r, f.g, f.b, a * 0.85F);
+                    }
+                }
+                for (int i = 0; i < 16; i++) {
+                    double ang = spin * 0.6D + i * Math.PI / 8.0D;
+                    flatSeg(bb, m, cam, f.x + Math.cos(ang) * radius * 0.66D, f.z + Math.sin(ang) * radius * 0.66D,
+                            f.x + Math.cos(ang) * radius * 0.76D, f.z + Math.sin(ang) * radius * 0.76D, y, radius * 0.05D,
+                            f.r, f.g, f.b, a * 0.8F);
+                }
+            }
+            default -> {   // гексаграмма из двух треугольников, вращается медленно
+                for (int i = 0; i < 6; i++) {
+                    double a1 = spin + i * Math.PI / 3.0D;
+                    double a2 = spin + (i + 2) * Math.PI / 3.0D;
+                    flatSeg(bb, m, cam, f.x + Math.cos(a1) * hr, f.z + Math.sin(a1) * hr,
+                            f.x + Math.cos(a2) * hr, f.z + Math.sin(a2) * hr, y, wl, f.r, f.g, f.b, a * 0.8F);
+                }
+            }
         }
         // руны по кольцу вращаются в обратную сторону
         for (int i = 0; i < 24; i++) {
@@ -358,5 +421,136 @@ public final class ClientFx {
             billboard(bb, m, cam, c.add(dir.scale(in)), c.add(dir.scale(out)), 0.05D + 0.05D * rnd(i, 4),
                     f.r, f.g, f.b, a, a * 0.15F);
         }
+    }
+
+    // ----- спираль: двойная нить света, поднимающаяся вокруг оси -----
+    private static void helix(BufferBuilder bb, Matrix4f m, Vec3 cam, Fx f, float age) {
+        float p = age / f.ticks;
+        float a = Mth.clamp(Math.min(age / 5.0F, (1.0F - p) * 3.0F), 0.0F, 1.0F);
+        double h = f.size * Math.min(1.0F, age / 7.0F);
+        double rad = f.ax > 0.01D ? f.ax : 1.2D;
+        double spin = age * 0.28D;
+        int n = 40;
+        for (int strand = 0; strand < 2; strand++) {
+            Vec3 prev = null;
+            for (int k = 0; k <= n; k++) {
+                double t = k / (double) n;
+                double ang = spin + t * Math.PI * 5.0D + strand * Math.PI;
+                double rr = rad * (1.0D - 0.35D * t);
+                Vec3 cur = new Vec3(f.x + Math.cos(ang) * rr, f.y + t * h, f.z + Math.sin(ang) * rr);
+                if (prev != null) {
+                    float al = a * (float) (1.0D - t * 0.75D);
+                    billboard(bb, m, cam, prev, cur, 0.16D, f.r, f.g, f.b, al, al);
+                    billboard(bb, m, cam, prev, cur, 0.06D, 1.0F, 1.0F, 1.0F, al, al);
+                }
+                prev = cur;
+            }
+        }
+    }
+
+    // ----- ливень светящихся нитей -----
+    private static void rain(BufferBuilder bb, Matrix4f m, Vec3 cam, Fx f, float age) {
+        float p = age / f.ticks;
+        float a = Mth.clamp(Math.min(age / 4.0F, (1.0F - p) * 4.0F), 0.0F, 1.0F);
+        for (int i = 0; i < 44; i++) {
+            double ang = rnd(i, 11) * Math.PI * 2.0D;
+            double rr = Math.sqrt(rnd(i, 12)) * f.size;
+            double fall = (age * (0.8D + 0.5D * rnd(i, 13)) + rnd(i, 14) * 9.0D) % 9.0D;
+            double x = f.x + Math.cos(ang) * rr;
+            double z = f.z + Math.sin(ang) * rr;
+            double y = f.y + 9.0D - fall;
+            float al = a * (float) (0.4D + 0.6D * (1.0D - fall / 9.0D));
+            billboard(bb, m, cam, new Vec3(x, y, z), new Vec3(x, y + 0.9D, z), 0.07D, f.r, f.g, f.b, al * 0.2F, al);
+        }
+        ringLine(bb, m, cam, f.x, f.y + 0.05D, f.z, f.size, 0.06D, 48, f.r, f.g, f.b, a * 0.5F);
+    }
+
+    // ----- солнечный диск на земле -----
+    private static void sun(BufferBuilder bb, Matrix4f m, Vec3 cam, Fx f, float age) {
+        float p = age / f.ticks;
+        float a = Mth.clamp(Math.min(age / 5.0F, (1.0F - p) * 4.0F), 0.0F, 1.0F);
+        double radius = f.size * (0.5D + 0.5D * easeOut(age / 8.0F));
+        double spin = age * 0.09D;
+        double y = f.y + 0.07D;
+        for (int i = 0; i < 18; i++) {
+            double ang = spin + i * Math.PI * 2.0D / 18.0D;
+            double len = radius * (0.7D + 0.3D * Math.abs(Math.sin(age * 0.22D + i * 1.7D)));
+            double w = radius * 0.12D;
+            double bx = f.x + Math.cos(ang) * radius * 0.18D;
+            double bz = f.z + Math.sin(ang) * radius * 0.18D;
+            double ex = f.x + Math.cos(ang) * len;
+            double ez = f.z + Math.sin(ang) * len;
+            double nx = -Math.sin(ang) * w * 0.5D;
+            double nz = Math.cos(ang) * w * 0.5D;
+            vtx(bb, m, cam, bx - nx, y, bz - nz, f.r, f.g, f.b, a * 0.8F);
+            vtx(bb, m, cam, bx + nx, y, bz + nz, f.r, f.g, f.b, a * 0.8F);
+            vtx(bb, m, cam, ex + nx * 0.1D, y, ez + nz * 0.1D, f.r, f.g, f.b, 0.0F);
+            vtx(bb, m, cam, ex - nx * 0.1D, y, ez - nz * 0.1D, f.r, f.g, f.b, 0.0F);
+        }
+        ringLine(bb, m, cam, f.x, y, f.z, radius * 0.18D, radius * 0.03D, 32, 1.0F, 1.0F, 1.0F, a);
+        ringLine(bb, m, cam, f.x, y, f.z, radius * 0.95D, radius * 0.02D, 56, f.r, f.g, f.b, a * 0.8F);
+    }
+
+    // ----- крылья из света позади точки (направление взгляда в aux x, z) -----
+    private static void wings(BufferBuilder bb, Matrix4f m, Vec3 cam, Fx f, float age) {
+        float p = age / f.ticks;
+        float a = Mth.clamp(Math.min(age / 4.0F, (1.0F - p) * 3.0F), 0.0F, 1.0F);
+        double dl = Math.sqrt(f.ax * f.ax + f.az * f.az);
+        double dx = dl > 1.0e-6D ? f.ax / dl : 0.0D;
+        double dz = dl > 1.0e-6D ? f.az / dl : 1.0D;
+        double sx = -dz;
+        double sz = dx;
+        double flap = Math.sin(age * 0.45D) * 0.18D;
+        double spread = easeOut(age / 6.0F);
+        Vec3 origin = new Vec3(f.x - dx * 0.25D, f.y + 1.35D, f.z - dz * 0.25D);
+        for (int side = -1; side <= 1; side += 2) {
+            for (int i = 0; i < 8; i++) {
+                double t = i / 7.0D;
+                double angle = (0.15D + t * 1.25D + flap) * spread;
+                double len = f.size * (1.1D + 0.9D * Math.sin(t * Math.PI * 0.85D + 0.2D));
+                Vec3 end = origin.add(sx * side * Math.cos(angle) * len - dx * 0.45D * len * 0.4D,
+                        Math.sin(angle) * len,
+                        sz * side * Math.cos(angle) * len - dz * 0.45D * len * 0.4D);
+                billboard(bb, m, cam, origin, end, 0.28D * (1.0D - 0.4D * t), f.r, f.g, f.b, a * 0.75F, a * 0.05F);
+                billboard(bb, m, cam, origin, end, 0.08D, 1.0F, 1.0F, 1.0F, a * 0.9F, 0.0F);
+            }
+        }
+    }
+
+    // ----- молния: ломаная линия, мерцает каждые два тика -----
+    private static void lightning(BufferBuilder bb, Matrix4f m, Vec3 cam, Fx f, float age) {
+        float p = age / f.ticks;
+        float a = (float) Math.pow(1.0F - p, 0.8D);
+        Vec3 p0 = new Vec3(f.x, f.y, f.z);
+        Vec3 p1 = new Vec3(f.ax, f.ay, f.az);
+        Vec3 dir = p1.subtract(p0);
+        double len = dir.length();
+        if (len < 0.1D) {
+            return;
+        }
+        int flick = (int) (age / 2.0F);
+        int n = 9;
+        Vec3 up = Math.abs(dir.y / len) > 0.9D ? new Vec3(1, 0, 0) : new Vec3(0, 1, 0);
+        Vec3 sideA = dir.cross(up).normalize();
+        Vec3 sideB = dir.cross(sideA).normalize();
+        Vec3 prev = p0;
+        Vec3 mid = p0;
+        for (int k = 1; k <= n; k++) {
+            double t = k / (double) n;
+            double amp = k == n ? 0.0D : len * 0.07D;
+            Vec3 pt = p0.add(dir.scale(t))
+                    .add(sideA.scale((rnd(k + flick * 17, 21) - 0.5D) * 2.0D * amp))
+                    .add(sideB.scale((rnd(k + flick * 17, 22) - 0.5D) * 2.0D * amp));
+            billboard(bb, m, cam, prev, pt, f.size, f.r, f.g, f.b, a * 0.6F, a * 0.6F);
+            billboard(bb, m, cam, prev, pt, f.size * 0.3D, 1.0F, 1.0F, 1.0F, a, a);
+            if (k == n / 2) {
+                mid = pt;
+            }
+            prev = pt;
+        }
+        // боковая ветвь из середины
+        Vec3 branchEnd = mid.add(sideA.scale((rnd(flick, 23) - 0.5D) * len * 0.5D)).add(dir.scale(0.25D))
+                .add(sideB.scale((rnd(flick, 24) - 0.5D) * len * 0.3D));
+        billboard(bb, m, cam, mid, branchEnd, f.size * 0.6D, f.r, f.g, f.b, a * 0.5F, 0.0F);
     }
 }

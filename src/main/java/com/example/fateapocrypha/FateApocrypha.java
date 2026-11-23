@@ -17,6 +17,8 @@ public class FateApocrypha {
         ModCreativeTabs.TABS.register(bus);
         com.example.fateapocrypha.world.ModWorldgen.CHUNK_GENERATORS.register(bus);
         com.example.fateapocrypha.world.ModWorldgen.BIOME_SOURCES.register(bus);
+        net.minecraftforge.fml.ModLoadingContext.get().registerConfig(net.minecraftforge.fml.config.ModConfig.Type.CLIENT,
+                com.example.fateapocrypha.client.ClientConfig.SPEC);
         bus.addListener(this::commonSetup);
     }
 

@@ -32,6 +32,8 @@ public class ModNetwork {
                 OpenBoardPacket::encode, OpenBoardPacket::decode, OpenBoardPacket::handle);
         CHANNEL.registerMessage(id++, BoardActionPacket.class,
                 BoardActionPacket::encode, BoardActionPacket::decode, BoardActionPacket::handle);
+        CHANNEL.registerMessage(id++, PlayerAnimPacket.class,
+                PlayerAnimPacket::encode, PlayerAnimPacket::decode, PlayerAnimPacket::handle);
         CHANNEL.registerMessage(id++, FxPacket.class,
                 FxPacket::encode, FxPacket::decode, FxPacket::handle);
         CHANNEL.registerMessage(id++, ShakePacket.class,

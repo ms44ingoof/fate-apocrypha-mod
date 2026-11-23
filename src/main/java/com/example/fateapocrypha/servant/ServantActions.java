@@ -1,6 +1,10 @@
 package com.example.fateapocrypha.servant;
 
 import com.example.fateapocrypha.ModItems;
+import com.example.fateapocrypha.anim.FateAnimBus;
+import com.example.fateapocrypha.entity.AstolfoEntity;
+import com.example.fateapocrypha.entity.JeanneEntity;
+import com.example.fateapocrypha.entity.MordredEntity;
 import com.example.fateapocrypha.entity.ServantEntity;
 import com.example.fateapocrypha.story.StoryManager;
 import java.util.UUID;
@@ -91,13 +95,7 @@ public class ServantActions {
             return;
         }
         if (player.level() instanceof ServerLevel fxLevel) {
-            // печать вспыхивает золотым кругом под игроком
-            FateFx.circle(fxLevel, player.getX(), player.getY(), player.getZ(), FateFx.GOLD, 2.6F, 36);
-            FateFx.pillar(fxLevel, player.getX(), player.getY(), player.getZ(), 0xFFE79A, 6.0F, 14);
-            if (action == ACTION_PHANTASM) {
-                FateFx.ring(fxLevel, servant.getX(), servant.getY(), servant.getZ(), FateFx.GOLD, 9.0F, 22);
-                FateFx.shake(fxLevel, servant.getX(), servant.getY(), servant.getZ(), 30.0D, 0.7F, 12);
-            }
+            sealFx(fxLevel, player, servant, action);
         }
         switch (action) {
             case ACTION_TELEPORT -> teleportServant(player, servant);
@@ -171,10 +169,7 @@ public class ServantActions {
             level.addFreshEntity(bolt);
         }
 
-        FateFx.circle(level, servant.getX(), servant.getY(), servant.getZ(), 0x7FD1FF, 3.4F, 60);
-        FateFx.pillar(level, servant.getX(), servant.getY(), servant.getZ(), 0xBFE6FF, 14.0F, 24);
-        FateFx.burst(level, servant.getX(), servant.getY() + 1.0D, servant.getZ(), 0xBFE6FF, 3.0F, 18);
-        FateFx.shake(level, servant.getX(), servant.getY(), servant.getZ(), 24.0D, 0.6F, 14);
+        summonFx(level, servant);
         StoryManager.setServantId(player, servant.getUUID());
         if (!creative) {
             consumeOne(player, ModItems.SUMMON_CATALYST.get());
@@ -209,11 +204,68 @@ public class ServantActions {
             bolt.setVisualOnly(true);
             level.addFreshEntity(bolt);
         }
-        FateFx.circle(level, servant.getX(), servant.getY(), servant.getZ(), 0x7FD1FF, 3.4F, 60);
-        FateFx.pillar(level, servant.getX(), servant.getY(), servant.getZ(), 0xBFE6FF, 14.0F, 24);
-        FateFx.burst(level, servant.getX(), servant.getY() + 1.0D, servant.getZ(), 0xBFE6FF, 3.0F, 18);
-        FateFx.shake(level, servant.getX(), servant.getY(), servant.getZ(), 24.0D, 0.6F, 14);
+        summonFx(level, servant);
         StoryManager.setServantId(player, servant.getUUID());
         return servant;
+    }
+
+    /** Эффект печати: у каждого действия свой рисунок. */
+    private static void sealFx(ServerLevel level, ServerPlayer player, ServantEntity servant, int action) {
+        double px = player.getX();
+        double py = player.getY();
+        double pz = player.getZ();
+        // Мастер и Слуга играют согласованные анимации: клип PAL у игрока и жест у Слуги (GeckoLib-рендерер)
+        switch (action) {
+            case ACTION_TELEPORT -> FateAnimBus.together(player, "seal", servant, "cast", 30);
+            case ACTION_BUFF -> FateAnimBus.together(player, "bless", servant, "pray", 40);
+            default -> FateAnimBus.together(player, "beam", servant, "charge", 40);
+        }
+        switch (action) {
+            case ACTION_TELEPORT -> {   // фиолетовая шестерня и спираль, как перенос через пространство
+                FateFx.circle(level, px, py, pz, FateFx.VIOLET, 2.4F, 30, FateFx.STYLE_GEAR);
+                FateFx.helix(level, px, py, pz, FateFx.VIOLET, 3.2F, 0.9D, 22);
+                FateFx.burst(level, servant.getX(), servant.getY() + 1.0D, servant.getZ(), FateFx.VIOLET, 2.5F, 14);
+            }
+            case ACTION_BUFF -> {   // золотой лотос и столб: благословение
+                FateFx.circle(level, px, py, pz, FateFx.GOLD, 3.0F, 44, FateFx.STYLE_LOTUS);
+                FateFx.pillar(level, px, py, pz, 0xFFE79A, 7.0F, 18);
+                FateFx.helix(level, servant.getX(), servant.getY(), servant.getZ(), 0xFFE79A, 3.0F, 0.8D, 24);
+            }
+            default -> {   // Фантазм: солнце, крылья, ливень и тряска
+                FateFx.sun(level, servant.getX(), servant.getY(), servant.getZ(), FateFx.GOLD, 8.0F, 40);
+                FateFx.circle(level, px, py, pz, FateFx.RED, 3.0F, 40, FateFx.STYLE_OCTA);
+                FateFx.wings(level, servant.getX(), servant.getY(), servant.getZ(), servant.getLookAngle().x,
+                        servant.getLookAngle().z, 0xFFF1C2, 2.6F, 28);
+                FateFx.rain(level, servant.getX(), servant.getY(), servant.getZ(), 0xFFD24A, 7.0F, 36);
+                FateFx.shake(level, servant.getX(), servant.getY(), servant.getZ(), 30.0D, 0.7F, 14);
+            }
+        }
+    }
+
+    /** Эффект призыва: у каждого героя свой рисунок круга и свой цвет. */
+    private static void summonFx(ServerLevel level, ServantEntity servant) {
+        double x = servant.getX();
+        double y = servant.getY();
+        double z = servant.getZ();
+        if (servant instanceof AstolfoEntity) {          // розовый лотос и крылья гиппогрифа
+            FateFx.circle(level, x, y, z, 0xFF9CCB, 3.4F, 64, FateFx.STYLE_LOTUS);
+            FateFx.wings(level, x, y, z, 0.0D, 1.0D, 0xFFD6EA, 2.8F, 40);
+            FateFx.rain(level, x, y, z, 0xFFC4E0, 3.5F, 50);
+        } else if (servant instanceof JeanneEntity) {    // золотое солнце и белый столб
+            FateFx.sun(level, x, y, z, 0xFFE9A0, 4.2F, 56);
+            FateFx.circle(level, x, y, z, 0xFFF1C2, 3.0F, 64, FateFx.STYLE_HEX);
+            FateFx.pillar(level, x, y, z, 0xFFFFFF, 16.0F, 26);
+        } else if (servant instanceof MordredEntity) {   // красная октаграмма и молнии
+            FateFx.circle(level, x, y, z, FateFx.RED, 3.4F, 64, FateFx.STYLE_OCTA);
+            FateFx.lightning(level, new net.minecraft.world.phys.Vec3(x, y + 14.0D, z),
+                    new net.minecraft.world.phys.Vec3(x, y, z), 0xFF7A7A, 0.7F, 12);
+            FateFx.burst(level, x, y + 1.0D, z, FateFx.RED, 3.2F, 18);
+        } else {                                         // Семирамида: шестерня и спираль яда
+            FateFx.circle(level, x, y, z, FateFx.VIOLET, 3.6F, 64, FateFx.STYLE_GEAR);
+            FateFx.helix(level, x, y, z, FateFx.VIOLET, 5.0F, 1.4D, 44);
+            FateFx.rain(level, x, y, z, 0xD6B8FF, 3.5F, 50);
+        }
+        FateFx.pillar(level, x, y, z, 0xBFE6FF, 14.0F, 24);
+        FateFx.shake(level, x, y, z, 24.0D, 0.6F, 14);
     }
 }

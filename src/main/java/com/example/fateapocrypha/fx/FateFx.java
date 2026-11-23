@@ -20,6 +20,18 @@ public final class FateFx {
     public static final int BEAM = 3;
     public static final int SLASH = 4;
     public static final int BURST = 5;
+    public static final int HELIX = 6;
+    public static final int RAIN = 7;
+    public static final int SUN = 8;
+    public static final int WINGS = 9;
+    public static final int LIGHTNING = 10;
+
+    /** Стили магического круга: 0 гексаграмма, 1 солнце, 2 октаграмма, 3 лотос, 4 шестерня. */
+    public static final int STYLE_HEX = 0;
+    public static final int STYLE_SUN = 1;
+    public static final int STYLE_OCTA = 2;
+    public static final int STYLE_LOTUS = 3;
+    public static final int STYLE_GEAR = 4;
 
     public static final int GOLD = 0xFFD24A;
     public static final int CYAN = 0x7FE8FF;
@@ -39,9 +51,39 @@ public final class FateFx {
                 new FxPacket(kind, x, y, z, ax, ay, az, color, size, ticks));
     }
 
-    /** Магический круг на земле (радиус в блоках). */
+    /** Магический круг на земле (радиус в блоках), стиль по умолчанию гексаграмма. */
     public static void circle(ServerLevel level, double x, double y, double z, int color, float radius, int ticks) {
         spawn(level, CIRCLE, x, y, z, 0.0D, 0.0D, 0.0D, color, radius, ticks);
+    }
+
+    /** Магический круг заданного стиля (STYLE_*). */
+    public static void circle(ServerLevel level, double x, double y, double z, int color, float radius, int ticks, int style) {
+        spawn(level, CIRCLE, x, y, z, 0.0D, style, 0.0D, color, radius, ticks);
+    }
+
+    /** Спираль света, поднимающаяся вокруг точки (height: высота, radius: радиус витка). */
+    public static void helix(ServerLevel level, double x, double y, double z, int color, float height, double radius, int ticks) {
+        spawn(level, HELIX, x, y, z, radius, 0.0D, 0.0D, color, height, ticks);
+    }
+
+    /** Ливень светящихся нитей в радиусе над точкой. */
+    public static void rain(ServerLevel level, double x, double y, double z, int color, float radius, int ticks) {
+        spawn(level, RAIN, x, y, z, 0.0D, 0.0D, 0.0D, color, radius, ticks);
+    }
+
+    /** Солнечный диск с лучами на земле. */
+    public static void sun(ServerLevel level, double x, double y, double z, int color, float radius, int ticks) {
+        spawn(level, SUN, x, y, z, 0.0D, 0.0D, 0.0D, color, radius, ticks);
+    }
+
+    /** Крылья света за спиной (направление взгляда dx, dz; size: размах). */
+    public static void wings(ServerLevel level, double x, double y, double z, double dx, double dz, int color, float size, int ticks) {
+        spawn(level, WINGS, x, y, z, dx, 0.0D, dz, color, size, ticks);
+    }
+
+    /** Молния между точками a и b (width: толщина свечения). */
+    public static void lightning(ServerLevel level, Vec3 a, Vec3 b, int color, float width, int ticks) {
+        spawn(level, LIGHTNING, a.x, a.y, a.z, b.x, b.y, b.z, color, width, ticks);
     }
 
     /** Расходящееся кольцо до заданного радиуса. */

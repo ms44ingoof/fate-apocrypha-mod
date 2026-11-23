@@ -24,6 +24,7 @@ public class FateCommands {
         dispatcher.register(Commands.literal("fate")
                 .then(Commands.literal("story").executes(ctx -> showStory(ctx.getSource())))
                 .then(Commands.literal("kit").executes(ctx -> kit(ctx.getSource())))
+                .then(Commands.literal("arms").executes(ctx -> arms(ctx.getSource())))
                 .then(Commands.literal("trifas").executes(ctx -> travel(ctx.getSource())))
                 .then(Commands.literal("go").executes(ctx -> go(ctx.getSource())))
                 .then(Commands.literal("restart")
@@ -56,6 +57,27 @@ public class FateCommands {
             ServantActions.give(player, new ItemStack(ModItems.SUMMON_CATALYST.get()));
         }
         return 1;
+    }
+
+    /** Возвращает всё легендарное оружие, которого нет в инвентаре (после эпилога или операторам). */
+    private static int arms(CommandSourceStack source) throws CommandSyntaxException {
+        ServerPlayer player = source.getPlayerOrException();
+        if (StoryManager.getChapter(player).ordinal() < StoryChapter.TO_BE_CONTINUED.ordinal() && !source.hasPermission(2)) {
+            source.sendFailure(Component.translatable("command.fateapocrypha.locked").withStyle(ChatFormatting.RED));
+            return 0;
+        }
+        net.minecraft.world.item.Item[] weapons = {ModItems.ASTOLFO_SWORD.get(), ModItems.BALMUNG.get(), ModItems.CLARENT.get(),
+                ModItems.VASAVI_SHAKTI.get(), ModItems.ARGALIA_LANCE.get(), ModItems.LA_PUCELLE.get()};
+        int given = 0;
+        for (net.minecraft.world.item.Item w : weapons) {
+            if (!ServantActions.hasItem(player, w)) {
+                ServantActions.give(player, new ItemStack(w));
+                given++;
+            }
+        }
+        final int n = given;
+        source.sendSuccess(() -> Component.translatable("command.fateapocrypha.arms", n), false);
+        return given;
     }
 
     private static int setChapter(CommandSourceStack source, int id) throws CommandSyntaxException {
